@@ -32,7 +32,6 @@ stop_signal = False
 app_name = 'meal_planner'
 relative_url = f'../{app_name}'
 settings_path = '/root/bin/meal-planner/settings.json'
-meal_plan_path = '/root/bin/meal-planner/plan.json'
 blacklist_path = '/root/bin/meal-planner/blacklist.json'
 notes_path = '/root/bin/meal-planner/notes.json'
 users_path = '/root/bin/meal-planner/users.json'
