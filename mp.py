@@ -206,36 +206,36 @@ def get_day_count_of_all_a(include_aminus=False):
         sql = '''
         SELECT `date` FROM meal_plan WHERE
         ((`breakfast_feedback` != "A" AND `breakfast_feedback` != "A-"
-          AND `breakfast_feedback` != "-") OR
+          AND `breakfast_feedback` != "没吃") OR
          (`morning_extra_meal_feedback` != "A"  AND
           `morning_extra_meal_feedback` != "A-"  AND
-          `morning_extra_meal_feedback` != "-") OR
+          `morning_extra_meal_feedback` != "没吃") OR
          (`lunch_feedback` != "A" AND `lunch_feedback` != "A-" AND
-          `lunch_feedback` != "-") OR
+          `lunch_feedback` != "没吃") OR
          (`afternoon_extra_meal_feedback` != "A" AND
           `afternoon_extra_meal_feedback` != "A-"
-          AND `afternoon_extra_meal_feedback` != "-") OR
+          AND `afternoon_extra_meal_feedback` != "没吃") OR
          (`dinner_feedback` != "A"  AND `dinner_feedback` != "A-"  AND
-          `dinner_feedback` != "-") OR
+          `dinner_feedback` != "没吃") OR
          (`evening_extra_meal_feedback` != "A" AND
           `evening_extra_meal_feedback` != "A-" AND
-          `evening_extra_meal_feedback` != "-")) AND
+          `evening_extra_meal_feedback` != "没吃")) AND
          `date` <= CURDATE()
          ORDER BY `date` DESC LIMIT 10
         '''
     else:
         sql = '''
         SELECT `date` FROM meal_plan WHERE
-        ((`breakfast_feedback` != "A" AND `breakfast_feedback` != "-") OR
+        ((`breakfast_feedback` != "A" AND `breakfast_feedback` != "没吃") OR
          (`morning_extra_meal_feedback` != "A"  AND
-          `morning_extra_meal_feedback` != "-") OR
-         (`lunch_feedback` != "A" AND `lunch_feedback` != "-") OR
+          `morning_extra_meal_feedback` != "没吃") OR
+         (`lunch_feedback` != "A" AND `lunch_feedback` != "没吃") OR
          (`afternoon_extra_meal_feedback` != "A"AND
-          `afternoon_extra_meal_feedback` != "-") OR
+          `afternoon_extra_meal_feedback` != "没吃") OR
          (`dinner_feedback` != "A"  AND
-          `dinner_feedback` != "-") OR
+          `dinner_feedback` != "没吃") OR
          (`evening_extra_meal_feedback` != "A" AND
-          `evening_extra_meal_feedback` != "-")) AND
+          `evening_extra_meal_feedback` != "没吃")) AND
          `date` <= CURDATE()
          ORDER BY `date` DESC LIMIT 10
         '''

@@ -65,20 +65,22 @@
             {% elif meal_plans[i][j][1] == 'B+' %} class="w3-select" style="color:#bac100;font-weight:bold;" 
             {% elif meal_plans[i][j][1] == 'B' %} class="w3-select" style="color:#f2552c;font-weight:bold;" 
             {% elif meal_plans[i][j][1] == 'C' %} class="w3-select w3-text-red" style="font-weight:bold;"
-            {% endif %} 
+            {% endif %}
+             id="{{meal_plan_items[j]}}_review_{{i}}"
              name="{{meal_plan_items[j]}}_review">
-  					<option class="w3-text-black" style="font-weight:bold;" 
-  					{% if meal_plans[i][j][1] != 'A' and 
-  					      meal_plans[i][j][1] != 'A-' and 
-  					      meal_plans[i][j][1] != 'B+' and 
-  					      meal_plans[i][j][1] != 'B' and 
-  					      meal_plans[i][j][1] != 'C' %} selected {% endif %} 
-  					value="-">-</option>
-            <option class="w3-text-green" style="font-weight:bold;" {% if meal_plans[i][j][1] == 'A' %} selected {% endif %} value="A">A</option>  
-            <option style="font-weight:bold;color:#60a917;" {% if meal_plans[i][j][1] == 'A-' %} selected {% endif %} value="A-">A-</option>  
-            <option style="font-weight:bold;color:#bac100;" {% if meal_plans[i][j][1] == 'B+' %} selected {% endif %} value="B+">B+</option><!-- total self-selected -->
-            <option style="font-weight:bold;color:#f2552c;" {% if meal_plans[i][j][1] == 'B' %} selected {% endif %} value="B">B</option><!--w3-2017-flame-->
-            <option class="w3-text-red" style="font-weight:bold;" {% if meal_plans[i][j][1] == 'C' %} selected {% endif %} value="C">C</option>
+  					<option class="w3-text-black" 
+  					     {% if meal_plans[i][j][1] != 'A' and 
+        					     meal_plans[i][j][1] != 'A-' and 
+        					     meal_plans[i][j][1] != 'B+' and 
+        					     meal_plans[i][j][1] != 'B' and 
+        					     meal_plans[i][j][1] != 'C'and 
+        					     meal_plans[i][j][1] != '没吃' %} selected {% endif %}	value="-">待填</option>
+            <option class="w3-text-black" {% if meal_plans[i][j][1] == 'A' %} selected {% endif %} value="A">A</option>  
+            <option class="w3-text-black" {% if meal_plans[i][j][1] == 'A-' %} selected {% endif %} value="A-">A-</option>  
+            <option class="w3-text-black" {% if meal_plans[i][j][1] == 'B+' %} selected {% endif %} value="B+">B+</option><!-- total self-selected -->
+            <option class="w3-text-black" {% if meal_plans[i][j][1] == 'B' %} selected {% endif %} value="B">B</option><!--w3-2017-flame-->
+            <option class="w3-text-black" {% if meal_plans[i][j][1] == 'C' %} selected {% endif %} value="C">C</option>
+            <option class="w3-text-black" {% if meal_plans[i][j][1] == '没吃' %} selected {% endif %} value="没吃">没吃</option>
           </select>
         </div>
       </div>
@@ -100,7 +102,7 @@
       {% if i == 2 %}
         <input class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom" style="margin-top:0.85rem;" type="button" onclick="copyMealPlanOfToday();" value="沿用今日">
       {% endif %}
-    </form>    
+    </form>
   </div>
 	{%endfor%}
   <button onclick="accordionHandler('notes')" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">
@@ -153,7 +155,7 @@
   <div class="fixed-footer">
     <div class="w3-cell-row">
     全A天数：<span style="font-size:30px">{{days_a}},</span>&nbsp;{{dayss_a}} <br>
-    含A-天数：<span style="font-size:20px">{{days_aminus}},</span>&nbsp;{{dayss_aminus}}
+    含A-：<span style="font-size:20px">{{days_aminus}},</span>&nbsp;{{dayss_aminus}}
     </div>
   </div>
 </div>
@@ -162,6 +164,7 @@ window.onload = function() {
   logUserActivity('[meal-planner/index] load', '{{username}}');
   checkDifference();
   showDailyReminder();
+  
   $('input[name=text], textarea').each(
     function(){  
       textAreaAdjust($(this)[0]);
