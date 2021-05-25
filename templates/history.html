@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<link rel="shortcut icon" href="//monitor.sz.lan/meal_planner/static/favicon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="//monitor.sz.lan/resources/w3.css">
+<link rel="stylesheet" href="//monitor.sz.lan/resources/w3-colors-2017.css">
+<link rel="stylesheet" href="//monitor.sz.lan/resources/w3-colors-highway.css">
+<link rel="stylesheet" href="//monitor.sz.lan/resources/font-awesome.min.css">
+<script src="//monitor.sz.lan/resources/monitor.js"></script>
+<script src="//monitor.sz.lan/resources/jquery-3.5.1.min.js"></script>
+<html>
+<head>
+<style>
+.fixed-footer {
+   position: fixed;
+   left: 0;
+   bottom: 0;
+   width: 100%;
+   background-color: #4CAF50;
+   color: white;
+   text-align: center;
+}
+.fixed-header {
+   top: 0;
+   position: fixed;
+   left: 0;
+   width: 100%;
+   background-color: #4CAF50;
+   color: white;
+   text-align: center;
+}
+</style>
+<title>每日食谱-历史记录[{{username}}]</title>
+</head>
+<body>
+<div class="fixed-header">
+  <h5>食谱历史记录</h5>
+</div>
+<div class="w3-container w3-responsive" 
+     style="max-width: 50em; padding:0.75rem; display: block; margin-left: auto; margin-right: auto;margin-top: 3em; margin-bottom: 3em;">
+  <table class="w3-table w3-striped w3-border w3-hoverable">
+    <colgroup>
+      <col span="1" style="width: 18%;">
+      <col span="1" style="width: 69%;">
+      <col span="1" style="width: 13%;">
+    </colgroup>
+    <tr><th>名称</th><th>内容</th><th>反馈</th></tr>
+  		<tr> 
+  			<td style="height:6em;">早餐</td> 
+  			<td><span style="word-break:break-all;">{{breakfast[0]}}</span></td>
+  			<td class="grade">{{breakfast[1]}}</td>
+  		</tr>
+  		<tr> 
+  			<td style="height:4em;">上午加餐</td> 
+  			<td><span style="word-break:break-all;">{{morning_extra_meal[0]}}</span></td>
+  			<td class="grade">{{morning_extra_meal[1]}}</td>
+  		</tr>
+  		<tr> 
+  			<td style="height:6em;">午餐</td> 
+  			<td><span style="word-break:break-all;">{{lunch[0]}}</span></td>
+  			<td class="grade">{{lunch[1]}}</td>
+  		</tr>
+  		<tr> 
+  			<td style="height:4em;">下午加餐</td> 
+  			<td><span style="word-break:break-all;">{{afternoon_extra_meal[0]}}</span></td>
+  			<td class="grade">{{afternoon_extra_meal[1]}}</td>
+  		</tr>
+  		<tr> 
+  			<td style="height:6em;">晚餐</td> 
+  			<td><span style="word-break:break-all;">{{dinner[0]}}</span></td>
+  			<td class="grade">{{dinner[1]}}</td>
+  		</tr>
+  		<tr> 
+  			<td style="height:4em;">晚上加餐</td> 
+  			<td><span style="word-break:break-all;">{{evening_extra_meal[0]}}</span></td>
+  			<td class="grade">{{evening_extra_meal[1]}}</td>
+  		</tr>
+  		<tr> 
+  			<td style="height:10em;">今日备注</td> 
+  			<td><span style="word-break:break-all;">{{daily_remark|safe}}</span></td>
+  			<td><b>-</b></td>
+  		</tr>
+  </table>
+</div>
+<div class="fixed-footer">
+  <div class="w3-cell-row">
+    <div class="w3-container w3-cell w3-cell-top">
+      <p><a href="./?date={{yesterday}}">向前</a></p>
+    </div>
+    <div class="w3-container w3-cell w3-cell-middle">
+      <form class="w3-center" action="./">
+        <input type="date" id="date" name="date" value="{{date}}">
+        <input type="submit" value="确定">
+      </form>
+    </div>
+    <div class="w3-container w3-cell w3-cell-bottom">
+      <p><a href="./?date={{tomorrow}}">向后</a></p>
+    </div>
+  </div>
+</div>
+<script>
+  window.onload = function() {
+
+    logUserActivity('[meal-planner/history-{{date}}] load', '{{username}}'); 
+    
+    $('.grade:contains("A-")').css('color', 'red');
+    $('.grade:contains("B")').css('color', 'red');
+    $('.grade:contains("C")').css('color', 'red');
+    $('.grade:contains("A-")').css('font-weight', 'bold');
+    $('.grade:contains("B")').css('font-weight', 'bold');
+    $('.grade:contains("C")').css('font-weight', 'bold');
+  };
+  window.onunload = function() { logUserActivity('[meal-planner/history-{{date}}] unload', '{{username}}'); };
+</script>
+</body>
+</html>
