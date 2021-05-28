@@ -144,6 +144,7 @@
       </header>
       <div class="w3-container">
         <p id="msg-body" style="font-size:large;"></p>
+        <p id="msg-body-statistics" style="font-size:large; text-align:center"></p>
         <p>
           <button id="button-okay" onclick="closeDailyReminder();" class="w3-right w3-button w3-green" disabled>
             确定(<span id="count"></span>)
@@ -152,19 +153,17 @@
       </div>
     </div>
   </div>
-  <div class="fixed-footer">
-    <div class="w3-cell-row">
-    全A天数：<span style="font-size:30px">{{days_a}},</span>&nbsp;{{dayss_a}} <br>
-    含A-：<span style="font-size:20px">{{days_aminus}},</span>&nbsp;{{dayss_aminus}}
-    </div>
-  </div>
 </div>
 <script>
 window.onload = function() {
   logUserActivity('[meal-planner/index] load', '{{username}}');
   checkDifference();
-  showDailyReminder();
   
+  $.get('https://monitor.sz.lan/meal_planner/straight_a/',  // url
+      function (statistics, textStatus, jqXHR) {  // success callback
+        showDailyReminder(statistics);
+//          alert('status: ' + textStatus + ', data:' + data);
+    });
   $('input[name=text], textarea').each(
     function(){  
       textAreaAdjust($(this)[0]);
@@ -194,7 +193,7 @@ function closeDailyReminder() {
   logUserActivity('[meal-planner/index] daily reminder closed', '{{username}}');
 }
 
-function showDailyReminder() {
+function showDailyReminder(statistics) {
 
   {% if show_reminder == True %}
   document.getElementById('msg-box').style.display='block';
@@ -220,7 +219,7 @@ function showDailyReminder() {
     '连续几天A了？会不会，又开始着急了？',
     '不要心急。',
     '反问一下：和自己的肠胃功能相比，这两天吃的东西会不会已经很多了？',
-    '别老想着加加加，能维持现状就不错了。',
+    '别老想着加加加，能<b>维持现状</b>就不错了。',
     '先定小目标，争取每30天才一个A-或者B吧？不要一周就犯事吧？',
     '选A的时候要想想：是A还是A-？',
     '不要买额外的东西可以从源头上杜绝吃额外的东西。',
@@ -229,13 +228,14 @@ function showDailyReminder() {
     '最好可以默默朗读每日一提醒的内容',
     '不要忘记昨天晚上的反馈，有时候可能会漏掉',
     '体重是成功与否的唯一标准，其他所有主观感觉都是幻觉',
-    '成功100天，失败1天，之前的成功全部归零',
+    '成功100天，失败1天，之前的成功<b>全部归零</b>',
     '不要偷吃。一颗坚果，也要先记录，才能吃。',
     '定期翻看一下备忘和黑名单。对于过期的内容，要及时删除。',
     '哪里有<b>灵活</b>，哪里就有<b>失败</b>',
     '修改食谱要提前进行，不可把食物从冰箱里拿出来了才想到改。'];
   reminderID = Math.floor(Math.random() * remindersList.length);
   document.getElementById("msg-body").innerHTML = remindersList[reminderID];
+  $('#msg-body-statistics').html(statistics);
   logUserActivity('[meal-planner/index] daily reminder [' + remindersList[reminderID] + '] shown', '{{username}}');
   
   (function countDown(){

@@ -195,9 +195,8 @@ def read_notes_from_json_file():
     return notes
 
 
-def get_day_count_of_all_a(include_aminus=False):
+def get_straight_a_days(include_aminus=False):
 
-    limit = 10
     conn = pymysql.connect(db_url, db_username, db_password, db_name)
     conn.autocommit(True)
     # It appears that both UPDATE and SELECT need "commit"
@@ -221,7 +220,7 @@ def get_day_count_of_all_a(include_aminus=False):
           `evening_extra_meal_feedback` != "A-" AND
           `evening_extra_meal_feedback` != "没吃")) AND
          `date` <= CURDATE()
-         ORDER BY `date` DESC LIMIT {limit}
+         ORDER BY `date` DESC
         '''
     else:
         sql = f'''
@@ -237,7 +236,7 @@ def get_day_count_of_all_a(include_aminus=False):
          (`evening_extra_meal_feedback` != "A" AND
           `evening_extra_meal_feedback` != "没吃")) AND
          `date` <= CURDATE()
-         ORDER BY `date` DESC LIMIT {limit}
+         ORDER BY `date` DESC
         '''
     cursor.execute(sql,)
     last_failure = cursor.fetchall()
@@ -247,24 +246,12 @@ def get_day_count_of_all_a(include_aminus=False):
         return None
     else:
         deltas = []
-        for i in range(limit - 1):
+        for i in range(len(last_failure) - 1):
             deltas.append((last_failure[i][0] - last_failure[i+1][0]).days - 1)
             logging.debug(
                 f'Include A- [{include_aminus}], from {last_failure[i][0]} to '
                 f'{last_failure[i+1][0]}: {deltas[i]} days')
-#        delta1 = dt.date.today() - last_failure[0][0]
-#        delta2 = last_failure[0][0] - last_failure[1][0]
-#        delta3 = last_failure[1][0] - last_failure[2][0]
-#        delta4 = last_failure[2][0] - last_failure[3][0]
-#        delta5 = last_failure[3][0] - last_failure[4][0]
-#        delta6 = last_failure[4][0] - last_failure[5][0]
-#        delta7 = last_failure[5][0] - last_failure[6][0]
-#        delta8 = last_failure[6][0] - last_failure[7][0]
-#        delta9 = last_failure[7][0] - last_failure[8][0]
-#        delta10 = last_failure[8][0] - last_failure[9][0]
-#        dayss = [delta2.days, delta3.days, delta4.days,
-#                 delta5.days, delta6.days, delta7.days,
-#                 delta8.days, delta9.days, delta10.days]
+
         return deltas
 
 
@@ -427,8 +414,7 @@ def index():
         write_notes_to_json_file(request.form['notes'])
     notes = read_notes_from_json_file()
 
-    deltas_a = get_day_count_of_all_a()
-    deltas_a_minus = get_day_count_of_all_a(True)
+
     if (f'{username}_last_reminder' not in session[f'{app_name}']
        or session[f'{app_name}'][f'{username}_last_reminder']
        != dt.datetime.now().strftime('%Y%m%d')):
@@ -448,11 +434,30 @@ def index():
                            banned_items=banned_items,
                            limited_items=limited_items,
                            notes=notes,
-                           days_a=deltas_a[0],
-                           dayss_a=', '.join([str(e) for e in deltas_a[1:]]),
-                           days_aminus=deltas_a_minus[0],
-                           dayss_aminus=', '.join([str(e) for e in deltas_a_minus[1:]]),
                            show_reminder=show_reminder)
+
+
+@app.route('/straight_a/', methods=['GET', 'POST'])
+def straight_a():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        pass
+    else:
+        return redirect(f'{relative_url}/login/')
+
+    deltas_a = get_straight_a_days(False)
+    deltas_a_minus = get_straight_a_days(True)
+
+    dayss_a, dayss_a_minus = '', ''
+    for i in range(1, 7):
+        dayss_a = dayss_a + ', ' + str(deltas_a[i])
+        dayss_a_minus = dayss_a_minus + ', ' + str(deltas_a_minus[i])
+    return render_template('straight-a.html',
+                           days_a=deltas_a[0], dayss_a=dayss_a,
+                           days_a_minus=deltas_a_minus[0],
+                           dayss_a_minus=dayss_a_minus,
+                           max_a=max(deltas_a),
+                           max_a_minus=max(deltas_a_minus))
 
 
 def cleanup(*args):
