@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from flask import Flask, render_template, Response, request, redirect, session, url_for
+from flask import Flask, render_template, Response, request, redirect, session
 from flask_cors import CORS
 from waitress import serve
 
