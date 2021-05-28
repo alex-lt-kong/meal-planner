@@ -44,7 +44,10 @@
       <div>
         <p id="title-{{i}}{{j}}" class="w3-text-green" style="margin-top:0.5em; margin-bottom:0.1em">
           <b>{{meal_plan_items_cn[j]}}</b>
-          {% if i == 1 and mod_types[j] == True %} <span style="color:red;font-weight:bold;">（危险的改动！）</span>{% endif %}
+          {% if i == 1 %}
+            {% if mod_types[j] == 1 %} （安全的改动 ✓）</span>
+            {% elif mod_types[j] == 2 %} <span style="color:red;font-weight:bold;">（危险的改动 ❗）</span>{% endif %}
+          {% endif %}
         </p>
       </div>
       <div class="w3-cell-row">
@@ -78,7 +81,7 @@
         					     meal_plans[i][j][1] != 'A-' and 
         					     meal_plans[i][j][1] != 'B+' and 
         					     meal_plans[i][j][1] != 'B' and 
-        					     meal_plans[i][j][1] != 'C'and 
+        					     meal_plans[i][j][1] != 'C' and 
         					     meal_plans[i][j][1] != '没吃' %} selected {% endif %}	value="待填">待填</option>
             <option class="w3-text-black" {% if meal_plans[i][j][1] == 'A' %} selected {% endif %} value="A">A</option>  
             <option class="w3-text-black" {% if meal_plans[i][j][1] == 'A-' %} selected {% endif %} value="A-">A-</option>  

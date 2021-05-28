@@ -196,30 +196,41 @@ def read_notes_from_json_file():
     return notes
 
 
-def detect_modification_type(meal_plans):
+def detect_modification_type(meal_plan_new, meal_plan_old):
+
+    if meal_plan_old is None or meal_plan_new is None:
+        return None
+    if len(meal_plan_new) != len(meal_plan_old):
+        return None
 
     mod_types = []
-    for i in range(len(meal_plans[0])):
-        # Iterate meals, not days
-        mod_types.append(False)
+    # type == 0: no modification
+    # type == 1: safe modification
+    # type == 2: dangerous modification
 
-        res1 = re.split(r'(-?\d*\.?\d+)', meal_plans[0][i][0])[1:]
-        res2 = re.split(r'(-?\d*\.?\d+)', meal_plans[1][i][0])[1:]
-        # First element should be timestamp
-        print(res1)
-        print(res2)
-        if len(res1) != len(res2):
-            mod_types[i] = True
+    for i in range(len(meal_plan_new)):
+        # Iterate meals, not days
+        mod_types.append(0)
+
+        res_old = re.split(r'(-?\d*\.?\d+)', meal_plan_old[i][0])[2:]
+        res_new = re.split(r'(-?\d*\.?\d+)', meal_plan_new[i][0])[2:]
+        # The 1st element from this flawed split is a space
+        # The 2nd element is the timestamp
+
+        if len(res_old) != len(res_new):
+            mod_types[i] = 2
         else:
-            for j in range(len(res1)):
-                if res1[j] != res2[j]:
+            for j in range(len(res_old)):
+                if res_old[j] != res_new[j]:
                     try:
-                        f1, f2 = float(res1[j]), float(res2[j])
+                        f1, f2 = float(res_old[j]), float(res_new[j])
                         if f2 > f1:
-                            mod_types[i] = True
+                            mod_types[i] = 2
+                        elif mod_types[i] == 0:
+                            mod_types[i] = 1
                     except Exception as ex:
-                        logging.debug(f'{ex}: {res1[j]}, {res2[j]}')
-                        mod_types[i] = True
+                        logging.debug(f'{ex}: {res_old[j]}, {res_new[j]}')
+                        mod_types[i] = 2
                         break
     return mod_types
 
@@ -348,7 +359,16 @@ def history():
         date = dt.datetime.strptime(date, '%Y-%m-%d')
     except Exception as e:
         return Response(f'错误：参数date的值[{date}]不正确：{e}', 400)
+
+    yesterday = (date + dt.timedelta(days=-1)).strftime("%Y-%m-%d")
+    tomorrow = (date + dt.timedelta(days=1)).strftime("%Y-%m-%d")
     results = read_meal_plan_from_db(date)
+    results_old = read_meal_plan_from_db(yesterday)
+    if results is not None and results_old is not None:
+        mod_types = detect_modification_type(meal_plan_new=results,
+                                             meal_plan_old=results_old)
+    else:
+        mod_types = None
 
     if results is not None:
         breakfast = results[0]
@@ -369,8 +389,7 @@ def history():
         evening_extra_meal = ['[无记录]', '-']
         daily_remark = ''
 
-    yesterday = (date + dt.timedelta(days=-1)).strftime("%Y-%m-%d")
-    tomorrow = (date + dt.timedelta(days=1)).strftime("%Y-%m-%d")
+
     return render_template('history.html',
                            date=date.strftime("%Y-%m-%d"),
                            yesterday=yesterday, tomorrow=tomorrow,
@@ -381,7 +400,7 @@ def history():
                            dinner=dinner,
                            evening_extra_meal=evening_extra_meal,
                            daily_remark=daily_remark,
-                           username=username)
+                           username=username, mod_types=mod_types)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -436,8 +455,8 @@ def index():
     except Exception as e:
         return Response(f'读取食谱数据错误！原因：{e}', 400)
 
-    mod_types = detect_modification_type(meal_plans)
-  #  print(mod_types)
+    mod_types = detect_modification_type(meal_plan_new=meal_plans[1],
+                                         meal_plan_old=meal_plans[0])
 
     if 'banned_items' in request.form and 'limited_items' in request.form:
         write_blacklist_to_json_file(request.form['banned_items'],
