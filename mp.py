@@ -11,6 +11,7 @@ import hashlib
 import json
 import logging
 import pymysql
+import re
 import signal
 import smtplib
 import sys
@@ -195,6 +196,34 @@ def read_notes_from_json_file():
     return notes
 
 
+def detect_modification_type(meal_plans):
+
+    mod_types = []
+    for i in range(len(meal_plans[0])):
+        # Iterate meals, not days
+        mod_types.append(False)
+
+        res1 = re.split(r'(-?\d*\.?\d+)', meal_plans[0][i][0])[1:]
+        res2 = re.split(r'(-?\d*\.?\d+)', meal_plans[1][i][0])[1:]
+        # First element should be timestamp
+        print(res1)
+        print(res2)
+        if len(res1) != len(res2):
+            mod_types[i] = True
+        else:
+            for j in range(len(res1)):
+                if res1[j] != res2[j]:
+                    try:
+                        f1, f2 = float(res1[j]), float(res2[j])
+                        if f2 > f1:
+                            mod_types[i] = True
+                    except Exception as ex:
+                        logging.debug(f'{ex}: {res1[j]}, {res2[j]}')
+                        mod_types[i] = True
+                        break
+    return mod_types
+
+
 def get_straight_a_days(include_aminus=False):
 
     conn = pymysql.connect(db_url, db_username, db_password, db_name)
@@ -202,7 +231,7 @@ def get_straight_a_days(include_aminus=False):
     # It appears that both UPDATE and SELECT need "commit"
     cursor = conn.cursor()
     if include_aminus is True:
-        sql = f'''
+        sql = '''
         SELECT `date` FROM meal_plan WHERE
         ((`breakfast_feedback` != "A" AND `breakfast_feedback` != "A-"
           AND `breakfast_feedback` != "没吃") OR
@@ -223,7 +252,7 @@ def get_straight_a_days(include_aminus=False):
          ORDER BY `date` DESC
         '''
     else:
-        sql = f'''
+        sql = '''
         SELECT `date` FROM meal_plan WHERE
         ((`breakfast_feedback` != "A" AND `breakfast_feedback` != "没吃") OR
          (`morning_extra_meal_feedback` != "A"  AND
@@ -320,6 +349,7 @@ def history():
     except Exception as e:
         return Response(f'错误：参数date的值[{date}]不正确：{e}', 400)
     results = read_meal_plan_from_db(date)
+
     if results is not None:
         breakfast = results[0]
         morning_extra_meal = results[1]
@@ -339,10 +369,11 @@ def history():
         evening_extra_meal = ['[无记录]', '-']
         daily_remark = ''
 
+    yesterday = (date + dt.timedelta(days=-1)).strftime("%Y-%m-%d")
+    tomorrow = (date + dt.timedelta(days=1)).strftime("%Y-%m-%d")
     return render_template('history.html',
                            date=date.strftime("%Y-%m-%d"),
-                           yesterday=(date + dt.timedelta(days=-1)).strftime("%Y-%m-%d"),
-                           tomorrow=(date + dt.timedelta(days=1)).strftime("%Y-%m-%d"),
+                           yesterday=yesterday, tomorrow=tomorrow,
                            breakfast=breakfast,
                            morning_extra_meal=morning_extra_meal,
                            lunch=lunch,
@@ -405,6 +436,9 @@ def index():
     except Exception as e:
         return Response(f'读取食谱数据错误！原因：{e}', 400)
 
+    mod_types = detect_modification_type(meal_plans)
+  #  print(mod_types)
+
     if 'banned_items' in request.form and 'limited_items' in request.form:
         write_blacklist_to_json_file(request.form['banned_items'],
                                      request.form['limited_items'])
@@ -413,7 +447,6 @@ def index():
     if 'notes' in request.form:
         write_notes_to_json_file(request.form['notes'])
     notes = read_notes_from_json_file()
-
 
     if (f'{username}_last_reminder' not in session[f'{app_name}']
        or session[f'{app_name}'][f'{username}_last_reminder']
@@ -430,7 +463,7 @@ def index():
                            meal_plan_items=meal_plan_items,
                            meal_plan_items_cn=meal_plan_items_cn,
                            daily_remarks=daily_remarks,
-                           meal_plans=meal_plans,
+                           meal_plans=meal_plans, mod_types=mod_types,
                            banned_items=banned_items,
                            limited_items=limited_items,
                            notes=notes,

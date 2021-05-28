@@ -41,7 +41,12 @@
     <form class="w3-container" id="form-plan-content-{{i}}" action="https://monitor.sz.lan/meal_planner/" method="post" style="padding:8px;">
       <input type="hidden" name="date" value="{{i}}"> 
       {%for j in range(0, meal_plans[i]|length)%} 
-      <div><p id="title-{{i}}{{j}}" class="w3-text-green" style="margin-top:0.5em; margin-bottom:0.1em"><b>{{meal_plan_items_cn[j]}}</b></p></div>
+      <div>
+        <p id="title-{{i}}{{j}}" class="w3-text-green" style="margin-top:0.5em; margin-bottom:0.1em">
+          <b>{{meal_plan_items_cn[j]}}</b>
+          {% if i == 1 and mod_types[j] == True %} <span style="color:red;font-weight:bold;">（危险的改动！）</span>{% endif %}
+        </p>
+      </div>
       <div class="w3-cell-row">
         <div class="w3-cell">
           <textarea id="textarea-{{i}}{{j}}"
@@ -157,7 +162,6 @@
 <script>
 window.onload = function() {
   logUserActivity('[meal-planner/index] load', '{{username}}');
-  checkDifference();
   
   $.get('https://monitor.sz.lan/meal_planner/straight_a/',  // url
       function (statistics, textStatus, jqXHR) {  // success callback
@@ -277,28 +281,6 @@ function copyMealPlanOfToday() {
   }
   document.getElementById('textarea-daily-remarks-2').value = document.getElementById('textarea-daily-remarks-1').value;
   logUserActivity('[meal-planner/index] copy today\'s meal plan', '{{username}}');
-}
-
-function checkDifference() {
-  var changeCount = 0;
-  var incrementCount = 0;
-  var decrementCount = 0
-  var warningMessages = ['<span style="color:red;">&nbsp(第1处修改，如果是增加，最好<span style="font-weight:bold;text-decoration:underline;">3天一次</span>)</span>',
-                         '<span style="color:red;">&nbsp(第2处修改)',
-                         '<span style="color:red;font-weight:bold;">&nbsp(第3处修改)</span>',
-                         '<span style="color:red;font-weight:bold;">&nbsp(第4处修改)</span>',
-                         '<span style="color:red;font-weight:bold;">&nbsp(第5处修改)</span>', 
-                         '<span style="color:red;font-weight:bold;">&nbsp(第6处修改)</span>',
-                         '<span style="color:red;font-weight:bold;">&nbsp(第7处修改)</span>'];
-  for (i = 0; i < {{meal_plan_items|length}}; i++) {
-    yesterday = document.getElementById('textarea-0' + i.toString()).value.replace(/[0-2][0-9][0-5][0-9]/, '')
-    today = document.getElementById('textarea-1' + i.toString()).value.replace(/[0-2][0-9][0-5][0-9]/, '');
-    if (yesterday != today && today.length > 0) {
-      document.getElementById('title-1' + i.toString()).innerHTML = 
-        document.getElementById('title-1' + i.toString()).innerHTML + warningMessages[changeCount];
-      changeCount += 1;
-    }
-  }
 }
 </script>
 </body>
