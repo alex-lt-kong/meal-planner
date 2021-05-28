@@ -197,12 +197,13 @@ def read_notes_from_json_file():
 
 def get_day_count_of_all_a(include_aminus=False):
 
+    limit = 10
     conn = pymysql.connect(db_url, db_username, db_password, db_name)
     conn.autocommit(True)
     # It appears that both UPDATE and SELECT need "commit"
     cursor = conn.cursor()
     if include_aminus is True:
-        sql = '''
+        sql = f'''
         SELECT `date` FROM meal_plan WHERE
         ((`breakfast_feedback` != "A" AND `breakfast_feedback` != "A-"
           AND `breakfast_feedback` != "没吃") OR
@@ -220,10 +221,10 @@ def get_day_count_of_all_a(include_aminus=False):
           `evening_extra_meal_feedback` != "A-" AND
           `evening_extra_meal_feedback` != "没吃")) AND
          `date` <= CURDATE()
-         ORDER BY `date` DESC LIMIT 10
+         ORDER BY `date` DESC LIMIT {limit}
         '''
     else:
-        sql = '''
+        sql = f'''
         SELECT `date` FROM meal_plan WHERE
         ((`breakfast_feedback` != "A" AND `breakfast_feedback` != "没吃") OR
          (`morning_extra_meal_feedback` != "A"  AND
@@ -236,7 +237,7 @@ def get_day_count_of_all_a(include_aminus=False):
          (`evening_extra_meal_feedback` != "A" AND
           `evening_extra_meal_feedback` != "没吃")) AND
          `date` <= CURDATE()
-         ORDER BY `date` DESC LIMIT 10
+         ORDER BY `date` DESC LIMIT {limit}
         '''
     cursor.execute(sql,)
     last_failure = cursor.fetchall()
@@ -245,20 +246,23 @@ def get_day_count_of_all_a(include_aminus=False):
     if len(last_failure) == 0:
         return None
     else:
-        delta1 = dt.date.today() - last_failure[0][0]
-        delta2 = last_failure[0][0] - last_failure[1][0]
-        delta3 = last_failure[1][0] - last_failure[2][0]
-        delta4 = last_failure[2][0] - last_failure[3][0]
-        delta5 = last_failure[3][0] - last_failure[4][0]
-        delta6 = last_failure[4][0] - last_failure[5][0]
-        delta7 = last_failure[5][0] - last_failure[6][0]
-        delta8 = last_failure[6][0] - last_failure[7][0]
-        delta9 = last_failure[7][0] - last_failure[8][0]
-        delta10 = last_failure[8][0] - last_failure[9][0]
-        dayss = [delta2.days, delta3.days, delta4.days,
-                 delta5.days, delta6.days, delta7.days,
-                 delta8.days, delta9.days, delta10.days]
-        return delta1.days, dayss
+        deltas = []
+        for i in range(limit - 1):
+            deltas.append((last_failure[i][0] - last_failure[i+1][0]).days)
+#        delta1 = dt.date.today() - last_failure[0][0]
+#        delta2 = last_failure[0][0] - last_failure[1][0]
+#        delta3 = last_failure[1][0] - last_failure[2][0]
+#        delta4 = last_failure[2][0] - last_failure[3][0]
+#        delta5 = last_failure[3][0] - last_failure[4][0]
+#        delta6 = last_failure[4][0] - last_failure[5][0]
+#        delta7 = last_failure[5][0] - last_failure[6][0]
+#        delta8 = last_failure[6][0] - last_failure[7][0]
+#        delta9 = last_failure[7][0] - last_failure[8][0]
+#        delta10 = last_failure[8][0] - last_failure[9][0]
+#        dayss = [delta2.days, delta3.days, delta4.days,
+#                 delta5.days, delta6.days, delta7.days,
+#                 delta8.days, delta9.days, delta10.days]
+        return deltas
 
 
 @app.route('/logout/')
@@ -420,8 +424,8 @@ def index():
         write_notes_to_json_file(request.form['notes'])
     notes = read_notes_from_json_file()
 
-    days_a, dayss_a = get_day_count_of_all_a()
-    days_aminus, dayss_aminus = get_day_count_of_all_a(True)
+    deltas_a = get_day_count_of_all_a()
+    deltas_a_minus = get_day_count_of_all_a(True)
     if (f'{username}_last_reminder' not in session[f'{app_name}']
        or session[f'{app_name}'][f'{username}_last_reminder']
        != dt.datetime.now().strftime('%Y%m%d')):
@@ -441,10 +445,10 @@ def index():
                            banned_items=banned_items,
                            limited_items=limited_items,
                            notes=notes,
-                           days_a=days_a,
-                           dayss_a=', '.join([str(e) for e in dayss_a]),
-                           days_aminus=days_aminus,
-                           dayss_aminus=', '.join([str(e) for e in dayss_aminus]),
+                           days_a=deltas_a[0],
+                           dayss_a=', '.join([str(e) for e in deltas_a]),
+                           days_aminus=deltas_a_minus[0],
+                           dayss_aminus=', '.join([str(e) for e in deltas_a_minus]),
                            show_reminder=show_reminder)
 
 
@@ -456,18 +460,18 @@ def cleanup(*args):
     sys.exit(0)
 
 
-def send_notification_email(delay: int,
-                            from_name: str,
-                            subject: str,
-                            mainbody: str):
+def send_notification_email(delay: int, from_name: str,
+                            subject: str, mainbody: str):
 
     global stop_signal
 
-    logging.info('Wait for {} seconds before sending the email'.format(delay))
+    logging.info(f'Wait for {delay} seconds before sending the email')
     sec_count = 0
     while sec_count < delay:
+        # This delay has to be long enough so that if the service is down due
+        # to a power failure, it sends the email after the network is up again.
         time.sleep(1)
-        # This delay has to be long enough to accommodate the startup time of pfSense.
+
         sec_count += 1
         if stop_signal:
             return
@@ -483,13 +487,13 @@ def send_notification_email(delay: int,
 
     sender = json_data['email']['address']
     password = json_data['email']['password']
-    receivers = ['admin@mamsds.net']
+    receivers = json_data['email']['to']
 
     message = ('From: {} <{}>\n'
-                'To: Mamsds Admin Account <admin@mamsds.net>\n'
-                'Content-Type: text/html; charset="UTF-8"\n'
-                'Subject: {}\n'
-                '<meta http-equiv="Content-Type"  content="text/html charset=UTF-8" /><html><font size="2" color="black">{}</font></html>'.format(from_name, sender, subject, mainbody.replace('\n', '<br>')))
+               f'To: Mamsds Admin Account <{receivers}>\n'
+               'Content-Type: text/html; charset="UTF-8"\n'
+               'Subject: {}\n'
+               '<meta http-equiv="Content-Type"  content="text/html charset=UTF-8" /><html><font size="2" color="black">{}</font></html>'.format(from_name, sender, subject, mainbody.replace('\n', '<br>')))
 
     try:
         smtpObj = smtplib.SMTP(host='server172.web-hosting.com', port=587)
@@ -512,7 +516,7 @@ def main():
     logging.basicConfig(
         filename='/var/log/mamsds/meal-planner.log',
         level=logging.DEBUG if debug_mode else logging.INFO,
-        format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
+        format='%(asctime)s %(levelname)s %(module)s-%(funcName)s: %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
     )
     logging.info('meal planner started')
@@ -526,15 +530,16 @@ def main():
 
     signal.signal(signal.SIGINT, cleanup)
     signal.signal(signal.SIGTERM, cleanup)
-    email_sender = threading.Thread(target=send_notification_email,
-                                    args=(0 if debug_mode else 600,
-                                          'meal planner notification service',
-                                          'meal planner started',
-                                          'meal planner is started at {}'.format(start_time)))
+    email_sender = threading.Thread(
+                        target=send_notification_email,
+                        args=(0 if debug_mode else 600,
+                              'meal planner notification service',
+                              'meal planner started',
+                              f'meal planner is started at {start_time}'))
     email_sender.start()
     logging.info('meal planner server')
 
-    port=-1
+    port = -1
     try:
         with open(settings_path, 'r') as json_file:
             json_str = json_file.read()
