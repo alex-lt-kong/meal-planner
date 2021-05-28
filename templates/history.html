@@ -46,48 +46,48 @@
     <tr><th>名称</th><th>内容</th><th>反馈</th></tr>
   		<tr> 
   			<td style="height:6em;">早餐
-  			{% if mod_types[0] == 1 %}-安</span>
-        {% elif mod_types[0] == 2 %} <span style="color:red;font-weight:bold;">-危</span>{% endif %}
+  			{% if mod_types[0] == 1 %}<span>-安</span>
+        {% elif mod_types[0] == 2 %}<span style="color:red;font-weight:bold;">-危</span>{% endif %}
   			</td> 
   			<td><span style="word-break:break-all;">{{breakfast[0]}}</span></td>
   			<td class="grade">{{breakfast[1]}}</td>
   		</tr>
   		<tr> 
   			<td style="height:4em;">上午加餐
-   			{% if mod_types[1] == 1 %}-安</span>
-        {% elif mod_types[1] == 2 %} <span style="color:red;font-weight:bold;">-危</span>{% endif %}
+   			{% if mod_types[1] == 1 %}<span>-安</span>
+        {% elif mod_types[1] == 2 %}<span style="color:red;font-weight:bold;">-危</span>{% endif %}
         </td>
   			<td><span style="word-break:break-all;">{{morning_extra_meal[0]}}</span></td>
   			<td class="grade">{{morning_extra_meal[1]}}</td>
   		</tr>
   		<tr> 
   			<td style="height:6em;">午餐
-   			{% if mod_types[2] == 1 %}-安</span>
-        {% elif mod_types[2] == 2 %} <span style="color:red;font-weight:bold;">-危</span>{% endif %}
+   			{% if mod_types[2] == 1 %}<span>-安</span>
+        {% elif mod_types[2] == 2 %}<span style="color:red;font-weight:bold;">-危</span>{% endif %}
         </td>
   			<td><span style="word-break:break-all;">{{lunch[0]}}</span></td>
   			<td class="grade">{{lunch[1]}}</td>
   		</tr>
   		<tr> 
   			<td style="height:4em;">下午加餐
-   			{% if mod_types[3] == 1 %} （安✓）</span>
-        {% elif mod_types[3] == 2 %} <span style="color:red;font-weight:bold;">-危</span>{% endif %}
+   			{% if mod_types[3] == 1 %}<span>-安</span>
+        {% elif mod_types[3] == 2 %}<span style="color:red;font-weight:bold;">-危</span>{% endif %}
         </td> 
   			<td><span style="word-break:break-all;">{{afternoon_extra_meal[0]}}</span></td>
   			<td class="grade">{{afternoon_extra_meal[1]}}</td>
   		</tr>
   		<tr> 
   			<td style="height:6em;">晚餐
-   			{% if mod_types[4] == 1 %}-安</span>
-        {% elif mod_types[4] == 2 %} <span style="color:red;font-weight:bold;">-危</span>{% endif %}
+   			{% if mod_types[4] == 1 %}<span>-安</span>
+        {% elif mod_types[4] == 2 %}<span style="color:red;font-weight:bold;">-危</span>{% endif %}
         </td> 
   			<td><span style="word-break:break-all;">{{dinner[0]}}</span></td>
   			<td class="grade">{{dinner[1]}}</td>
   		</tr>
   		<tr> 
   			<td style="height:4em;">晚上加餐
-   			{% if mod_types[1] == 1 %}-安</span>
-        {% elif mod_types[1] == 2 %} <span style="color:red;font-weight:bold;">-危</span>{% endif %}
+   			{% if mod_types[1] == 1 %}<span>-安</span>
+        {% elif mod_types[1] == 2 %}<span style="color:red;font-weight:bold;">-危</span>{% endif %}
         </td> 
   			<td><span style="word-break:break-all;">{{evening_extra_meal[0]}}</span></td>
   			<td class="grade">{{evening_extra_meal[1]}}</td>
