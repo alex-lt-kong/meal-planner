@@ -534,7 +534,18 @@ def main():
     email_sender.start()
     logging.info('meal planner server')
 
-    serve(app, host="127.0.0.1", port=92)
+    port=-1
+    try:
+        with open(settings_path, 'r') as json_file:
+            json_str = json_file.read()
+            json_data = json.loads(json_str)
+            app.secret_key = json_data['flask']['secret_key']
+            port = json_data['flask']['port']
+    except Exception as e:
+        json_data = None
+        logging.error(e)
+
+    serve(app, host="127.0.0.1", port=port)
 
 
 if __name__ == '__main__':
