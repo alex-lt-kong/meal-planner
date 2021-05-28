@@ -248,7 +248,10 @@ def get_day_count_of_all_a(include_aminus=False):
     else:
         deltas = []
         for i in range(limit - 1):
-            deltas.append((last_failure[i][0] - last_failure[i+1][0]).days)
+            deltas.append((last_failure[i][0] - last_failure[i+1][0]).days - 1)
+            logging.debug(
+                f'Include A- [{include_aminus}], from {last_failure[i][0]} to '
+                f'{last_failure[i+1][0]}: {deltas[i]} days')
 #        delta1 = dt.date.today() - last_failure[0][0]
 #        delta2 = last_failure[0][0] - last_failure[1][0]
 #        delta3 = last_failure[1][0] - last_failure[2][0]
@@ -446,9 +449,9 @@ def index():
                            limited_items=limited_items,
                            notes=notes,
                            days_a=deltas_a[0],
-                           dayss_a=', '.join([str(e) for e in deltas_a]),
+                           dayss_a=', '.join([str(e) for e in deltas_a[1:]]),
                            days_aminus=deltas_a_minus[0],
-                           dayss_aminus=', '.join([str(e) for e in deltas_a_minus]),
+                           dayss_aminus=', '.join([str(e) for e in deltas_a_minus[1:]]),
                            show_reminder=show_reminder)
 
 
