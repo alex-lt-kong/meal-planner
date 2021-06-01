@@ -467,15 +467,6 @@ def index():
         write_notes_to_json_file(request.form['notes'])
     notes = read_notes_from_json_file()
 
-    if (f'{username}_last_reminder' not in session[f'{app_name}']
-       or session[f'{app_name}'][f'{username}_last_reminder']
-       != dt.datetime.now().strftime('%Y%m%d')):
-
-        session[f'{app_name}'][f'{username}_last_reminder'] = dt.datetime.now().strftime('%Y%m%d')
-        show_reminder = True
-    else:
-        show_reminder = False
-
     return render_template('planner.html',
                            day_strings=day_strings,
                            username=username,
@@ -485,8 +476,7 @@ def index():
                            meal_plans=meal_plans, mod_types=mod_types,
                            banned_items=banned_items,
                            limited_items=limited_items,
-                           notes=notes,
-                           show_reminder=show_reminder)
+                           notes=notes)
 
 
 @app.route('/straight_a/', methods=['GET', 'POST'])

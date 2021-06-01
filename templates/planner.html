@@ -202,13 +202,12 @@ function closeDailyReminder() {
 
 function showDailyReminder(statistics) {
 
-  {% if show_reminder == True %}
-  document.getElementById('msg-box').style.display='block';
-  
-  {% else %}
-  document.getElementById('msg-box').style.display='none';
-  return;
-  {% endif %}
+  if (Math.random() <= 0.25) {
+    document.getElementById('msg-box').style.display='block';
+  } else {
+    document.getElementById('msg-box').style.display='none';
+  }
+
   var spn = document.getElementById("count");
   var btn = document.getElementById("button-okay");
   
