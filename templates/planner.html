@@ -202,10 +202,11 @@ function closeDailyReminder() {
 
 function showDailyReminder(statistics) {
 
-  if (Math.random() <= 0.25) {
+  if (Math.random() <= 0.2) {
     document.getElementById('msg-box').style.display='block';
   } else {
     document.getElementById('msg-box').style.display='none';
+    return
   }
 
   var spn = document.getElementById("count");
@@ -217,16 +218,17 @@ function showDailyReminder(statistics) {
   var remindersList = [
     '修改前想一想：一定要今天改吗？明天改会不会更好？',
     '体重下降是警告你要<b>减慢</b>增加，而不是<b>加快</b>增加。',
-    '制定<b>死板</b>的规矩并且<b>严格</b>遵守是唯一的出路。事实已经反复说明，任何形式的灵活都会导致失败。',
+    '制定<b>死板</b>的规矩并且<b>严格</b>遵守是唯一的出路。',
+    '事实已经反复说明，任何形式的灵活都会导致失败。',
     '反思一下，连续几天A了？是不是又要接近出事了？',
-    '事实反复说明：<br>一分灵活，一分失败<br>一分死板，一分成功。',
-    '即使昨天肠胃很舒服，也可以等明天再加，对不对？着急一天，有什么用呢？',
+    '<br>一分灵活，一分失败<br>一分死板，一分成功。',
+    '即使昨天肠胃很舒服，也可以等明天再加，对不对？！',
     '饿的时候，想想<b>拉肚子</b>的时候。',
     '连续几天A了？会不会，又开始着急了？',
     '不要心急。',
-    '反问一下：和自己的肠胃功能相比，这两天吃的东西会不会已经很多了？',
+    '和自己的肠胃功能相比，这两天吃的东西会不会已经很多了？',
     '别老想着加加加，能<b>维持现状</b>就不错了。',
-    '先定小目标，争取每30天才一个A-或者B吧？不要一周就犯事吧？',
+    '先定小目标，争取每30天才一个A-或者B吧？！',
     '选A的时候要想想：是A还是A-？',
     '不要买额外的东西可以从源头上杜绝吃额外的东西。',
     '食谱要准确，不然就是<b>自欺欺人</b>。',

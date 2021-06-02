@@ -13,10 +13,13 @@ import logging
 import pymysql
 import re
 import signal
-import smtplib
 import sys
 import threading
-import time
+
+import importlib.machinery
+loader = importlib.machinery.SourceFileLoader('emailer',
+                                              '/root/bin/emailer/emailer.py')
+emailer = loader.load_module()
 
 app = Flask(__name__)
 app.secret_key = b'jkjk*&(*&98wqoe"]/e;.fdloefkiue78u9io1'
@@ -31,6 +34,7 @@ CORS(app)
 #  https://stackoverflow.com/questions/22181384/javascript-no-access-control-allow-origin-header-is-present-on-the-requested
 stop_signal = False
 app_name = 'meal_planner'
+log_path = '/var/log/mamsds/meal-planner.log'
 relative_url = f'../{app_name}'
 settings_path = '/root/bin/meal-planner/settings.json'
 blacklist_path = '/root/bin/meal-planner/blacklist.json'
@@ -510,52 +514,6 @@ def cleanup(*args):
     sys.exit(0)
 
 
-def send_notification_email(delay: int, from_name: str,
-                            subject: str, mainbody: str):
-
-    global stop_signal
-
-    logging.info(f'Wait for {delay} seconds before sending the email')
-    sec_count = 0
-    while sec_count < delay:
-        # This delay has to be long enough so that if the service is down due
-        # to a power failure, it sends the email after the network is up again.
-        time.sleep(1)
-
-        sec_count += 1
-        if stop_signal:
-            return
-    logging.debug('Sending [{}] notification email'.format(subject))
-
-    try:
-        with open(settings_path, 'r') as json_file:
-            json_str = json_file.read()
-            json_data = json.loads(json_str)
-    except Exception as e:
-        json_data = None
-        logging.error(e)
-
-    sender = json_data['email']['address']
-    password = json_data['email']['password']
-    receivers = json_data['email']['to']
-
-    message = ('From: {} <{}>\n'
-               f'To: Mamsds Admin Account <{receivers}>\n'
-               'Content-Type: text/html; charset="UTF-8"\n'
-               'Subject: {}\n'
-               '<meta http-equiv="Content-Type"  content="text/html charset=UTF-8" /><html><font size="2" color="black">{}</font></html>'.format(from_name, sender, subject, mainbody.replace('\n', '<br>')))
-
-    try:
-        smtpObj = smtplib.SMTP(host='server172.web-hosting.com', port=587)
-        smtpObj.starttls()
-        smtpObj.login(sender, password)
-        smtpObj.sendmail(sender, receivers, message.encode('utf-8'))
-        smtpObj.quit()
-        logging.debug("Email [{}] sent successfully".format(subject))
-    except Exception as e:
-        logging.error(f'{e}')
-
-
 def main():
 
     ap = argparse.ArgumentParser()
@@ -564,13 +522,13 @@ def main():
     debug_mode = args['debug']
 
     logging.basicConfig(
-        filename='/var/log/mamsds/meal-planner.log',
+        filename=log_path,
         level=logging.DEBUG if debug_mode else logging.INFO,
-        format='%(asctime)s %(levelname)s %(module)s-%(funcName)s: %(message)s',
+        format=('%(asctime)s %(levelname)s'
+                '%(module)s-%(funcName)s: %(message)s'),
         datefmt='%Y-%m-%d %H:%M:%S',
     )
     logging.info('meal planner started')
-    start_time = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     if debug_mode is True:
         print('Running in debug mode')
@@ -580,13 +538,12 @@ def main():
 
     signal.signal(signal.SIGINT, cleanup)
     signal.signal(signal.SIGTERM, cleanup)
-    email_sender = threading.Thread(
-                        target=send_notification_email,
-                        args=(0 if debug_mode else 600,
-                              'meal planner notification service',
-                              'meal planner started',
-                              f'meal planner is started at {start_time}'))
-    email_sender.start()
+    th_email = threading.Thread(target=emailer.send_service_start_notification,
+                                kwargs={'settings_path': settings_path,
+                                        'service_name': 'meal-planner',
+                                        'log_path': log_path,
+                                        'delay': 0 if debug_mode else 300})
+    th_email.start()
     logging.info('meal planner server')
 
     port = -1
