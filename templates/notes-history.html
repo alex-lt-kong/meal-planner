@@ -67,14 +67,11 @@ function loadNotes() {
   $("#content").text(notes[idx][1]);
   $("#content").height(1);
   $("#content").height(1 + $('#content').prop('scrollHeight'));
-  logUserActivity('[meal-planner/notes-history-{{date}}] show notes on' + notes[idx][0], '{{username}}');
+  logUserActivity('[meal-planner/notes-history] show notes on' + notes[idx][0], '{{username}}');
 }
 
 window.onload = function() {
-  logUserActivity('[meal-planner/notes-history-{{date}}] load', '{{username}}');  
-};
-window.onunload = function() {
-  logUserActivity('[meal-planner/notes-history-{{date}}] unload', '{{username}}');
+  logUserActivity('[meal-planner/notes-history] load', '{{username}}');  
 };
 </script>
 </body>
