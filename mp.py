@@ -536,11 +536,11 @@ def straight_a():
                            max_a_minus=max(deltas_a_minus))
 
 
-def handle_stop_signal(*args):
+def stop_signal_handler(*args):
 
     global stop_signal
     stop_signal = True
-    logging.info('Stop signal received, exiting')
+    logging.info(f'Signal [{args[0]}] received, exiting')
     sys.exit(0)
 
 
@@ -566,8 +566,8 @@ def main():
     else:
         logging.info('Running in production mode')
 
-    signal.signal(signal.SIGINT, handle_stop_signal)
-    signal.signal(signal.SIGTERM, handle_stop_signal)
+    signal.signal(signal.SIGINT, stop_signal_handler)
+    signal.signal(signal.SIGTERM, stop_signal_handler)
     th_email = threading.Thread(target=emailer.send_service_start_notification,
                                 kwargs={'settings_path': settings_path,
                                         'service_name': 'meal-planner',
