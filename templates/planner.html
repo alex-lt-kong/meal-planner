@@ -29,7 +29,7 @@
       每日食谱<span class="w3-right" style="margin-bottom:1rem;font-size:0.65em;">[{{username}}], <a href="#" onclick="logout();">退出</a></span>
     </h3>
   </div> 
-  <button onclick="window.open('./history/');" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">查询历史食谱...
+  <button onclick="window.open('./plans-history/');" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">查询历史食谱...</button>
 	{%for i in range(0, day_strings|length)%} 
   <button onclick="accordionHandler('{{i}}')" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">
   {{day_strings[i][2]}}食谱({{day_strings[i][3]}})
@@ -115,16 +115,19 @@
 	{%endfor%}
   <button onclick="accordionHandler('notes')" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">
   饮食健康笔记
-  <span id="small-triangle-notes" class="w3-right"> ▾ 
-    </span>
+  <span id="small-triangle-notes" class="w3-right"> ▾ </span>
   </button>
   <div id="accordion-notes" class="w3-hide w3-container w3-card-4">
     <div class="w3-container">
-      <form action="https://monitor.sz.lan/meal_planner/" method="post" style="padding:8px;margin-top:1em;" id="form-notes">
-        <div><textarea rows="18" name="notes" form="form-notes" style="width:100%;">{{notes}}</textarea></div>
-        <input class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom" style="margin-top: 0.85rem" type="submit"
-          onclick="logUserActivity('[meal-planner/index] submit new notes', '{{username}}');" value="提交">
-      </form>
+      <div style="padding-top:8px;margin-top:1em;">
+        <textarea id="notes-content" rows="18" name="content" form="form-notes" style="width:100%;">{{notes}}</textarea>
+      </div>
+      <input id="notes-submission" class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom"
+             style="margin-top:0.35em" type="submit" 
+             onclick="logUserActivity('[meal-planner/index] submit new notes', '{{username}}');" value="提交">
+      <input onclick="window.open('./notes-history/');" type="button" 
+             class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom"
+             style="margin-top:0.35em;" value="查询历史笔记">
     </div>  
   </div>
   <button onclick="accordionHandler('blacklist')" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">
@@ -179,7 +182,22 @@ window.onload = function() {
 };
 
 window.onunload = function() { logUserActivity('[meal-planner/index] unload', '{{username}}'); };
-   
+  
+$("#notes-submission").click(function(){
+  $.post("./update-notes/",
+  {
+    content: $("#notes-content").val()
+  }).done(
+    function(response){
+       alert(response);
+       textAreaAdjust(document.getElementById("notes-content"));
+     }
+   ).fail(
+    function(jqXHR, textStatus, errorThrown) {
+        alert(jqXHR.responseText);
+     });
+});
+ 
 function textAreaAdjust(element) {
   /* this function can only be applied to onkeyup() event
      of textareas whose is expected to be not too high,

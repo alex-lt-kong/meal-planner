@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<link rel="shortcut icon" href="//monitor.sz.lan/meal_planner/static/favicon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="//monitor.sz.lan/resources/w3.css">
+<link rel="stylesheet" href="//monitor.sz.lan/resources/w3-colors-2017.css">
+<link rel="stylesheet" href="//monitor.sz.lan/resources/w3-colors-highway.css">
+<link rel="stylesheet" href="//monitor.sz.lan/resources/font-awesome.min.css">
+<script src="//monitor.sz.lan/resources/monitor.js"></script>
+<script src="//monitor.sz.lan/resources/jquery-3.5.1.min.js"></script>
+<html>
+<head>
+<style>
+.fixed-footer {
+   position: fixed;
+   left: 0;
+   bottom: 0;
+   width: 100%;
+   background-color: #4CAF50;
+   color: white;
+   text-align: center;
+}
+.fixed-header {
+   top: 0;
+   position: fixed;
+   left: 0;
+   width: 100%;
+   background-color: #4CAF50;
+   color: white;
+   text-align: center;
+}
+</style>
+<title>每日食谱-健康笔记历史记录[{{username}}]</title>
+</head>
+<body>
+<div class="fixed-header">
+  <h5>健康笔记历史记录</h5>
+</div>
+<div class="w3-container w3-responsive" 
+     style="max-width:50em; padding:0.75rem; display:block; margin-left:auto; margin-right:auto; margin-top:3em; margin-bottom:3em;">
+  <textarea id="content" style="width:100%; border:none;" readonly></textarea>
+</div>
+<div class="fixed-footer">
+  <div class="w3-cell-row">
+    <div class="w3-container w3-cell w3-cell-top">
+      <p><a href="#" onclick="idx=idx-1;loadNotes();">向前</a></p>
+    </div>
+    <b><p id="date" class="w3-center"></p></b>
+    <div class="w3-container w3-cell w3-cell-bottom">
+      <p><a href="#" onclick="idx=idx+1;loadNotes();">向后</a></p>
+    </div>
+  </div>
+</div>
+<script>
+
+var notes = {{ results|tojson }};
+console.log(notes);
+
+var idx = notes.length - 1;
+console.log(notes[idx][0]);
+console.log(notes[idx][1]);
+loadNotes();
+
+function loadNotes() {
+  if (idx < 0) { idx = notes.length - 1; }
+  if (idx >= notes.length) { idx = 0; }
+  $("#date").text(notes[idx][0]);
+  $("#content").text(notes[idx][1]);
+  $("#content").height(1);
+  $("#content").height(1 + $('#content').prop('scrollHeight'));
+  logUserActivity('[meal-planner/notes-history-{{date}}] show notes on' + notes[idx][0], '{{username}}');
+}
+
+window.onload = function() {
+  logUserActivity('[meal-planner/notes-history-{{date}}] load', '{{username}}');  
+};
+window.onunload = function() {
+  logUserActivity('[meal-planner/notes-history-{{date}}] unload', '{{username}}');
+};
+</script>
+</body>
+</html>

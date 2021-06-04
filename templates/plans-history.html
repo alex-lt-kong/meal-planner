@@ -118,7 +118,7 @@
 <script>
   window.onload = function() {
 
-    logUserActivity('[meal-planner/history-{{date}}] load', '{{username}}'); 
+    logUserActivity('[meal-planner/plans-history-{{date}}] load', '{{username}}'); 
     
     $('.grade:contains("A-")').css('color', 'red');
     $('.grade:contains("B")').css('color', 'red');
@@ -127,7 +127,7 @@
     $('.grade:contains("B")').css('font-weight', 'bold');
     $('.grade:contains("C")').css('font-weight', 'bold');
   };
-  window.onunload = function() { logUserActivity('[meal-planner/history-{{date}}] unload', '{{username}}'); };
+  window.onunload = function() { logUserActivity('[meal-planner/plans-history-{{date}}] unload', '{{username}}'); };
 </script>
 </body>
 </html>

@@ -172,34 +172,6 @@ def read_blacklist_from_json_file():
     return banned_items, limited_items
 
 
-def write_notes_to_json_file(notes: str):
-
-    try:
-        with open(notes_path, 'w+') as json_file:
-            json.dump({'notes': notes},
-                      json_file, sort_keys=True, indent=4, ensure_ascii=False)
-    except Exception as e:
-        logging.error(f'Unable to write json data to file [{notes_path}]: {e}')
-        return False, e
-    return True, ''
-
-
-def read_notes_from_json_file():
-
-    notes = None
-    try:
-        with open(notes_path, 'r') as json_file:
-            json_str = json_file.read()
-            json_data = json.loads(json_str)
-            logging.debug(f'json data [{json_data}] read from [{notes_path}]')
-            notes = json_data['notes']
-    except Exception as e:
-        logging.error(f'Unable to read data from file [{notes_path}]: {e}')
-        notes = ''
-
-    return notes
-
-
 def detect_modification_type(meal_plan_new, meal_plan_old):
 
     if meal_plan_old is None or meal_plan_new is None:
@@ -346,8 +318,8 @@ def login():
     return render_template('login.html', message='')
 
 
-@app.route('/history/', methods=['GET', 'POST'])
-def history():
+@app.route('/plans-history/', methods=['GET', 'POST'])
+def plans_history():
 
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         username = session[f'{app_name}']['username']
@@ -393,8 +365,7 @@ def history():
         evening_extra_meal = ['[无记录]', '-']
         daily_remark = ''
 
-
-    return render_template('history.html',
+    return render_template('plans-history.html',
                            date=date.strftime("%Y-%m-%d"),
                            yesterday=yesterday, tomorrow=tomorrow,
                            breakfast=breakfast,
@@ -405,6 +376,69 @@ def history():
                            evening_extra_meal=evening_extra_meal,
                            daily_remark=daily_remark,
                            username=username, mod_types=mod_types)
+
+
+@app.route('/notes-history/', methods=['GET'])
+def notes_history():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        username = session[f'{app_name}']['username']
+    else:
+        return redirect(f'{relative_url}/login/')
+
+    conn = pymysql.connect(db_url, db_username, db_password, db_name)
+    cursor = conn.cursor()
+    sql = '''SELECT DATE_FORMAT(`date`,'%Y-%m-%d'), `content`
+             FROM `notes` ORDER BY `date` ASC'''
+    cursor.execute(sql)
+    results = cursor.fetchall()
+
+    return render_template('notes-history.html',
+                           username=username,
+                           results=results)
+
+
+def read_notes():
+
+    conn = pymysql.connect(db_url, db_username, db_password, db_name)
+    cursor = conn.cursor()
+    sql = '''SELECT `id`, `date`, `content` FROM `notes`
+             WHERE `date` = (SELECT MAX(`date`) FROM `notes`)'''
+    cursor.execute(sql)
+    results = cursor.fetchall()
+
+    content = ''
+    if len(results) > 0:
+        content = results[0][2]
+
+    return content
+
+
+@app.route('/update-notes/', methods=['GET', 'POST'])
+def update_notes():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        pass
+    else:
+        return redirect(f'{relative_url}/login/')
+
+    if 'content' not in request.form or len(request.form['content']) == 0:
+        return Response('没有收到数据', 400)
+    content = request.form['content']
+
+    conn = pymysql.connect(db_url, db_username, db_password, db_name)
+    conn.autocommit(True)
+    #  It appears that both UPDATE and SELECT need "commit"
+    cursor = conn.cursor()
+    sql = 'DELETE FROM `notes` WHERE `date` = CURDATE()'
+    cursor.execute(sql)
+
+    sql = 'INSERT INTO `notes` (`date`, `content`) VALUES (CURDATE(), %s)'
+
+    cursor.execute(sql, (content))
+    cursor.close()
+    conn.close()
+    return Response('更新成功', 200)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -467,10 +501,6 @@ def index():
                                      request.form['limited_items'])
     banned_items, limited_items = read_blacklist_from_json_file()
 
-    if 'notes' in request.form:
-        write_notes_to_json_file(request.form['notes'])
-    notes = read_notes_from_json_file()
-
     return render_template('planner.html',
                            day_strings=day_strings,
                            username=username,
@@ -480,7 +510,7 @@ def index():
                            meal_plans=meal_plans, mod_types=mod_types,
                            banned_items=banned_items,
                            limited_items=limited_items,
-                           notes=notes)
+                           notes=read_notes())
 
 
 @app.route('/straight_a/', methods=['GET', 'POST'])
@@ -506,7 +536,7 @@ def straight_a():
                            max_a_minus=max(deltas_a_minus))
 
 
-def cleanup(*args):
+def handle_stop_signal(*args):
 
     global stop_signal
     stop_signal = True
@@ -524,7 +554,7 @@ def main():
     logging.basicConfig(
         filename=log_path,
         level=logging.DEBUG if debug_mode else logging.INFO,
-        format=('%(asctime)s %(levelname)s'
+        format=('%(asctime)s %(levelname)s '
                 '%(module)s-%(funcName)s: %(message)s'),
         datefmt='%Y-%m-%d %H:%M:%S',
     )
@@ -536,8 +566,8 @@ def main():
     else:
         logging.info('Running in production mode')
 
-    signal.signal(signal.SIGINT, cleanup)
-    signal.signal(signal.SIGTERM, cleanup)
+    signal.signal(signal.SIGINT, handle_stop_signal)
+    signal.signal(signal.SIGTERM, handle_stop_signal)
     th_email = threading.Thread(target=emailer.send_service_start_notification,
                                 kwargs={'settings_path': settings_path,
                                         'service_name': 'meal-planner',
