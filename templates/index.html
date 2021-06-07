@@ -99,11 +99,8 @@ window.onload = function() {
         showDailyReminder(statistics);
 //          alert('status: ' + textStatus + ', data:' + data);
     });
-  $('input, textarea').each(
-    function(){  
-      textAreaAdjust($(this)[0]);
-    }
-  );
+  textAreaAdjust();
+
 };
 
 window.onunload = function() { logUserActivity('[meal-planner/index] unload', '{{username}}'); };
@@ -122,9 +119,6 @@ $("#notes-submission").click(function(){
         alert(jqXHR.responseText);
      });
 });
-
-
-
 
 function logout() {
   logUserActivity('[meal-planner/index] logout', '{{username}}');
@@ -213,14 +207,6 @@ function accordionHandler(id) {
       textAreaAdjust($(this)[0]);
     }
   );
-}
-
-function copyMealPlanOfToday() {
-  for (i = 0; i < {{meal_plan_items|length}}; i++) {
-    document.getElementById('textarea-2' + i.toString()).value = document.getElementById('textarea-1' + i.toString()).value;
-  }
-  document.getElementById('textarea-daily-remarks-2').value = document.getElementById('textarea-daily-remarks-1').value;
-  logUserActivity('[meal-planner/index] copy today\'s meal plan', '{{username}}');
 }
 </script>
 

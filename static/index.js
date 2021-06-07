@@ -22,7 +22,7 @@ class MealPlanDailyRemark extends React.Component {
         <div><p class="w3-text-green p-mealplanitem-title"><b>今日备注</b></p></div>
         <div class="w3-cell-row">
           <div class="w3-cell">
-            <textarea class="w3-input textarea-dailyremark" rows="8" onChange={this.handleChange}>
+            <textarea class="w3-input textarea-dailyremark" rows="3" onChange={this.handleChange}>
               {this.state.data.daily_remark}
             </textarea>
           </div>
@@ -37,11 +37,20 @@ class MealPlanItem extends React.Component {
     super(props);
     this.state = {
       data: props.data,
-      date: props.date,
       itemName: props.itemName
     };
     this.handleContentChange = this.handleContentChange.bind(this);
     this.handleFeedbackChange = this.handleFeedbackChange.bind(this);
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    // Need this function for children components to update state
+    // after state being changed in parent components.
+   // this.setState({
+    //  data: nextProps.data,
+     // itemName: nextProps.itemName 
+    //});
+    return true;
   }
 
   handleContentChange(event) {
@@ -74,15 +83,15 @@ class MealPlanItem extends React.Component {
         </div>
         <div class="w3-cell-row">
           <div class="w3-cell">
-            <textarea id={this.state.date + '-' + this.state.itemName} class="w3-input textarea-mealplanitem" rows="1"
+            <textarea class="w3-input textarea-mealplanitem" rows="1"
                       onInput={this.handleContentChange}>
               {this.state.data[this.state.itemName].content}
             </textarea>
           </div>
           <div class="w3-cell">
             <select class="w3-select" value={this.state.data[this.state.itemName].feedback} onChange={this.handleFeedbackChange} >
-              /* If value matches nothing, seems that React.js will simply select the first itm.*/
-              <option class="w3-text-black" selected value="待填">待填</option>
+              {/* If value matches nothing, seems that React.js will simply select the first itm.*/}
+              <option class="w3-text-black" value="待填">待填</option>
               <option class="w3-text-black" value="A">A</option>  
               <option class="w3-text-black" value="A-">A-</option>  
               <option class="w3-text-black" value="B+">B+</option>
@@ -103,6 +112,7 @@ class MealPlan extends React.Component {
     super(props);
     super(props);
     this.state = {
+      id: props.id,
       date: props.date,
       convenientDateName: props.convenientDateName,
       show: props.show,
@@ -111,6 +121,7 @@ class MealPlan extends React.Component {
 
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleAccordionClick = this.handleAccordionClick.bind(this);
+    this.handleCopyTodayClick = this.handleCopyTodayClick.bind(this);
     this.handleAccordionShow = this.handleAccordionShow.bind(this);    
     this.getData = this.getData.bind(this);
   }
@@ -118,6 +129,34 @@ class MealPlan extends React.Component {
   getData(value){
     // do not forget to bind getData in constructor
     this.setState({ data: value });
+  }
+
+  handleCopyTodayClick(event) {
+    let today = new Date(this.state.date);
+    today.setDate(today.getDate() - 1);
+    axios.get('https://monitor.sz.lan/meal-planner/get-meal-plan/?date=' + today.toISOString().slice(0, 10))
+      .then(response => {
+        // handle success
+        this.setState({
+          data: null
+          // You have to make some drastic change. i.e., make the reference different, to
+          // let react.js know that it needs to pass the new state to children components!
+        });
+        let data = response.data;
+        data['breakfast']['feedback'] = '待填';
+        data['morning_extra_meal']['feedback'] = '待填';
+        data['lunch']['feedback'] = '待填';
+        data['afternoon_extra_meal']['feedback'] = '待填';
+        data['dinner']['feedback'] = '待填';
+        data['evening_extra_meal']['feedback'] = '待填';
+        this.setState({
+          data: data
+        });
+        textAreaAdjust();
+      })
+      .catch(function (error) {
+        alert('沿用今日失败！请重试！\n' + error);
+      });
   }
 
   handleAccordionClick(event) {
@@ -134,9 +173,8 @@ class MealPlan extends React.Component {
   }
 
   handleSubmit(event) {
-    let currentComponent = this;
     const payload = new FormData();
-    payload.append('date', this.state.date);
+    payload.append('date', this.state.date.toISOString().slice(0, 10));
     payload.append('data', JSON.stringify(this.state.data));
     axios({
       method: "post",
@@ -144,11 +182,11 @@ class MealPlan extends React.Component {
       data: payload,
       headers: { "Content-Type": "multipart/form-data" },
     })
-    .then(function (response) {
-      alert(currentComponent.state.date + '的食谱更新成功！');
+    .then(response => {
+      alert(this.state.date.toISOString().slice(0, 10) + '的食谱更新成功！');
       console.log(response);
     })
-    .catch(function (error) {
+    .catch(error => {
       console.log(error.response);
       alert('错误\n状态码：' + error.response.status + '\n错误提示：' + error.response.data);
     });
@@ -156,44 +194,53 @@ class MealPlan extends React.Component {
   }
 
   componentDidMount() {
-    let currentComponent = this;
-    axios.get('https://monitor.sz.lan/meal-planner/get-meal-plan/?date=' + this.state.date)
-      .then(function (response) {
+    axios.get('https://monitor.sz.lan/meal-planner/get-meal-plan/?date=' + this.state.date.toISOString().slice(0, 10))
+      .then(response => {
         // handle success
-        currentComponent.setState({
+        this.setState({
           data: response.data
         });
         textAreaAdjust();
-        // textAreaAdjust() has to be called twice. 
-        // This call adjusts the height of textareas after initialization.
       })
-      .catch(function (error) {
-        alert('加载食谱项目失败！请关闭窗口后重试！');
+      .catch(error => {
+        alert(this.state.date.toISOString().slice(0, 10) + '的食谱项目加载失败！请关闭窗口后重试！');
       });
   }
 
   render() {
+
+    
     if (this.state.data === null) { return null }
+    // So that if data is still not filled, an empty GUI will not be rendered.
+    let buttonCopyToday;
+    if (parseInt(this.state.id) === 3) {
+      // Originally, I use convenientDateName === "明天" to achieve the same
+      // However, it turns out that string comparison in Javascript is really strange...
+      buttonCopyToday = <button class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button"
+                                onClick={this.handleCopyTodayClick}>沿用今日</button>;
+    }
+
     return (
       <div class="accordion" >
         <button onClick={this.handleAccordionClick} class="w3-button w3-block w3-left-align w3-green">
-          {this.state.convenientDateName}食谱({this.state.date})
+          {this.state.convenientDateName}食谱({this.state.date.toISOString().slice(0, 10)})
           <span class="w3-right">▴</span>
         </button>
-        <div className={`w3-hide w3-container w3-card-4 ${this.state.show ? "w3-show" : ""}`} onShow={this.handleAccordionShow}>
+        <div className={`w3-container w3-card-4 ${this.state.show ? "w3-show" : "w3-hide"}`}>
           {/* The current implementation is that we are going to pass the entire json to each 
             MealPlanItem so that it would be easier to handle while MealPlanItem sends data back */}
-          <MealPlanItem date={this.state.date} data={this.state.data} itemName="breakfast" sendData={this.getData} />
-          <MealPlanItem date={this.state.date} data={this.state.data} itemName="morning_extra_meal" sendData={this.getData} />
-          <MealPlanItem date={this.state.date} data={this.state.data} itemName="lunch" sendData={this.getData} />
-          <MealPlanItem date={this.state.date} data={this.state.data} itemName="afternoon_extra_meal" sendData={this.getData} />
-          <MealPlanItem date={this.state.date} data={this.state.data} itemName="dinner" sendData={this.getData} />
-          <MealPlanItem date={this.state.date} data={this.state.data} itemName="evening_extra_meal" sendData={this.getData} />
+          <MealPlanItem data={this.state.data} itemName="breakfast" sendData={this.getData} />
+          <MealPlanItem data={this.state.data} itemName="morning_extra_meal" sendData={this.getData} />
+          <MealPlanItem data={this.state.data} itemName="lunch" sendData={this.getData} />
+          <MealPlanItem data={this.state.data} itemName="afternoon_extra_meal" sendData={this.getData} />
+          <MealPlanItem data={this.state.data} itemName="dinner" sendData={this.getData} />
+          <MealPlanItem data={this.state.data} itemName="evening_extra_meal" sendData={this.getData} />
           <MealPlanDailyRemark data={this.state.data} sendData={this.getData} />          
           <div>
             <form onSubmit={this.handleSubmit}>
               <input class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button" type="submit" value="提交" />
             </form>
+            {buttonCopyToday}           
           </div>
         </div>
       </div>
@@ -201,7 +248,8 @@ class MealPlan extends React.Component {
   }
 }
 
-const today = new Date();
+// A hacky way of getting UTC+8...
+const today = new Date(new Date().getTime() + (8*60*60*1000));
 const yesterday = new Date(today);
 const tomorrow = new Date(today);
 yesterday.setDate(yesterday.getDate() - 1);
@@ -209,9 +257,9 @@ tomorrow.setDate(tomorrow.getDate() + 1);
 
 ReactDOM.render(
   <div>
-    <MealPlan show={false} convenientDateName="昨日" date={yesterday.toISOString().slice(0, 10)}  />
-    <MealPlan show={true}  convenientDateName="今日" date={today.toISOString().slice(0, 10)} />
-    <MealPlan show={false} convenientDateName="明日" date={tomorrow.toISOString().slice(0, 10)} />
+    <MealPlan id="1" show={false} convenientDateName="昨日" date={yesterday}  />
+    <MealPlan id="2" show={true}  convenientDateName="今日" date={today} />
+    <MealPlan id="3" show={false} convenientDateName="明日" date={tomorrow} />
   </div>,
   document.getElementById('root')
 );
@@ -229,5 +277,4 @@ async function textAreaAdjust() {
       $(this)[0].style.height = (1 + $(this)[0].scrollHeight)+"px";
     }
   );
-
 }

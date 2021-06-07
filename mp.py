@@ -49,43 +49,6 @@ db_username = 'meal_planner'
 db_password = 'asdasJASDer3'
 db_name = 'meal_planner'
 
-meal_plan_items = ['breakfast', 'morning_extra_meal',
-                   'lunch', 'afternoon_extra_meal',
-                   'dinner', 'evening_extra_meal']
-meal_plan_items_cn = ['早餐', '上午加餐', '午餐', '下午加餐', '晚餐', '晚上加餐']
-
-
-def read_meal_plan_from_db(date_string):
-
-    conn = pymysql.connect(db_url, db_username, db_password, db_name)
-    conn.autocommit(True)
-    # It appears that both UPDATE and SELECT need "commit"
-    cursor = conn.cursor()
-
-    sql = '''
-         SELECT `breakfast`, `breakfast_feedback`,
-         `morning_extra_meal`, `morning_extra_meal_feedback`,
-         `lunch`, `lunch_feedback`,
-         `afternoon_extra_meal`, `afternoon_extra_meal_feedback`,
-         `dinner`, `dinner_feedback`,
-         `evening_extra_meal`, `evening_extra_meal_feedback`, `daily_remark`
-         FROM `meal_plan` WHERE `date` = %s'''
-    cursor.execute(sql, (date_string))
-    meal_plan = cursor.fetchall()
-    cursor.close()
-    conn.close()
-
-    if len(meal_plan) == 0:
-        return None
-    else:
-        return [[meal_plan[0][0], meal_plan[0][1]],
-                [meal_plan[0][2], meal_plan[0][3]],
-                [meal_plan[0][4], meal_plan[0][5]],
-                [meal_plan[0][6], meal_plan[0][7]],
-                [meal_plan[0][8], meal_plan[0][9]],
-                [meal_plan[0][10], meal_plan[0][11]],
-                meal_plan[0][12]]
-
 
 def write_blacklist_to_json_file(banned_items: str, limited_items: str):
 
