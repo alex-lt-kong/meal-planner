@@ -13,6 +13,7 @@
 <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://monitor.sz.lan/meal-planner/static/index.js" type="text/jsx"></script>
+<script src="https://unpkg.com/react/umd/react.production.min.js" crossorigin></script>
 <html>
 <head>
 <style>
@@ -35,7 +36,7 @@
       每日食谱<span class="w3-right" style="margin-bottom:1rem;font-size:0.65em;">[{{username}}], <a href="#" onclick="logout();">退出</a></span>
     </h3>
   </div> 
-  <button onclick="window.open('./plans-history/');" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">查询历史食谱...</button>
+  <button onclick="window.open('https://monitor.sz.lan/meal-planner/plans-history/');" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">查询历史食谱...</button>
   <div id="root"></div>
   <button onclick="accordionHandler('notes')" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">
   饮食健康笔记
@@ -98,7 +99,7 @@ window.onload = function() {
         showDailyReminder(statistics);
 //          alert('status: ' + textStatus + ', data:' + data);
     });
-  $('input[name=text], textarea').each(
+  $('input, textarea').each(
     function(){  
       textAreaAdjust($(this)[0]);
     }
@@ -121,16 +122,9 @@ $("#notes-submission").click(function(){
         alert(jqXHR.responseText);
      });
 });
- 
-function textAreaAdjust(element) {
-  /* this function can only be applied to onkeyup() event
-     of textareas whose is expected to be not too high,
-     otherwise a smartphone's keyboard could block
-     the control.
-  */
-  element.style.height = "1px";
-  element.style.height = (1 + element.scrollHeight)+"px";
-}
+
+
+
 
 function logout() {
   logUserActivity('[meal-planner/index] logout', '{{username}}');

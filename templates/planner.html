@@ -198,12 +198,13 @@ $("#notes-submission").click(function(){
      });
 });
  
-function textAreaAdjust(element) {
+async function textAreaAdjust(element) {
   /* this function can only be applied to onkeyup() event
      of textareas whose is expected to be not too high,
      otherwise a smartphone's keyboard could block
      the control.
   */
+  await sleep(2000);
   element.style.height = "1px";
   element.style.height = (1 + element.scrollHeight)+"px";
 }

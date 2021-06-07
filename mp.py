@@ -55,57 +55,6 @@ meal_plan_items = ['breakfast', 'morning_extra_meal',
 meal_plan_items_cn = ['早餐', '上午加餐', '午餐', '下午加餐', '晚餐', '晚上加餐']
 
 
-def update_meal_plan_to_db(new_meal_plan, date_string):
-
-    # today = datetime.datetime.now().strftime("%Y-%m-%d")
-
-    logging.debug(f'raw string submitted by client: [{new_meal_plan}]')
-    logging.debug(f'decoded string submitted by client: [{new_meal_plan}]')
-
-    conn = pymysql.connect(db_url, db_username, db_password, db_name)
-    conn.autocommit(True)
-    #  It appears that both UPDATE and SELECT need "commit"
-    cursor = conn.cursor()
-    sql = 'SELECT `id`, `date` FROM `meal_plan` WHERE `date` = %s'
-    cursor.execute(sql, (date_string))
-    results = cursor.fetchall()
-
-    if len(results) > 0:
-        sql = 'DELETE FROM `meal_plan` WHERE `date` = %s'
-        cursor.execute(sql, (date_string))
-
-    sql = '''
-    INSERT INTO `meal_plan` (`date`,
-    `breakfast`, `breakfast_feedback`,
-    `morning_extra_meal`, `morning_extra_meal_feedback`,
-    `lunch`, `lunch_feedback`,
-    `afternoon_extra_meal`, `afternoon_extra_meal_feedback`,
-    `dinner`, `dinner_feedback`,
-    `evening_extra_meal`, `evening_extra_meal_feedback`,
-    `daily_remark`)
-     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'''
-
-    parameters = (date_string,
-                  new_meal_plan['breakfast'],
-                  new_meal_plan['breakfast_review'],
-                  new_meal_plan['morning_extra_meal'],
-                  new_meal_plan['morning_extra_meal_review'],
-                  new_meal_plan['lunch'],
-                  new_meal_plan['lunch_review'],
-                  new_meal_plan['afternoon_extra_meal'],
-                  new_meal_plan['afternoon_extra_meal_review'],
-                  new_meal_plan['dinner'],
-                  new_meal_plan['dinner_review'],
-                  new_meal_plan['evening_extra_meal'],
-                  new_meal_plan['evening_extra_meal_review'],
-                  new_meal_plan['daily_remark'])
-
-    cursor.execute(sql, parameters)
-    cursor.close()
-    conn.close()
-
-
-
 def read_meal_plan_from_db(date_string):
 
     conn = pymysql.connect(db_url, db_username, db_password, db_name)
@@ -327,6 +276,72 @@ def login():
     return render_template('login.html', message='')
 
 
+@app.route('/update-meal-plan/', methods=['POST'])
+def update_meal_plan():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        username = session[f'{app_name}']['username']
+    else:
+        return Response('错误：未登录', 401)
+
+    if 'date' not in request.form or 'data' not in request.form:
+        return Response('错误：未指定参数date或data', 400)
+    date = request.form['date']
+    data = request.form['data']
+    try:
+        date_string = dt.datetime.strptime(date, '%Y-%m-%d')
+    except Exception as e:
+        return Response(f'date的值[{date}]不正确：{e}', 400)
+    try:
+        json_data = json.loads(data)
+    except Exception as e:
+        return Response(f'data的值无法解析成JSON字符串：{e}', 400)
+
+    logging.debug(f'raw string submitted by client: [{json_data}]')
+
+    conn = pymysql.connect(db_url, db_username, db_password, db_name)
+    conn.autocommit(True)
+    #  It appears that both UPDATE and SELECT need "commit"
+    cursor = conn.cursor()
+    sql = 'DELETE FROM `meal_plan` WHERE `date` = %s'
+    cursor.execute(sql, (date_string))
+
+    sql = '''
+    INSERT INTO `meal_plan` (`date`,
+    `breakfast`, `breakfast_feedback`,
+    `morning_extra_meal`, `morning_extra_meal_feedback`,
+    `lunch`, `lunch_feedback`,
+    `afternoon_extra_meal`, `afternoon_extra_meal_feedback`,
+    `dinner`, `dinner_feedback`,
+    `evening_extra_meal`, `evening_extra_meal_feedback`,
+    `daily_remark`)
+     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'''
+
+    parameters = (
+        date_string,
+        json_data['breakfast']['content'], json_data['breakfast']['feedback'],
+        json_data['morning_extra_meal']['content'],
+        json_data['morning_extra_meal']['feedback'],
+        json_data['lunch']['content'], json_data['lunch']['feedback'],
+        json_data['afternoon_extra_meal']['content'],
+        json_data['afternoon_extra_meal']['feedback'],
+        json_data['dinner']['content'], json_data['dinner']['feedback'],
+        json_data['evening_extra_meal']['content'],
+        json_data['evening_extra_meal']['feedback'],
+        json_data['daily_remark'])
+
+    try:
+        cursor.execute(sql, parameters)
+    except Exception as e:
+        cursor.close()
+        conn.close()
+        return Response(f'数据库更新错误：{e}', 500)
+
+    cursor.close()
+    conn.close()
+    return Response(f'更新{date_string}食谱成功！', 200)
+
+
 @app.route('/get-meal-plan/', methods=['GET'])
 def get_meal_plan():
 
@@ -366,29 +381,45 @@ def get_meal_plan():
     meal_plan['date'] = date_string
     meal_plan['breakfast'] = {}
     meal_plan['breakfast']['title'] = '早餐'
-    meal_plan['breakfast']['content'] = res[0][0]
-    meal_plan['breakfast']['feedback'] = res[0][1]
     meal_plan['morning_extra_meal'] = {}
     meal_plan['morning_extra_meal']['title'] = '上午加餐'
-    meal_plan['morning_extra_meal']['content'] = res[0][2]
-    meal_plan['morning_extra_meal']['feedback'] = res[0][3]
     meal_plan['lunch'] = {}
     meal_plan['lunch']['title'] = '午餐'
-    meal_plan['lunch']['content'] = res[0][4]
-    meal_plan['lunch']['feedback'] = res[0][5]
     meal_plan['afternoon_extra_meal'] = {}
     meal_plan['afternoon_extra_meal']['title'] = '下午加餐'
-    meal_plan['afternoon_extra_meal']['content'] = res[0][6]
-    meal_plan['afternoon_extra_meal']['feedback'] = res[0][7]
     meal_plan['dinner'] = {}
     meal_plan['dinner']['title'] = '晚餐'
-    meal_plan['dinner']['content'] = res[0][8]
-    meal_plan['dinner']['feedback'] = res[0][9]
     meal_plan['evening_extra_meal'] = {}
     meal_plan['evening_extra_meal']['title'] = '晚上加餐'
-    meal_plan['evening_extra_meal']['content'] = res[0][10]
-    meal_plan['evening_extra_meal']['feedback'] = res[0][11]
-    meal_plan['daily_remark'] = res[0][12]
+
+    if len(res) > 0:
+        meal_plan['breakfast']['content'] = res[0][0]
+        meal_plan['breakfast']['feedback'] = res[0][1]
+        meal_plan['morning_extra_meal']['content'] = res[0][2]
+        meal_plan['morning_extra_meal']['feedback'] = res[0][3]
+        meal_plan['lunch']['content'] = res[0][4]
+        meal_plan['lunch']['feedback'] = res[0][5]
+        meal_plan['afternoon_extra_meal']['content'] = res[0][6]
+        meal_plan['afternoon_extra_meal']['feedback'] = res[0][7]
+        meal_plan['dinner']['content'] = res[0][8]
+        meal_plan['dinner']['feedback'] = res[0][9]
+        meal_plan['evening_extra_meal']['content'] = res[0][10]
+        meal_plan['evening_extra_meal']['feedback'] = res[0][11]
+        meal_plan['daily_remark'] = res[0][12]
+    else:
+        meal_plan['breakfast']['content'] = ''
+        meal_plan['breakfast']['feedback'] = ''
+        meal_plan['morning_extra_meal']['content'] = ''
+        meal_plan['morning_extra_meal']['feedback'] = ''
+        meal_plan['lunch']['content'] = ''
+        meal_plan['lunch']['feedback'] = ''
+        meal_plan['afternoon_extra_meal']['content'] = ''
+        meal_plan['afternoon_extra_meal']['feedback'] = ''
+        meal_plan['dinner']['content'] = ''
+        meal_plan['dinner']['feedback'] = ''
+        meal_plan['evening_extra_meal']['content'] = ''
+        meal_plan['evening_extra_meal']['feedback'] = ''
+        meal_plan['daily_remark'] = ''
 
     return flask.jsonify(meal_plan)
 
@@ -516,79 +547,7 @@ def update_notes():
     return Response('更新成功', 200)
 
 
-@app.route('/index/', methods=['GET', 'POST'])
-def new_index():
-
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        username = session[f'{app_name}']['username']
-    else:
-        return redirect(f'{relative_url}/login/')
-
-    global meal_plan_today, meal_plan_tomorrow
-    day_strings = []
-    day_strings.append([(dt.date.today() + dt.timedelta(days = -1)).strftime('%Y%m%d'), 'yesterday', '昨日', (dt.date.today() + dt.timedelta(days = -1)).strftime('%m月%d日')])
-    day_strings.append([(dt.date.today() + dt.timedelta(days = 0)).strftime('%Y%m%d'), 'today', '今日', (dt.date.today() + dt.timedelta(days = 0)).strftime('%m月%d日')])
-    day_strings.append([(dt.date.today() + dt.timedelta(days = 1)).strftime('%Y%m%d'), 'tomorrow', '明日', (dt.date.today() + dt.timedelta(days = 1)).strftime('%m月%d日')])
-
-    logging.debug('request.form: [{}]'.format(request.form))
-    if 'date' in request.form:
-        for meal_plan_item in meal_plan_items:
-            if meal_plan_item not in request.form:
-                return Response('错误：缺少参数{}'.format(meal_plan_item), 400)
-
-        i = int(request.form['date'])
-        if i < 0 or i > len(day_strings) - 1:
-            return Response('错误：参数date的值不正确', 400)
-
-        try:
-            update_meal_plan_to_db(request.form, day_strings[i][0])
-        except Exception as e:
-            return Response(f'保存食谱数据错误！原因：{e}', 400)
-
-    meal_plans = [[None] * len(meal_plan_items),
-                  [None] * len(meal_plan_items),
-                  [None] * len(meal_plan_items)]
-    daily_remarks = ['', '', '']
-    try:
-        for i in range(len(day_strings)):
-            retval = read_meal_plan_from_db(day_strings[i][0])
-            if retval is not None:
-                for j in range(len(retval) - 1):
-                    meal_plans[i][j] = retval[j]
-
-                daily_remarks[i] = retval[len(retval) - 1]
-            else:
-                meal_plans[i][0] = ''
-                meal_plans[i][1] = ''
-                meal_plans[i][2] = ''
-                meal_plans[i][3] = ''
-                meal_plans[i][4] = ''
-                meal_plans[i][5] = ''
-                daily_remarks[i] = ''
-    except Exception as e:
-        return Response(f'读取食谱数据错误！原因：{e}', 400)
-
-    mod_types = detect_modification_type(meal_plan_new=meal_plans[1],
-                                         meal_plan_old=meal_plans[0])
-
-    if 'banned_items' in request.form and 'limited_items' in request.form:
-        write_blacklist_to_json_file(request.form['banned_items'],
-                                     request.form['limited_items'])
-    banned_items, limited_items = read_blacklist_from_json_file()
-
-    return render_template('index.html',
-                           day_strings=day_strings,
-                           username=username,
-                           meal_plan_items=meal_plan_items,
-                           meal_plan_items_cn=meal_plan_items_cn,
-                           daily_remarks=daily_remarks,
-                           meal_plans=meal_plans, mod_types=mod_types,
-                           banned_items=banned_items,
-                           limited_items=limited_items,
-                           notes=read_notes())
-
-
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def index():
 
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
@@ -596,65 +555,16 @@ def index():
     else:
         return redirect(f'{relative_url}/login/')
 
-    global meal_plan_today, meal_plan_tomorrow
-    day_strings = []
-    day_strings.append([(dt.date.today() + dt.timedelta(days = -1)).strftime('%Y%m%d'), 'yesterday', '昨日', (dt.date.today() + dt.timedelta(days = -1)).strftime('%m月%d日')])
-    day_strings.append([(dt.date.today() + dt.timedelta(days = 0)).strftime('%Y%m%d'), 'today', '今日', (dt.date.today() + dt.timedelta(days = 0)).strftime('%m月%d日')])
-    day_strings.append([(dt.date.today() + dt.timedelta(days = 1)).strftime('%Y%m%d'), 'tomorrow', '明日', (dt.date.today() + dt.timedelta(days = 1)).strftime('%m月%d日')])
-
-    logging.debug('request.form: [{}]'.format(request.form))
-    if 'date' in request.form:
-        for meal_plan_item in meal_plan_items:
-            if meal_plan_item not in request.form:
-                return Response('错误：缺少参数{}'.format(meal_plan_item), 400)
-
-        i = int(request.form['date'])
-        if i < 0 or i > len(day_strings) - 1:
-            return Response('错误：参数date的值不正确', 400)
-
-        try:
-            update_meal_plan_to_db(request.form, day_strings[i][0])
-        except Exception as e:
-            return Response(f'保存食谱数据错误！原因：{e}', 400)
-
-    meal_plans = [[None] * len(meal_plan_items),
-                  [None] * len(meal_plan_items),
-                  [None] * len(meal_plan_items)]
-    daily_remarks = ['', '', '']
-    try:
-        for i in range(len(day_strings)):
-            retval = read_meal_plan_from_db(day_strings[i][0])
-            if retval is not None:
-                for j in range(len(retval) - 1):
-                    meal_plans[i][j] = retval[j]
-
-                daily_remarks[i] = retval[len(retval) - 1]
-            else:
-                meal_plans[i][0] = ''
-                meal_plans[i][1] = ''
-                meal_plans[i][2] = ''
-                meal_plans[i][3] = ''
-                meal_plans[i][4] = ''
-                meal_plans[i][5] = ''
-                daily_remarks[i] = ''
-    except Exception as e:
-        return Response(f'读取食谱数据错误！原因：{e}', 400)
-
-    mod_types = detect_modification_type(meal_plan_new=meal_plans[1],
-                                         meal_plan_old=meal_plans[0])
+#    mod_types = detect_modification_type(meal_plan_new=meal_plans[1],
+#                                         meal_plan_old=meal_plans[0])
 
     if 'banned_items' in request.form and 'limited_items' in request.form:
         write_blacklist_to_json_file(request.form['banned_items'],
                                      request.form['limited_items'])
     banned_items, limited_items = read_blacklist_from_json_file()
 
-    return render_template('planner.html',
-                           day_strings=day_strings,
+    return render_template('index.html',
                            username=username,
-                           meal_plan_items=meal_plan_items,
-                           meal_plan_items_cn=meal_plan_items_cn,
-                           daily_remarks=daily_remarks,
-                           meal_plans=meal_plans, mod_types=mod_types,
                            banned_items=banned_items,
                            limited_items=limited_items,
                            notes=read_notes())
