@@ -7,6 +7,7 @@ from waitress import serve
 
 import argparse
 import datetime as dt
+import flask
 import hashlib
 import json
 import logging
@@ -33,13 +34,13 @@ CORS(app)
 #  This necessary for javascript to access a telemetry link without opening it:
 #  https://stackoverflow.com/questions/22181384/javascript-no-access-control-allow-origin-header-is-present-on-the-requested
 stop_signal = False
-app_name = 'meal_planner'
-log_path = '/var/log/mamsds/meal-planner.log'
+app_name = 'meal-planner'
+log_path = f'/var/log/mamsds/{app_name}.log'
 relative_url = f'../{app_name}'
-settings_path = '/root/bin/meal-planner/settings.json'
-blacklist_path = '/root/bin/meal-planner/blacklist.json'
-notes_path = '/root/bin/meal-planner/notes.json'
-users_path = '/root/bin/meal-planner/users.json'
+settings_path = f'/root/bin/{app_name}/settings.json'
+blacklist_path = f'/root/bin/{app_name}/blacklist.json'
+notes_path = f'/root/bin/{app_name}/notes.json'
+users_path = f'/root/bin/{app_name}/users.json'
 meal_plan = None
 meal_plan_today = None
 
@@ -102,6 +103,7 @@ def update_meal_plan_to_db(new_meal_plan, date_string):
     cursor.execute(sql, parameters)
     cursor.close()
     conn.close()
+
 
 
 def read_meal_plan_from_db(date_string):
@@ -188,8 +190,15 @@ def detect_modification_type(meal_plan_new, meal_plan_old):
         # Iterate meals, not days
         mod_types.append(0)
 
-        res_old = re.split(r'(-?\d*\.?\d+)', meal_plan_old[i][0])[2:]
-        res_new = re.split(r'(-?\d*\.?\d+)', meal_plan_new[i][0])[2:]
+        if len(meal_plan_old[i]) > 0 and len(meal_plan_old[i][0]) > 0:
+            res_old = re.split(r'(-?\d*\.?\d+)', meal_plan_old[i][0])[2:]
+        else:
+            res_old = []
+
+        if len(meal_plan_new[i]) > 0 and len(meal_plan_new[i][0]) > 0:
+            res_new = re.split(r'(-?\d*\.?\d+)', meal_plan_new[i][0])[2:]
+        else:
+            res_new = []
         # The 1st element from this flawed split is a space
         # The 2nd element is the timestamp
 
@@ -316,6 +325,60 @@ def login():
         return redirect(f'{relative_url}/')
 
     return render_template('login.html', message='')
+
+
+@app.route('/get-meal-plan/', methods=['GET'])
+def get_meal_plan():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        username = session[f'{app_name}']['username']
+    else:
+        return Response('错误：未登录', 401)
+
+    if 'date' in request.args:
+        date = request.args['date']
+    else:
+        return Response('错误：未指定参数date', 401)
+    try:
+        date_string = dt.datetime.strptime(date, '%Y-%m-%d')
+    except Exception as e:
+        return Response(f'date的值[{date}]不正确：{e}', 400)
+
+    conn = pymysql.connect(db_url, db_username, db_password, db_name)
+    conn.autocommit(True)
+    # It appears that both UPDATE and SELECT need "commit"
+    cursor = conn.cursor()
+
+    sql = '''
+         SELECT `breakfast`, `breakfast_feedback`,
+         `morning_extra_meal`, `morning_extra_meal_feedback`,
+         `lunch`, `lunch_feedback`,
+         `afternoon_extra_meal`, `afternoon_extra_meal_feedback`,
+         `dinner`, `dinner_feedback`,
+         `evening_extra_meal`, `evening_extra_meal_feedback`, `daily_remark`
+         FROM `meal_plan` WHERE `date` = %s'''
+    cursor.execute(sql, (date_string))
+    res = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    print(res)
+    meal_plan = {}
+    meal_plan['date'] = date_string
+    meal_plan['breakfast'] = res[0][0]
+    meal_plan['breakfast_feedback'] = res[0][1]
+    meal_plan['morning_extra_meal'] = res[0][2]
+    meal_plan['morning_extra_meal_feedback'] = res[0][3]
+    meal_plan['lunch'] = res[0][4]
+    meal_plan['lunch_feedback'] = res[0][5]
+    meal_plan['afternoon_extra_meal'] = res[0][6]
+    meal_plan['afternoon_extra_meal_feedback'] = res[0][7]
+    meal_plan['dinner'] = res[0][8]
+    meal_plan['dinner_feedback'] = res[0][9]
+    meal_plan['evening_extra_meal'] = res[0][10]
+    meal_plan['evening_extra_meal_feedback'] = res[0][11]
+    meal_plan['daily_remark'] = res[0][12]
+
+    return flask.jsonify(meal_plan)
 
 
 @app.route('/plans-history/', methods=['GET', 'POST'])
@@ -558,7 +621,7 @@ def main():
                 '%(module)s-%(funcName)s: %(message)s'),
         datefmt='%Y-%m-%d %H:%M:%S',
     )
-    logging.info('meal planner started')
+    logging.info(f'{app_name} started')
 
     if debug_mode is True:
         print('Running in debug mode')
@@ -570,11 +633,11 @@ def main():
     signal.signal(signal.SIGTERM, stop_signal_handler)
     th_email = threading.Thread(target=emailer.send_service_start_notification,
                                 kwargs={'settings_path': settings_path,
-                                        'service_name': 'meal-planner',
+                                        'service_name': f'{app_name}',
                                         'log_path': log_path,
                                         'delay': 0 if debug_mode else 300})
     th_email.start()
-    logging.info('meal planner server')
+    logging.info(f'{app_name} server')
 
     port = -1
     try:
