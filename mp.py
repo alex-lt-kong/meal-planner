@@ -361,21 +361,33 @@ def get_meal_plan():
     res = cursor.fetchall()
     cursor.close()
     conn.close()
-    print(res)
+
     meal_plan = {}
     meal_plan['date'] = date_string
-    meal_plan['breakfast'] = res[0][0]
-    meal_plan['breakfast_feedback'] = res[0][1]
-    meal_plan['morning_extra_meal'] = res[0][2]
-    meal_plan['morning_extra_meal_feedback'] = res[0][3]
-    meal_plan['lunch'] = res[0][4]
-    meal_plan['lunch_feedback'] = res[0][5]
-    meal_plan['afternoon_extra_meal'] = res[0][6]
-    meal_plan['afternoon_extra_meal_feedback'] = res[0][7]
-    meal_plan['dinner'] = res[0][8]
-    meal_plan['dinner_feedback'] = res[0][9]
-    meal_plan['evening_extra_meal'] = res[0][10]
-    meal_plan['evening_extra_meal_feedback'] = res[0][11]
+    meal_plan['breakfast'] = {}
+    meal_plan['breakfast']['title'] = '早餐'
+    meal_plan['breakfast']['content'] = res[0][0]
+    meal_plan['breakfast']['feedback'] = res[0][1]
+    meal_plan['morning_extra_meal'] = {}
+    meal_plan['morning_extra_meal']['title'] = '上午加餐'
+    meal_plan['morning_extra_meal']['content'] = res[0][2]
+    meal_plan['morning_extra_meal']['feedback'] = res[0][3]
+    meal_plan['lunch'] = {}
+    meal_plan['lunch']['title'] = '午餐'
+    meal_plan['lunch']['content'] = res[0][4]
+    meal_plan['lunch']['feedback'] = res[0][5]
+    meal_plan['afternoon_extra_meal'] = {}
+    meal_plan['afternoon_extra_meal']['title'] = '下午加餐'
+    meal_plan['afternoon_extra_meal']['content'] = res[0][6]
+    meal_plan['afternoon_extra_meal']['feedback'] = res[0][7]
+    meal_plan['dinner'] = {}
+    meal_plan['dinner']['title'] = '晚餐'
+    meal_plan['dinner']['content'] = res[0][8]
+    meal_plan['dinner']['feedback'] = res[0][9]
+    meal_plan['evening_extra_meal'] = {}
+    meal_plan['evening_extra_meal']['title'] = '晚上加餐'
+    meal_plan['evening_extra_meal']['content'] = res[0][10]
+    meal_plan['evening_extra_meal']['feedback'] = res[0][11]
     meal_plan['daily_remark'] = res[0][12]
 
     return flask.jsonify(meal_plan)
@@ -502,6 +514,78 @@ def update_notes():
     cursor.close()
     conn.close()
     return Response('更新成功', 200)
+
+
+@app.route('/index/', methods=['GET', 'POST'])
+def new_index():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        username = session[f'{app_name}']['username']
+    else:
+        return redirect(f'{relative_url}/login/')
+
+    global meal_plan_today, meal_plan_tomorrow
+    day_strings = []
+    day_strings.append([(dt.date.today() + dt.timedelta(days = -1)).strftime('%Y%m%d'), 'yesterday', '昨日', (dt.date.today() + dt.timedelta(days = -1)).strftime('%m月%d日')])
+    day_strings.append([(dt.date.today() + dt.timedelta(days = 0)).strftime('%Y%m%d'), 'today', '今日', (dt.date.today() + dt.timedelta(days = 0)).strftime('%m月%d日')])
+    day_strings.append([(dt.date.today() + dt.timedelta(days = 1)).strftime('%Y%m%d'), 'tomorrow', '明日', (dt.date.today() + dt.timedelta(days = 1)).strftime('%m月%d日')])
+
+    logging.debug('request.form: [{}]'.format(request.form))
+    if 'date' in request.form:
+        for meal_plan_item in meal_plan_items:
+            if meal_plan_item not in request.form:
+                return Response('错误：缺少参数{}'.format(meal_plan_item), 400)
+
+        i = int(request.form['date'])
+        if i < 0 or i > len(day_strings) - 1:
+            return Response('错误：参数date的值不正确', 400)
+
+        try:
+            update_meal_plan_to_db(request.form, day_strings[i][0])
+        except Exception as e:
+            return Response(f'保存食谱数据错误！原因：{e}', 400)
+
+    meal_plans = [[None] * len(meal_plan_items),
+                  [None] * len(meal_plan_items),
+                  [None] * len(meal_plan_items)]
+    daily_remarks = ['', '', '']
+    try:
+        for i in range(len(day_strings)):
+            retval = read_meal_plan_from_db(day_strings[i][0])
+            if retval is not None:
+                for j in range(len(retval) - 1):
+                    meal_plans[i][j] = retval[j]
+
+                daily_remarks[i] = retval[len(retval) - 1]
+            else:
+                meal_plans[i][0] = ''
+                meal_plans[i][1] = ''
+                meal_plans[i][2] = ''
+                meal_plans[i][3] = ''
+                meal_plans[i][4] = ''
+                meal_plans[i][5] = ''
+                daily_remarks[i] = ''
+    except Exception as e:
+        return Response(f'读取食谱数据错误！原因：{e}', 400)
+
+    mod_types = detect_modification_type(meal_plan_new=meal_plans[1],
+                                         meal_plan_old=meal_plans[0])
+
+    if 'banned_items' in request.form and 'limited_items' in request.form:
+        write_blacklist_to_json_file(request.form['banned_items'],
+                                     request.form['limited_items'])
+    banned_items, limited_items = read_blacklist_from_json_file()
+
+    return render_template('index.html',
+                           day_strings=day_strings,
+                           username=username,
+                           meal_plan_items=meal_plan_items,
+                           meal_plan_items_cn=meal_plan_items_cn,
+                           daily_remarks=daily_remarks,
+                           meal_plans=meal_plans, mod_types=mod_types,
+                           banned_items=banned_items,
+                           limited_items=limited_items,
+                           notes=read_notes())
 
 
 @app.route('/', methods=['GET', 'POST'])
