@@ -33,21 +33,19 @@ app.config.update(
 CORS(app)
 #  This necessary for javascript to access a telemetry link without opening it:
 #  https://stackoverflow.com/questions/22181384/javascript-no-access-control-allow-origin-header-is-present-on-the-requested
-stop_signal = False
+
 app_name = 'meal-planner'
+db_url, db_username, db_password, db_name = '', '', '', ''
+json_data = None
 log_path = f'/var/log/mamsds/{app_name}.log'
 relative_url = f'../{app_name}'
 settings_path = f'/root/bin/{app_name}/settings.json'
+stop_signal = False
 blacklist_path = f'/root/bin/{app_name}/blacklist.json'
 notes_path = f'/root/bin/{app_name}/notes.json'
 users_path = f'/root/bin/{app_name}/users.json'
 meal_plan = None
 meal_plan_today = None
-
-db_url = 'localhost'
-db_username = 'meal_planner'
-db_password = 'asdasJASDer3'
-db_name = 'meal_planner'
 
 
 def write_blacklist_to_json_file(banned_items: str, limited_items: str):
@@ -63,6 +61,36 @@ def write_blacklist_to_json_file(banned_items: str, limited_items: str):
         return False, sys.exc_info()
 
     return True, ''
+
+
+def read_meal_plan_from_db(date_string):
+
+    conn = pymysql.connect(db_url, db_username, db_password, db_name)
+    conn.autocommit(True)
+    # It appears that both UPDATE and SELECT need "commit"
+    cursor = conn.cursor()
+    sql = '''
+         SELECT `breakfast`, `breakfast_feedback`,
+         `morning_extra_meal`, `morning_extra_meal_feedback`,
+         `lunch`, `lunch_feedback`,
+         `afternoon_extra_meal`, `afternoon_extra_meal_feedback`,
+         `dinner`, `dinner_feedback`,
+         `evening_extra_meal`, `evening_extra_meal_feedback`, `daily_remark`
+         FROM `meal_plan` WHERE `date` = %s'''
+    cursor.execute(sql, (date_string))
+    meal_plan = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    if len(meal_plan) == 0:
+        return None
+    else:
+        return [[meal_plan[0][0], meal_plan[0][1]],
+                [meal_plan[0][2], meal_plan[0][3]],
+                [meal_plan[0][4], meal_plan[0][5]],
+                [meal_plan[0][6], meal_plan[0][7]],
+                [meal_plan[0][8], meal_plan[0][9]],
+                [meal_plan[0][10], meal_plan[0][11]],
+                meal_plan[0][12]]
 
 
 def read_blacklist_from_json_file():
@@ -597,12 +625,18 @@ def main():
     logging.info(f'{app_name} server')
 
     port = -1
+    global db_url, db_username, db_password, db_name
+
     try:
         with open(settings_path, 'r') as json_file:
             json_str = json_file.read()
             json_data = json.loads(json_str)
             app.secret_key = json_data['flask']['secret_key']
             port = json_data['flask']['port']
+            db_url = json_data['flask']['url']
+            db_username = json_data['flask']['username']
+            db_password = json_data['flask']['password']
+            db_name = json_data['flask']['name']
     except Exception as e:
         json_data = None
         logging.error(e)
