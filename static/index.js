@@ -74,12 +74,35 @@ class MealPlanItem extends React.Component {
   }
 
   render() {
+    const modType = this.state.data[this.state.itemName].modification_type;
+    let modificationInfo;
+    if (modType == -1) {
+      modificationInfo = <span style={{ color: 'black' }}> - 改动检测错误（请汇报该错误）</span>;
+    } else if (modType == 1) {
+      modificationInfo = <span> - 安全的改动</span>;
+    } else if (modType == 2) {
+      modificationInfo = <span style={{ color: 'red', fontWeight: 'bold' }}> - 危险的改动！</span>;
+    }
+    var feedbackColor = 'black'
+    if (this.state.data[this.state.itemName].feedback === 'A') {
+      feedbackColor = 'green';
+    } else if (this.state.data[this.state.itemName].feedback === 'B+' || 
+            this.state.data[this.state.itemName].feedback === 'B' ||
+            this.state.data[this.state.itemName].feedback === 'C') {
+      feedbackColor = 'red';
+    }
+    const feedbackStyle = {
+      color: feedbackColor,
+      fontWeight: 'bold'
+    };
     return (
       <div>
         <div>
           <p class="w3-text-green p-mealplanitem-title">
             <b>{this.state.data[this.state.itemName].title}</b>
+            {modificationInfo}
           </p>
+          
         </div>
         <div class="w3-cell-row">
           <div class="w3-cell">
@@ -89,7 +112,8 @@ class MealPlanItem extends React.Component {
             </textarea>
           </div>
           <div class="w3-cell">
-            <select class="w3-select" value={this.state.data[this.state.itemName].feedback} onChange={this.handleFeedbackChange} >
+          
+            <select class="w3-select" style={feedbackStyle} value={this.state.data[this.state.itemName].feedback} onChange={this.handleFeedbackChange} >
               {/* If value matches nothing, seems that React.js will simply select the first itm.*/}
               <option class="w3-text-black" value="待填">待填</option>
               <option class="w3-text-black" value="A">A</option>  
@@ -129,6 +153,24 @@ class MealPlan extends React.Component {
   getData(value){
     // do not forget to bind getData in constructor
     this.setState({ data: value });
+  }
+
+  fetchDataFromServer() {
+    axios.get('https://monitor.sz.lan/meal-planner/get-meal-plan/?date=' + this.state.date.toISOString().slice(0, 10))
+      .then(response => {
+        // handle success
+        this.setState({
+          data: null
+          // make it empty before fill it in again to force a re-rendering.
+        });
+        this.setState({
+          data: response.data
+        });
+        textAreaAdjust();
+      })
+      .catch(error => {
+        alert(this.state.date.toISOString().slice(0, 10) + '的食谱项目加载失败！请关闭窗口后重试！');
+      });
   }
 
   handleCopyTodayClick(event) {
@@ -180,35 +222,28 @@ class MealPlan extends React.Component {
       method: "post",
       url: "https://monitor.sz.lan/meal-planner/update-meal-plan/",
       data: payload,
-      headers: { "Content-Type": "multipart/form-data" },
     })
     .then(response => {
       alert(this.state.date.toISOString().slice(0, 10) + '的食谱更新成功！');
+      this.fetchDataFromServer();
+      // Must make this call to ensure UI is refreshed.
       console.log(response);
     })
     .catch(error => {
-      console.log(error.response);
-      alert('错误\n状态码：' + error.response.status + '\n错误提示：' + error.response.data);
+      console.log(error);
+      alert('错误：\n' + error);
+      // You canNOT write error.response or whatever similar here.
+      // The reason is that this catch() catches both network error and other errors,
+      // which may or may not have a response property.
     });
     event.preventDefault();
   }
 
   componentDidMount() {
-    axios.get('https://monitor.sz.lan/meal-planner/get-meal-plan/?date=' + this.state.date.toISOString().slice(0, 10))
-      .then(response => {
-        // handle success
-        this.setState({
-          data: response.data
-        });
-        textAreaAdjust();
-      })
-      .catch(error => {
-        alert(this.state.date.toISOString().slice(0, 10) + '的食谱项目加载失败！请关闭窗口后重试！');
-      });
+    this.fetchDataFromServer();
   }
 
   render() {
-
     
     if (this.state.data === null) { return null }
     // So that if data is still not filled, an empty GUI will not be rendered.
@@ -224,7 +259,7 @@ class MealPlan extends React.Component {
       <div class="accordion" >
         <button onClick={this.handleAccordionClick} class="w3-button w3-block w3-left-align w3-green">
           {this.state.convenientDateName}食谱({this.state.date.toISOString().slice(0, 10)})
-          <span class="w3-right">▴</span>
+          <span class="w3-right">{this.state.show ? "▴" : "▾"}</span>
         </button>
         <div className={`w3-container w3-card-4 ${this.state.show ? "w3-show" : "w3-hide"}`}>
           {/* The current implementation is that we are going to pass the entire json to each 

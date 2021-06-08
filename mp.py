@@ -23,7 +23,7 @@ loader = importlib.machinery.SourceFileLoader('emailer',
 emailer = loader.load_module()
 
 app = Flask(__name__)
-app.secret_key = b'jkjk*&(*&98wqoe"]/e;.fdloefkiue78u9io1'
+app.secret_key = b''
 app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
@@ -112,52 +112,6 @@ def read_blacklist_from_json_file():
         limited_items = ''
 
     return banned_items, limited_items
-
-
-def detect_modification_type(meal_plan_new, meal_plan_old):
-
-    if meal_plan_old is None or meal_plan_new is None:
-        return None
-    if len(meal_plan_new) != len(meal_plan_old):
-        return None
-
-    mod_types = []
-    # type == 0: no modification
-    # type == 1: safe modification
-    # type == 2: dangerous modification
-
-    for i in range(len(meal_plan_new)):
-        # Iterate meals, not days
-        mod_types.append(0)
-
-        if len(meal_plan_old[i]) > 0 and len(meal_plan_old[i][0]) > 0:
-            res_old = re.split(r'(-?\d*\.?\d+)', meal_plan_old[i][0])[2:]
-        else:
-            res_old = []
-
-        if len(meal_plan_new[i]) > 0 and len(meal_plan_new[i][0]) > 0:
-            res_new = re.split(r'(-?\d*\.?\d+)', meal_plan_new[i][0])[2:]
-        else:
-            res_new = []
-        # The 1st element from this flawed split is a space
-        # The 2nd element is the timestamp
-
-        if len(res_old) != len(res_new):
-            mod_types[i] = 2
-        else:
-            for j in range(len(res_old)):
-                if res_old[j] != res_new[j]:
-                    try:
-                        f1, f2 = float(res_old[j]), float(res_new[j])
-                        if f2 > f1:
-                            mod_types[i] = 2
-                        elif mod_types[i] == 0:
-                            mod_types[i] = 1
-                    except Exception as ex:
-                        logging.debug(f'{ex}: {res_old[j]}, {res_new[j]}')
-                        mod_types[i] = 2
-                        break
-    return mod_types
 
 
 def get_straight_a_days(include_aminus=False):
@@ -253,12 +207,11 @@ def login():
         except Exception as e:
             return render_template('login.html', message=f'{e}')
         if request.form['username'] not in json_data['users']:
-            return render_template('login.html',
-                                   message=f'用户{request.form["username"]}不存在')
+            return render_template('login.html', message='用户名或密码错误')
         password = request.form['password'].encode('utf-8')
         if (hashlib.sha256(password).hexdigest()
                 != json_data['users'][request.form['username']]):
-            return render_template('login.html', message='密码错误')
+            return render_template('login.html', message='用户名或密码错误')
         session[f'{app_name}'] = {}
         session[f'{app_name}']['username'] = request.form['username']
 
@@ -333,22 +286,63 @@ def update_meal_plan():
     return Response(f'更新{date_string}食谱成功！', 200)
 
 
-@app.route('/get-meal-plan/', methods=['GET'])
-def get_meal_plan():
+def insert_modification_type(meal_plan_new):
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        username = session[f'{app_name}']['username']
-    else:
-        return Response('错误：未登录', 401)
+    today = dt.datetime.strptime(meal_plan_new['date'], '%Y-%m-%d')
+    yesterday = today - dt.timedelta(days=1)
+    meal_plan_old = convert_meal_plan_to_json(
+        dt.datetime.strftime(yesterday, '%Y-%m-%d'))
 
-    if 'date' in request.args:
-        date = request.args['date']
-    else:
-        return Response('错误：未指定参数date', 401)
-    try:
-        date_string = dt.datetime.strptime(date, '%Y-%m-%d')
-    except Exception as e:
-        return Response(f'date的值[{date}]不正确：{e}', 400)
+    # type == 0: no modification
+    # type == 1: safe modification
+    # type == 2: dangerous modification
+
+    meals = ['breakfast', 'morning_extra_meal',
+             'lunch', 'afternoon_extra_meal',
+             'dinner', 'evening_extra_meal']
+
+    re_str = r'(-?\d*\.?\d+)'
+    res_old, res_new = {}, {}
+    for meal in meals:
+        # Iterate meals, not days
+        meal_plan_new[meal]['modification_type'] = 0
+
+        if len(meal_plan_new[meal]['content']) > 0:
+            res_new[meal] = re.split(re_str,
+                                     meal_plan_new[meal]['content'])[2:]
+        else:
+            res_new[meal] = []
+
+        if len(meal_plan_old[meal]['content']) > 0:
+            res_old[meal] = re.split(re_str,
+                                     meal_plan_old[meal]['content'])[2:]
+        else:
+            res_old[meal] = []
+        # The 1st element from this flawed regex split is a space
+        # The 2nd element is the timestamp
+
+        if len(res_old[meal]) != len(res_new[meal]):
+            meal_plan_new[meal]['modification_type'] = 2
+        else:
+            for j in range(len(res_old[meal])):
+                if res_old[meal][j] != res_new[meal][j]:
+                    try:
+                        f1 = float(res_old[meal][j])
+                        f2 = float(res_new[meal][j])
+                        if f2 > f1:
+                            meal_plan_new[meal]['modification_type'] = 2
+                        elif meal_plan_new[meal]['modification_type'] == 0:
+                            meal_plan_new[meal]['modification_type'] = 1
+                    except Exception as ex:
+                        logging.debug(
+                            f'{ex}: '
+                            f'{res_old[meal][j]}, {res_new[meal][j]}')
+                        meal_plan_new[meal]['modification_type'] = 2
+                        break
+    return meal_plan_new
+
+
+def convert_meal_plan_to_json(date_string: str):
 
     conn = pymysql.connect(db_url, db_username, db_password, db_name)
     conn.autocommit(True)
@@ -412,6 +406,27 @@ def get_meal_plan():
         meal_plan['evening_extra_meal']['feedback'] = ''
         meal_plan['daily_remark'] = ''
 
+    return meal_plan
+
+
+@app.route('/get-meal-plan/', methods=['GET'])
+def get_meal_plan():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        pass
+    else:
+        return Response('错误：未登录', 401)
+
+    if 'date' in request.args:
+        date_string = request.args['date']
+    else:
+        return Response('错误：未指定参数date', 401)
+
+    meal_plan = convert_meal_plan_to_json(date_string)
+    meal_plan = insert_modification_type(meal_plan)
+
+    logging.debug(f'meal_plan to be sent to client: {meal_plan}')
+
     return flask.jsonify(meal_plan)
 
 
@@ -426,7 +441,7 @@ def plans_history():
     if 'date' in request.args:
         date = request.args['date']
     else:
-        date = dt.datetime.now().strftime("%Y-%m-%d")
+        date = dt.datetime.now().strftime('%Y-%m-%d')
 
     try:
         date = dt.datetime.strptime(date, '%Y-%m-%d')
@@ -633,13 +648,14 @@ def main():
             json_data = json.loads(json_str)
             app.secret_key = json_data['flask']['secret_key']
             port = json_data['flask']['port']
-            db_url = json_data['flask']['url']
-            db_username = json_data['flask']['username']
-            db_password = json_data['flask']['password']
-            db_name = json_data['flask']['name']
+            db_url = json_data['database']['url']
+            db_username = json_data['database']['username']
+            db_password = json_data['database']['password']
+            db_name = json_data['database']['name']
+            logging.debug(f'json_data: {json_data}')
     except Exception as e:
         json_data = None
-        logging.error(e)
+        logging.error(f'json_data error: {e}')
 
     serve(app, host="127.0.0.1", port=port)
 
