@@ -224,7 +224,7 @@ def login():
 def update_meal_plan():
 
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        username = session[f'{app_name}']['username']
+        pass
     else:
         return Response('错误：未登录', 401)
 
@@ -430,66 +430,6 @@ def get_meal_plan():
     return flask.jsonify(meal_plan)
 
 
-@app.route('/plans-history/', methods=['GET', 'POST'])
-def plans_history():
-
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        username = session[f'{app_name}']['username']
-    else:
-        return redirect(f'{relative_url}/login/')
-
-    if 'date' in request.args:
-        date = request.args['date']
-    else:
-        date = dt.datetime.now().strftime('%Y-%m-%d')
-
-    try:
-        date = dt.datetime.strptime(date, '%Y-%m-%d')
-    except Exception as e:
-        return Response(f'错误：参数date的值[{date}]不正确：{e}', 400)
-
-    yesterday = (date + dt.timedelta(days=-1)).strftime("%Y-%m-%d")
-    tomorrow = (date + dt.timedelta(days=1)).strftime("%Y-%m-%d")
-    results = read_meal_plan_from_db(date)
-    results_old = read_meal_plan_from_db(yesterday)
-    if results is not None and results_old is not None:
-        mod_types = detect_modification_type(meal_plan_new=results,
-                                             meal_plan_old=results_old)
-    else:
-        mod_types = None
-
-    if results is not None:
-        breakfast = results[0]
-        morning_extra_meal = results[1]
-        lunch = results[2]
-        afternoon_extra_meal = results[3]
-        dinner = results[4]
-        evening_extra_meal = results[5]
-        daily_remark = results[6]
-        if daily_remark is not None:
-            daily_remark = daily_remark.replace('\n', '<br>')
-    else:
-        breakfast = ['[无记录]', '-']
-        morning_extra_meal = ['[无记录]', '-']
-        lunch = ['[无记录]', '-']
-        afternoon_extra_meal = ['[无记录]', '-']
-        dinner = ['[无记录]', '-']
-        evening_extra_meal = ['[无记录]', '-']
-        daily_remark = ''
-
-    return render_template('plans-history.html',
-                           date=date.strftime("%Y-%m-%d"),
-                           yesterday=yesterday, tomorrow=tomorrow,
-                           breakfast=breakfast,
-                           morning_extra_meal=morning_extra_meal,
-                           lunch=lunch,
-                           afternoon_extra_meal=afternoon_extra_meal,
-                           dinner=dinner,
-                           evening_extra_meal=evening_extra_meal,
-                           daily_remark=daily_remark,
-                           username=username, mod_types=mod_types)
-
-
 @app.route('/notes-history/', methods=['GET'])
 def notes_history():
 
@@ -574,6 +514,16 @@ def index():
                            banned_items=banned_items,
                            limited_items=limited_items,
                            notes=read_notes())
+
+
+@app.route('/history-plans/', methods=['GET', 'POST'])
+def history_plans():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        username = session[f'{app_name}']['username']
+    else:
+        return redirect(f'{relative_url}/login/')
+    return render_template('history-plans.html', username=username)
 
 
 @app.route('/straight_a/', methods=['GET', 'POST'])

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<link rel="shortcut icon" href="//monitor.sz.lan/meal_planner/static/favicon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://monitor.sz.lan/meal-planner/static/history-plans.css">
+<link rel="stylesheet" href="//monitor.sz.lan/resources/w3.css">
+<link rel="stylesheet" href="//monitor.sz.lan/resources/w3-colors-2017.css">
+<link rel="stylesheet" href="//monitor.sz.lan/resources/w3-colors-highway.css">
+<link rel="stylesheet" href="//monitor.sz.lan/resources/font-awesome.min.css">
+<script src="//monitor.sz.lan/resources/monitor.js"></script>
+<script src="//monitor.sz.lan/resources/jquery-3.5.1.min.js"></script>
+<script src="//monitor.sz.lan/resources/react@16.14.0/umd/react.production.min.js"></script>
+<script src="//monitor.sz.lan/resources/react@16.14.0/umd/react-dom.production.min.js"></script>
+<script src="//monitor.sz.lan/resources/babel-standalone@6.15.0/babel.min.js"></script>
+<script src="//monitor.sz.lan/resources/axios@0.21.1/dist/axios.min.js"></script>
+<script src="https://monitor.sz.lan/meal-planner/static/history-plans.js" type="text/jsx"></script>
+<html>
+
+<head>
+  <title>每日食谱-历史记录[{{username}}]</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    window.onload = function() {
+      logUserActivity('[meal-planner/plans-history-{{date}}] load', '{{username}}'); 
+    };
+    window.onunload = function() { logUserActivity('[meal-planner/plans-history-{{date}}] unload', '{{username}}'); };
+  </script>
+</body>
+</html>

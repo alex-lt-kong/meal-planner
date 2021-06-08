@@ -8,25 +8,13 @@
 <link rel="stylesheet" href="//monitor.sz.lan/resources/font-awesome.min.css">
 <script src="//monitor.sz.lan/resources/monitor.js"></script>
 <script src="//monitor.sz.lan/resources/jquery-3.5.1.min.js"></script>
-<script src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
-<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="//monitor.sz.lan/resources/react@16.14.0/umd/react.production.min.js"></script>
+<script src="//monitor.sz.lan/resources/react@16.14.0/umd/react-dom.production.min.js"></script>
+<script src="//monitor.sz.lan/resources/babel-standalone@6.15.0/babel.min.js"></script>
+<script src="//monitor.sz.lan/resources/axios@0.21.1/dist/axios.min.js"></script>
 <script src="https://monitor.sz.lan/meal-planner/static/index.js" type="text/jsx"></script>
-<script src="https://unpkg.com/react/umd/react.production.min.js" crossorigin></script>
 <html>
 <head>
-<style>
-.fixed-footer {
-   position: fixed;
-   left: 0;
-   bottom: 0;
-   width: 100%;
-   background-color: #4CAF50;
-   color: white;
-   text-align: center;
-}
-</style>
 <title>每日食谱[{{username}}]</title>
 </head>
 <body>
@@ -36,7 +24,7 @@
       每日食谱<span class="w3-right" style="margin-bottom:1rem;font-size:0.65em;">[{{username}}], <a href="#" onclick="logout();">退出</a></span>
     </h3>
   </div> 
-  <button onclick="window.open('https://monitor.sz.lan/meal-planner/plans-history/');" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">查询历史食谱...</button>
+  <button onclick="window.open('./history-plans/');" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">查询历史食谱...</button>
   <div id="root"></div>
   <button onclick="accordionHandler('notes')" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">
   饮食健康笔记

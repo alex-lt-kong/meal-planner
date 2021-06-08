@@ -134,7 +134,6 @@ class MealPlan extends React.Component {
 
   constructor(props) {
     super(props);
-    super(props);
     this.state = {
       id: props.id,
       date: props.date,
@@ -245,7 +244,7 @@ class MealPlan extends React.Component {
 
   render() {
     
-    if (this.state.data === null) { return null }
+    if (this.state.data === null) { return null; }
     // So that if data is still not filled, an empty GUI will not be rendered.
     let buttonCopyToday;
     if (parseInt(this.state.id) === 3) {
