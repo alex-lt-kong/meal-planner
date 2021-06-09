@@ -8,9 +8,9 @@ tomorrow.setDate(tomorrow.getDate() + 1);
 ReactDOM.render(
   <div>
     <CheckHistoricalPlans />
-    <MealPlan show={false} convenientDateName="昨日" date={yesterday}  />
-    <MealPlan show={true}  convenientDateName="今日" date={today} />
-    <MealPlan show={false} convenientDateName="明日" date={tomorrow} />
+    <MealPlan id="0" show={false} convenientDateName="昨日" date={yesterday}  />
+    <MealPlan id="1" show={true}  convenientDateName="今日" date={today} />
+    <MealPlan id="2" show={false} convenientDateName="明日" date={tomorrow} />
     <Notes show={false} />
     <Blacklist show={false} />
   </div>,

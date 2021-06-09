@@ -74,7 +74,7 @@ function closeDailyReminder() {
 
 function showDailyReminder(statistics) {
 
-  if (Math.random() <= 0.2) {
+  if (Math.random() <= 0.05) {
     document.getElementById('msg-box').style.display='block';
   } else {
     document.getElementById('msg-box').style.display='none';
@@ -131,24 +131,6 @@ function showDailyReminder(statistics) {
       btn.removeAttribute("disabled");
     }
   }());
-}
-
-function accordionHandler(id) {
-  var x = document.getElementById('accordion-' + id.toString());
-  if (x.className.indexOf("w3-show") == -1) {
-    x.className += " w3-show";
-    document.getElementById('small-triangle-' + id.toString()).innerHTML = '▴';
-    logUserActivity('[meal-planner/index] accordion ' + id.toString() + ' shown', '{{username}}');
-  } else { 
-    x.className = x.className.replace(" w3-show", "");
-    document.getElementById('small-triangle-' + id.toString()).innerHTML = '▾';
-    logUserActivity('[meal-planner/index] accordion ' + id.toString() + ' hidden', '{{username}}');
-  }  
-  $('input[name=text], textarea').each(
-    function(){  
-      textAreaAdjust($(this)[0]);
-    }
-  );
 }
 </script>
 

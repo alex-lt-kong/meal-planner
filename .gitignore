@@ -2,6 +2,7 @@
 settings.json
 users.json
 resources/selfies
+resources/attachments
 blacklist.json
 
 # Byte-compiled / optimized / DLL files

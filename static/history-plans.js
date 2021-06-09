@@ -10,7 +10,7 @@ class PlanTable extends React.Component {
     if (this.props.data === null) { return null; }
     // For whatever reason, this.props.data works here but this.state.data does not...
     let itemNames = ['breakfast', 'morning_extra_meal', 'lunch', 'afternoon_extra_meal', 'dinner', 'evening_extra_meal'];
-    let items = [null, null, null, null, null, null];
+    let items = new Array(itemNames.length);
     let i = 0;
     for (i = 0; i < itemNames.length; i++) {
 
@@ -41,6 +41,14 @@ class PlanTable extends React.Component {
           <hr style={{ "margin-top": "0px", "margin-bottom": "0.5em", "margin-left": "2em", "margin-right": "2em" }}></hr>
           <div style={{ "margin-left": "2em", "margin-right": "2em", "white-space": "pre-wrap" }}>{this.props.data.daily_remark}</div>
         </div>
+        <div>
+          <div class="w3-panel w3-leftbar w3-border-green" style={{"margin-bottom": "0px"}}>
+            <span style={{ "margin-left": "0.5em", fontWeight: 'bold' }}>今日自拍</span>
+          </div>
+          <img src={`../get-selfie/?date=${new Date(this.props.data.date).toISOString().slice(0, 10)}&${new Date().getTime()}`} alt=""
+               style={{ display: "block", "margin-left": "auto", "margin-right": "auto", "max-width": "100%", width: "300px" }} />
+          {/* If alt="" is added, the broken image icon won't show if src is not found. */}
+          </div>
       </div>
       );
   }

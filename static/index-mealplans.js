@@ -1,3 +1,142 @@
+class MealPlanDailyAttachments extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      data: null,
+      date: props.date,
+      uploadProgress: null
+    };
+    this.onFileUpload = this.onFileUpload.bind(this);
+    this.handleClickFileName = this.handleClickFileName.bind(this);
+    this.handleClickFileRemove = this.handleClickFileRemove.bind(this);
+    this.onFileChange = this.onFileChange.bind(this);
+  }
+
+  onFileChange(event) { 
+    this.setState({ 
+      selectedFile: event.target.files[0]
+    }); 
+    if( event.target.files[0].size > 128000000){
+      alert("上传的文件不可超过128MB");
+      return;
+    };
+    this.onFileUpload(event.target.files[0]);
+  }; 
+   
+  onFileUpload(selected_file) {
+    console.log('start uploading...')
+    const payload = new FormData(); 
+    payload.append('selected_file', selected_file); 
+    console.log(selected_file); 
+
+    var config = {
+      onUploadProgress: function(progressEvent) {
+          var percentCompleted = Math.round( (progressEvent.loaded * 100) / progressEvent.total );
+          if (percentCompleted < 100)
+            this.setState({uploadProgress: percentCompleted}); //How set state with percentCompleted?
+          else
+            this.setState({uploadProgress: null});
+      }.bind(this)
+  };
+
+    axios.post("./upload-attachment/", payload, config)
+    .then(response => {
+      //alert(this.state.date.toISOString().slice(0, 10) + '的附件[' +selected_file.name + ']上传成功！');
+      // an alert is not needed since the user will see the change of the files list.
+      this.fetchDataFromServer();
+    })
+    .catch(error => {
+      console.log(error);
+      alert('附件上传错误\n' + error);
+      // You canNOT write error.response or whatever similar here.
+      // The reason is that this catch() catches both network error and other errors,
+      // which may or may not have a response property.
+    });
+  }
+
+  handleClickFileName(value) {
+    window.open('./get-attachment/?date=' + this.state.date.toISOString().slice(0, 10) + '&filename=' + value);
+  }
+
+  handleClickFileRemove(value) {
+    axios.get('./remove-attachment/?date=' + this.state.date.toISOString().slice(0, 10) + '&filename=' + value)
+      .then(response => {
+      //  alert('文件[' + value + ']删除成功！');
+      // an alert is not needed since the user will see the change of the files list.
+        this.fetchDataFromServer();
+      })
+      .catch(error => {
+        alert('文件[' + value + ']删除成功失败！\n' + error);
+      });
+  }
+
+  componentDidMount() {
+    this.fetchDataFromServer();
+  }
+
+  fetchDataFromServer() {
+    axios.get('./get-attachments-list/?date=' + this.state.date.toISOString().slice(0, 10))
+      .then(response => {
+        // handle success
+        this.setState({
+          data: null
+          // make it empty before fill it in again to force a re-rendering.
+        });
+        this.setState({
+          data: response.data
+        });
+        console.log(this.state.data);
+      })
+      .catch(error => {
+        alert(this.state.date.toISOString().slice(0, 10) + '的附件列表加载失败！请关闭窗口后重试！\n' + error);
+      });
+  }
+  
+  render() {
+
+    if (this.state.data === null) { return null; }
+
+    var filenames = new Array(0);
+    let i = 0;
+    if (this.state.data.filenames === null) {  }
+    else {
+      filenames = new Array(this.state.data.filenames.length);
+      for (i = 0; i < this.state.data.filenames.length; i++) {
+        console.log(this.state.data.filenames[i]);
+
+        filenames[i] = (
+        <li key={i} class="w3-display-container" >
+            <div value={this.state.data.filenames[i]} 
+            onClick={this.handleClickFileName.bind(this, this.state.data.filenames[i])}>{this.state.data.filenames[i]}</div>
+          <span class="w3-button w3-display-right" value={this.state.data.filenames[i]} 
+            onClick={this.handleClickFileRemove.bind(this, this.state.data.filenames[i])}>&times;</span>
+        </li>
+        );
+      }
+    }
+
+    var progressBar = null;
+    if (this.state.uploadProgress === null) {}
+    else{
+      progressBar = <span>（新附件上传进度：{this.state.uploadProgress}%）</span>;
+    }
+    
+    return ( 
+      <div> 
+        <div>
+          <p class="w3-text-green p-mealplanitem-title">
+            <b>今日附件{progressBar}</b>
+          </p>          
+        </div>
+        <ul class="w3-ul">
+          {filenames}
+        </ul>
+        <input type="file" onChange={this.onFileChange} />
+      </div> 
+    );
+  } 
+}
+
 class MealPlanDailySelfie extends React.Component {
   constructor(props) {
     super(props);
@@ -6,7 +145,6 @@ class MealPlanDailySelfie extends React.Component {
       data: props.data,
       date: props.date
     };
-    this.onFileUpload = this.onFileUpload.bind(this);
     this.onFileChange = this.onFileChange.bind(this);
   }
 
@@ -24,8 +162,9 @@ class MealPlanDailySelfie extends React.Component {
     console.log(selected_file); 
     axios.post("./upload-selfie/", payload)
     .then(response => {
-      alert(this.state.date.toISOString().slice(0, 10) + '的自拍照上传成功！');
-      this.forceUpdate();
+    //  alert(this.state.date.toISOString().slice(0, 10) + '的自拍照上传成功！');
+     // an alert is not needed since the user will see the change of the thumbnail.
+    //  this.forceUpdate();
     })
     .catch(error => {
       console.log(error);
@@ -223,7 +362,7 @@ class MealPlan extends React.Component {
         textAreaAdjust();
       })
       .catch(error => {
-        alert(this.state.date.toISOString().slice(0, 10) + '的食谱项目加载失败！请关闭窗口后重试！');
+        alert(this.state.date.toISOString().slice(0, 10) + '的食谱项目加载失败！请关闭窗口后重试！\n' + error);
       });
   }
 
@@ -298,7 +437,7 @@ class MealPlan extends React.Component {
     if (this.state.data === null) { return null; }
     // So that if data is still not filled, an empty GUI will not be rendered.
     let buttonCopyToday;
-    if (parseInt(this.state.id) === 3) {
+    if (parseInt(this.state.id) === 2) {
       // Originally, I use convenientDateName === "明天" to achieve the same
       // However, it turns out that string comparison in Javascript is really strange...
       buttonCopyToday = <button class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button"
@@ -322,6 +461,7 @@ class MealPlan extends React.Component {
           <MealPlanItem data={this.state.data} itemName="evening_extra_meal" sendData={this.getData} />
           <MealPlanDailyRemark data={this.state.data} sendData={this.getData} />
           <MealPlanDailySelfie date={this.state.date} />
+          <MealPlanDailyAttachments date={this.state.date} />
           <div>
             <button class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button" onClick={this.handleClickUpdate}>
               提交

@@ -26,6 +26,7 @@ emailer = loader.load_module()
 
 app = Flask(__name__)
 app.secret_key = b''
+app.config['MAX_CONTENT_LENGTH'] = 1
 app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
@@ -36,8 +37,14 @@ CORS(app)
 #  This necessary for javascript to access a telemetry link without opening it:
 #  https://stackoverflow.com/questions/22181384/javascript-no-access-control-allow-origin-header-is-present-on-the-requested
 
-allowed_ext = ['jpg', 'jpeg', 'png', 'gif']
+allowed_ext = ['7z', 'apk', 'avi', 'bmp', 'conf', 'crt', 'csv', 'doc', 'docx',
+               'flv', 'gif', 'ico', 'iso', 'jpeg', 'jpg', 'key', 'mp3', 'mp4',
+               'mkv', 'mov', 'mpg', 'mpeg', 'ods', 'odt', 'ovpn', 'pdf',
+               'pem', 'png', 'ppt', 'pptx', 'psd', 'rar', 'rtf', 'srt', 'sql',
+               'sqlite', 'tif', 'tiff', 'ttf', 'txt', 'wav', 'm4a', 'webm',
+               'wma', 'wmv', 'xls', 'xlsx', 'xml', 'zip']
 app_name = 'meal-planner'
+attachments_path = f'/root/bin/{app_name}/resources/attachments'
 db_url, db_username, db_password, db_name = '', '', '', ''
 json_data = None
 log_path = f'/var/log/mamsds/{app_name}.log'
@@ -47,6 +54,145 @@ selfies_path = f'/root/bin/{app_name}/resources/selfies'
 stop_signal = False
 blacklist_path = f'/root/bin/{app_name}/blacklist.json'
 users_path = f'/root/bin/{app_name}/users.json'
+
+
+@app.route('/get-attachments-list/', methods=['GET'])
+def get_attachment_list():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        pass
+    else:
+        return Response('错误：未登录', 401)
+    if 'date' in request.args:
+        date_string = request.args['date']
+    else:
+        return Response('错误：未指定参数date', 401)
+    try:
+        dt.datetime.strptime(date_string, '%Y-%m-%d')
+    except Exception as e:
+        return Response(f'参数date的语法不正确：{e}', 401)
+
+    attachments_path_today = os.path.join(attachments_path, date_string)
+    data = {}
+    data['date'] = date_string
+    if os.path.isdir(attachments_path_today):
+        data['filenames'] = os.listdir(attachments_path_today)
+    else:
+        data['filenames'] = None
+
+    return flask.jsonify(data)
+
+
+@app.route('/remove-attachment/', methods=['GET'])
+def remove_attachment():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        pass
+    else:
+        return Response('错误：未登录', 401)
+    if 'date' in request.args and 'filename' in request.args:
+        date_string = request.args['date']
+        filename = request.args['filename']
+        filename = sanitize_filename(filename)
+    else:
+        return Response('错误：未指定参数date或filename', 401)
+    try:
+        dt.datetime.strptime(date_string, '%Y-%m-%d')
+    except Exception as e:
+        return Response(f'参数date的语法不正确：{e}', 401)
+
+    attachments_path_today = os.path.join(attachments_path, date_string)
+    data = {}
+    data['date'] = date_string
+    if os.path.isdir(attachments_path_today) is False:
+        return Response(f'文件{filename}不存在', 401)
+    file_path = os.path.join(attachments_path_today, filename)
+    if os.path.isfile(file_path) is False:
+        return Response(f'文件{filename}不存在', 401)
+
+    try:
+        os.remove(file_path)
+    except Exception as e:
+        return Response(f'文件{filename}删除失败：{e}', 500)
+    return Response('文件{filename}删除成功', 200)
+
+
+@app.route('/get-attachment/', methods=['GET'])
+def get_attachment():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        pass
+    else:
+        return Response('错误：未登录', 401)
+    if 'date' in request.args and 'filename' in request.args:
+        date_string = request.args['date']
+        filename = request.args['filename']
+        filename = sanitize_filename(filename)
+    else:
+        return Response('错误：未指定参数date或filename', 401)
+    try:
+        dt.datetime.strptime(date_string, '%Y-%m-%d')
+    except Exception as e:
+        return Response(f'参数date的语法不正确：{e}', 401)
+
+    attachments_path_today = os.path.join(attachments_path, date_string)
+    data = {}
+    data['date'] = date_string
+    if os.path.isdir(attachments_path_today) is False:
+        return Response(f'文件{filename}不存在', 401)
+    file_path = os.path.join(attachments_path_today, filename)
+    if os.path.isfile(file_path) is False:
+        return Response(f'文件{filename}不存在', 401)
+
+    return flask.send_from_directory(directory=attachments_path_today,
+                                     filename=filename,  as_attachment=False,
+                                     attachment_filename=filename)
+
+
+def sanitize_filename(filename):
+    # This function may be not robust enough... but should be good enough
+    # for this use case...
+    # also, the security is enhanced by the use of send_from_directory()
+    error_set = ['/', '\\', ':', '*', '?', '"', '|', '<', '>', ' ', '..']
+    for c in filename:
+        if c in error_set:
+            filename = filename.replace(c, '_')
+    if len(filename) > 64:
+        filename = filename[:31] + '__' + filename[-31:]
+    return filename
+
+
+@app.route('/upload-attachment/', methods=['POST'])
+def upload_attachment():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        pass
+    else:
+        return Response('错误：未登录', 401)
+
+    if 'selected_file' not in request.files:
+        return Response('没有收到附件', 400)
+    if request.files['selected_file'] is None:
+        return Response('没有收到附件', 400)
+
+    selected_file = request.files['selected_file']
+
+    if selected_file.filename.rsplit('.', 1)[1].lower() not in allowed_ext:
+        return Response(f'仅允许上传后缀为{allowed_ext}的文件', 400)
+
+    date_string = dt.datetime.now().strftime('%Y-%m-%d')
+    attachments_path_today = os.path.join(attachments_path, date_string)
+    if os.path.isdir(attachments_path_today) is False:
+        try:
+            os.mkdir(attachments_path_today)
+        except Exception as e:
+            return Response(f'无法创建文件：{e}', 500)
+
+    filename = sanitize_filename(selected_file.filename)
+    selected_file.seek(0)
+    selected_file.save(os.path.join(attachments_path_today, filename))
+
+    return Response('附件上传成功', 200)
 
 
 @app.route('/upload-selfie/', methods=['POST'])
@@ -77,10 +223,13 @@ def upload_selfie():
 
     filename = f'{date_string}{oldext}'
     selected_file.seek(0)
-    image = Image.open(selected_file)
-    image.thumbnail((800, 800))
-    # (800, 800): the maximum width and maximum height of the thumbnail
-    image.save(os.path.join(selfies_path, filename))
+    try:
+        image = Image.open(selected_file).convert('RGB')
+        image.thumbnail((800, 800))
+        # (800, 800): the maximum width and maximum height of the thumbnail
+        image.save(os.path.join(selfies_path, filename))
+    except Exception as e:
+        return Response(f'自拍图保存错误：{e}', 500)
 
     return Response('自拍照上传成功', 200)
 
@@ -96,7 +245,11 @@ def check_if_selfie_exists():
     if 'date' in request.args:
         date_string = request.args['date']
     else:
-        return Response('错误：未指定参数date', 401)
+        return Response('未指定参数date', 401)
+    try:
+        dt.datetime.strptime(date_string, '%Y-%m-%d')
+    except Exception as e:
+        return Response(f'参数date的语法不正确：{e}', 401)
 
     image_path = f'/root/bin/meal-planner/resources/selfies/{date_string}.png'
 
@@ -115,11 +268,18 @@ def get_selfie():
         date_string = request.args['date']
     else:
         return Response('错误：未指定参数date', 401)
+    try:
+        dt.datetime.strptime(date_string, '%Y-%m-%d')
+    except Exception as e:
+        return Response(f'参数date的语法不正确：{e}', 401)
 
     for ext in allowed_ext:
         image_path = os.path.join(selfies_path, f'{date_string}.{ext}')
         if os.path.isfile(image_path):
-            return flask.send_file(filename_or_fp=image_path)
+            return flask.send_from_directory(directory=selfies_path,
+                                             filename=f'{date_string}.{ext}',
+                                             as_attachment=False)
+
     return Response('未找到该日期的自拍图', 404)
 
 
@@ -664,17 +824,19 @@ def main():
     try:
         with open(settings_path, 'r') as json_file:
             json_str = json_file.read()
-            json_data = json.loads(json_str)
-            app.secret_key = json_data['flask']['secret_key']
-            port = json_data['flask']['port']
-            db_url = json_data['database']['url']
-            db_username = json_data['database']['username']
-            db_password = json_data['database']['password']
-            db_name = json_data['database']['name']
-            logging.debug(f'json_data: {json_data}')
+            data = json.loads(json_str)
+        app.secret_key = data['flask']['secret_key']
+        app.config['MAX_CONTENT_LENGTH'] = data['flask']['max_upload_size']
+        port = data['flask']['port']
+        db_url = data['database']['url']
+        db_username = data['database']['username']
+        db_password = data['database']['password']
+        db_name = data['database']['name']
+        logging.debug(f'data: {data}')
     except Exception as e:
-        json_data = None
-        logging.error(f'json_data error: {e}')
+        data = None
+        logging.error(f'data error: {e}')
+        return
 
     serve(app, host="127.0.0.1", port=port)
 
