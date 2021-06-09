@@ -12,7 +12,10 @@
 <script src="//monitor.sz.lan/resources/react@16.14.0/umd/react-dom.production.min.js"></script>
 <script src="//monitor.sz.lan/resources/babel-standalone@6.15.0/babel.min.js"></script>
 <script src="//monitor.sz.lan/resources/axios@0.21.1/dist/axios.min.js"></script>
+<script src="https://monitor.sz.lan/meal-planner/static/index-mealplans.js" type="text/jsx"></script>
+<script src="https://monitor.sz.lan/meal-planner/static/index-notes.js" type="text/jsx"></script>
 <script src="https://monitor.sz.lan/meal-planner/static/index.js" type="text/jsx"></script>
+
 <html>
 <head>
 <title>每日食谱[{{username}}]</title>
@@ -26,23 +29,6 @@
   </div> 
   <button onclick="window.open('./history-plans/');" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">查询历史食谱...</button>
   <div id="root"></div>
-  <button onclick="accordionHandler('notes')" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">
-  饮食健康笔记
-  <span id="small-triangle-notes" class="w3-right"> ▾ </span>
-  </button>
-  <div id="accordion-notes" class="w3-hide w3-container w3-card-4">
-    <div class="w3-container">
-      <div style="padding-top:8px;margin-top:1em;">
-        <textarea id="notes-content" rows="18" name="content" form="form-notes" style="width:100%;">{{notes}}</textarea>
-      </div>
-      <input id="notes-submission" class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom"
-             style="margin-top:0.35em" type="submit" 
-             onclick="logUserActivity('[meal-planner/index] submit new notes', '{{username}}');" value="提交">
-      <input onclick="window.open('./notes-history/');" type="button" 
-             class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom"
-             style="margin-top:0.35em;" value="查询历史笔记">
-    </div>  
-  </div>
   <button onclick="accordionHandler('blacklist')" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">
   黑名单
   <span id="small-triangle-blacklist" class="w3-right"> ▾ 

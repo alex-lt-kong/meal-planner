@@ -450,7 +450,7 @@ def notes_history():
                            results=results)
 
 
-def read_notes():
+def convert_notes_to_json():
 
     conn = pymysql.connect(db_url, db_username, db_password, db_name)
     cursor = conn.cursor()
@@ -459,25 +459,42 @@ def read_notes():
     cursor.execute(sql)
     results = cursor.fetchall()
 
-    content = ''
+    notes_json = {}
+    notes_json['date'], notes_json['content'] = None, None
     if len(results) > 0:
-        content = results[0][2]
+        notes_json['date'] = results[0][1]
+        notes_json['content'] = results[0][2]
 
-    return content
+    return notes_json
 
 
-@app.route('/update-notes/', methods=['GET', 'POST'])
+@app.route('/get-notes/', methods=['GET'])
+def get_notes():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        pass
+    else:
+        return Response('错误：未登录', 401)
+
+    notes_json = convert_notes_to_json()
+    return flask.jsonify(notes_json)
+
+
+@app.route('/update-notes/', methods=['POST'])
 def update_notes():
 
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         pass
     else:
-        return redirect(f'{relative_url}/login/')
+        return Response('错误：未登录', 401)
 
-    if 'content' not in request.form or len(request.form['content']) == 0:
+    if 'data' not in request.form or len(request.form['data']) == 0:
         return Response('没有收到数据', 400)
-    content = request.form['content']
-
+    data = request.form['data']
+    try:
+        json_data = json.loads(data)
+    except Exception as e:
+        return Response(f'data的值无法解析成JSON字符串：{e}', 400)
     conn = pymysql.connect(db_url, db_username, db_password, db_name)
     conn.autocommit(True)
     #  It appears that both UPDATE and SELECT need "commit"
@@ -486,8 +503,14 @@ def update_notes():
     cursor.execute(sql)
 
     sql = 'INSERT INTO `notes` (`date`, `content`) VALUES (CURDATE(), %s)'
+    try:
+        cursor.execute(sql, (json_data['content']))
+    except Exception as e:
+        cursor.close()
+        conn.close()
+        logging.error(f'{e}')
+        return Response(f'数据库更新错误：{e}', 500)
 
-    cursor.execute(sql, (content))
     cursor.close()
     conn.close()
     return Response('更新成功', 200)
@@ -501,9 +524,6 @@ def index():
     else:
         return redirect(f'{relative_url}/login/')
 
-#    mod_types = detect_modification_type(meal_plan_new=meal_plans[1],
-#                                         meal_plan_old=meal_plans[0])
-
     if 'banned_items' in request.form and 'limited_items' in request.form:
         write_blacklist_to_json_file(request.form['banned_items'],
                                      request.form['limited_items'])
@@ -512,8 +532,7 @@ def index():
     return render_template('index.html',
                            username=username,
                            banned_items=banned_items,
-                           limited_items=limited_items,
-                           notes=read_notes())
+                           limited_items=limited_items)
 
 
 @app.route('/history-plans/', methods=['GET', 'POST'])
