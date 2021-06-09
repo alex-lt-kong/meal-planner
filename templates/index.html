@@ -12,6 +12,7 @@
 <script src="//monitor.sz.lan/resources/react@16.14.0/umd/react-dom.production.min.js"></script>
 <script src="//monitor.sz.lan/resources/babel-standalone@6.15.0/babel.min.js"></script>
 <script src="//monitor.sz.lan/resources/axios@0.21.1/dist/axios.min.js"></script>
+<script src="https://monitor.sz.lan/meal-planner/static/index-misc.js" type="text/jsx"></script>
 <script src="https://monitor.sz.lan/meal-planner/static/index-mealplans.js" type="text/jsx"></script>
 <script src="https://monitor.sz.lan/meal-planner/static/index-notes.js" type="text/jsx"></script>
 <script src="https://monitor.sz.lan/meal-planner/static/index.js" type="text/jsx"></script>
@@ -26,27 +27,9 @@
     <h3>
       每日食谱<span class="w3-right" style="margin-bottom:1rem;font-size:0.65em;">[{{username}}], <a href="#" onclick="logout();">退出</a></span>
     </h3>
-  </div> 
-  <button onclick="window.open('./history-plans/');" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">查询历史食谱...</button>
+  </div>  
   <div id="root"></div>
-  <button onclick="accordionHandler('blacklist')" class="w3-button w3-block w3-left-align w3-green" style="margin-top:0.35em;">
-  黑名单
-  <span id="small-triangle-blacklist" class="w3-right"> ▾ 
-    </span>
-  </button>
-  <div id="accordion-blacklist" class="w3-hide w3-container w3-card-4">
-    <div class="w3-container">
-      <form action="https://monitor.sz.lan/meal_planner/" method="post" style="padding:8px; margin-top:0.5em;" id="form-blacklist">
-        <span style="color:#ff0000;"><!--pure-red--><b>避免</b>食用</span>
-        <textarea rows="10" name="banned_items" form="form-blacklist" style="width:100%;">{{banned_items}}</textarea>
-        <span style="color:#f2552c;"><!--w3-2017-flame--><b>谨慎</b>食用</span>
-        <textarea rows="7" name="limited_items" form="form-blacklist" style="width:100%;">{{limited_items}}</textarea>
-        <input class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom" style="margin-top: 0.85rem" type="submit" 
-               onclick="logUserActivity('[meal-planner/index] submit new blacklist items', '{{username}}');" value="提交">
-      </form>      
-    </div>  
-  </div>
-  <div style="margin-bottom:5em;"></div>
+
   <div id="msg-box" class="w3-modal" style="display:none">
     <div class="w3-modal-content w3-animate-top">
       <header class="w3-container w3-green"> 
@@ -78,21 +61,6 @@ window.onload = function() {
 };
 
 window.onunload = function() { logUserActivity('[meal-planner/index] unload', '{{username}}'); };
-  
-$("#notes-submission").click(function(){
-  $.post("./update-notes/",
-  {
-    content: $("#notes-content").val()
-  }).done(
-    function(response){
-       alert(response);
-       textAreaAdjust(document.getElementById("notes-content"));
-     }
-   ).fail(
-    function(jqXHR, textStatus, errorThrown) {
-        alert(jqXHR.responseText);
-     });
-});
 
 function logout() {
   logUserActivity('[meal-planner/index] logout', '{{username}}');

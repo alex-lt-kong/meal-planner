@@ -6,7 +6,8 @@ class Notes extends React.Component {
       show: props.show,
       data: null /* Will be initialized in componentDidMount() */
     };
-    this.handleClick = this.handleClick.bind(this);
+    this.handleClickUpdate = this.handleClickUpdate.bind(this);
+    this.handleClickHistory = this.handleClickHistory.bind(this);
     this.handleAccordionClick = this.handleAccordionClick.bind(this);
     this.handleChange = this.handleChange.bind(this);
   }
@@ -20,11 +21,10 @@ class Notes extends React.Component {
     this.setState({
       data: currentData
     });
-    console.log(this.state.data.content)
   }
 
   fetchDataFromServer() {
-    axios.get('https://monitor.sz.lan/meal-planner/get-notes/')
+    axios.get('./get-notes/')
       .then(response => {
         this.setState({
           data: null
@@ -36,7 +36,7 @@ class Notes extends React.Component {
         textAreaAdjust();
       })
       .catch(error => {
-        alert('健康笔记加载失败！请关闭窗口后重试！');
+        alert('健康笔记加载失败！请关闭窗口后重试！\n' + error);
       });
   }
 
@@ -49,7 +49,11 @@ class Notes extends React.Component {
     // This call adjusts the height of textareas after accordion expansion.
   }
 
-  handleClick(event) {
+  handleClickHistory(event) {
+    window.open('./history-notes/');
+  }
+
+  handleClickUpdate(event) {
     const payload = new FormData();
     console.log('clicked!');
     payload.append('data', JSON.stringify(this.state.data));
@@ -68,10 +72,9 @@ class Notes extends React.Component {
       console.log(error);
       alert('健康笔记更新错误：\n' + error);
       // You canNOT write error.response or whatever similar here.
-      // The reason is that this catch() catches both network error and other errors,
+      // The reason is that this catch() catches both network errors and other errors,
       // which may or may not have a response property.
     });
-    event.preventDefault();
   }
 
   componentDidMount() {
@@ -88,12 +91,13 @@ class Notes extends React.Component {
           健康笔记<span class="w3-right">{this.state.show ? "▴" : "▾"}</span>
         </button>
         <div className={`w3-container w3-card-4 ${this.state.show ? "w3-show" : "w3-hide"}`}>
-            <textarea class="w3-input textarea-dailyremark" rows="3" onChange={this.handleChange}>
-              {this.state.data.content}
-            </textarea>
+          <textarea class="w3-input textarea-dailyremark" rows="3" onChange={this.handleChange}>
+            {this.state.data.content}
+          </textarea>
           <div>
             (<span>最后更新：{new Date(this.state.data.date).toISOString().slice(0, 10)}</span>)
-            <button onClick={this.handleClick} class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button">更新</button>   
+            <button onClick={this.handleClickUpdate} class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button">更新</button>   
+            <button onClick={this.handleClickHistory} class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button">翻看历史笔记</button>   
           </div>
         </div>
       </div>

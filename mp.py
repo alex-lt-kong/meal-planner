@@ -11,6 +11,7 @@ import flask
 import hashlib
 import json
 import logging
+import os
 import pymysql
 import re
 import signal
@@ -42,76 +43,116 @@ relative_url = f'../{app_name}'
 settings_path = f'/root/bin/{app_name}/settings.json'
 stop_signal = False
 blacklist_path = f'/root/bin/{app_name}/blacklist.json'
-notes_path = f'/root/bin/{app_name}/notes.json'
 users_path = f'/root/bin/{app_name}/users.json'
-meal_plan = None
-meal_plan_today = None
 
 
-def write_blacklist_to_json_file(banned_items: str, limited_items: str):
+@app.route('/upload-selfie/', methods=['POST'])
+def upload_selfie():
 
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        pass
+    else:
+        return Response('错误：未登录', 401)
+
+    if 'selected_file' not in request.files:
+        return Response('没有收到自拍图', 400)
+
+    selected_file = request.files['selected_file']
+    date_string = dt.datetime.now().strftime('%Y-%m-%d')
+    if selected_file:
+        filename = f'{date_string}.png'
+        selected_file.seek(0)
+        selected_file.save(
+            os.path.join('/root/bin/meal-planner/resources/selfies/',
+                         filename))
+
+    return Response('自拍照上传成功', 200)
+
+
+@app.route('/if-selfie-exists/', methods = ['GET'])
+def check_if_selfie_exists():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        pass
+    else:
+        return Response('错误：未登录', 401)
+
+    if 'date' in request.args:
+        date_string = request.args['date']
+    else:
+        return Response('错误：未指定参数date', 401)
+
+    image_path = f'/root/bin/meal-planner/resources/selfies/{date_string}.png'
+
+    return '1' if os.path.isfile(image_path) else '0'
+
+@app.route('/get-selfie/', methods = ['GET'])
+def get_selfie():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        pass
+    else:
+        return Response('错误：未登录', 401)
+
+    if 'date' in request.args:
+        date_string = request.args['date']
+    else:
+        return Response('错误：未指定参数date', 401)
+
+    image_path = f'/root/bin/meal-planner/resources/selfies/{date_string}.png'
+    if os.path.isfile(image_path):
+        return flask.send_file(filename_or_fp=image_path)
+    else:
+        return Response('未找到该自拍图', 404)
+
+
+@app.route('/update-blacklist/', methods=['POST'])
+def update_blacklist():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        pass
+    else:
+        return Response('错误：未登录', 401)
+
+    if 'data' not in request.form:
+        return Response('错误：未指定参数data', 400)
+
+    data = request.form['data']
+    try:
+        json_data = json.loads(data)
+    except Exception as e:
+        return Response(f'data的值无法解析成JSON字符串：{e}', 400)
+    if 'banned_items' not in json_data or 'limited_items' not in json_data:
+        return Response(f'JSON数据[{json_data}]格式错误', 400)
+    print(json_data)
     try:
         with open(blacklist_path, 'w+') as json_file:
-            json.dump({'banned_items': banned_items,
-                       'limited_items': limited_items},
-                      json_file, sort_keys=True, indent=4, ensure_ascii=False)
-
+            json.dump(json_data, json_file,
+                      sort_keys=True, indent=4, ensure_ascii=False)
     except Exception as e:
-        logging.error(f'Unable to write data to file [{blacklist_path}]: {e}')
-        return False, sys.exc_info()
+        logging.error(f'{e}')
+        return Response(f'黑名单写入错误：{e}', 500)
 
-    return True, ''
+    return Response('黑名单更新成功！', 200)
 
 
-def read_meal_plan_from_db(date_string):
+@app.route('/get-blacklist/', methods=['GET'])
+def get_blacklist():
 
-    conn = pymysql.connect(db_url, db_username, db_password, db_name)
-    conn.autocommit(True)
-    # It appears that both UPDATE and SELECT need "commit"
-    cursor = conn.cursor()
-    sql = '''
-         SELECT `breakfast`, `breakfast_feedback`,
-         `morning_extra_meal`, `morning_extra_meal_feedback`,
-         `lunch`, `lunch_feedback`,
-         `afternoon_extra_meal`, `afternoon_extra_meal_feedback`,
-         `dinner`, `dinner_feedback`,
-         `evening_extra_meal`, `evening_extra_meal_feedback`, `daily_remark`
-         FROM `meal_plan` WHERE `date` = %s'''
-    cursor.execute(sql, (date_string))
-    meal_plan = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    if len(meal_plan) == 0:
-        return None
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        pass
     else:
-        return [[meal_plan[0][0], meal_plan[0][1]],
-                [meal_plan[0][2], meal_plan[0][3]],
-                [meal_plan[0][4], meal_plan[0][5]],
-                [meal_plan[0][6], meal_plan[0][7]],
-                [meal_plan[0][8], meal_plan[0][9]],
-                [meal_plan[0][10], meal_plan[0][11]],
-                meal_plan[0][12]]
+        return Response('错误：未登录', 401)
 
-
-def read_blacklist_from_json_file():
-
-    blacklist = None
-    banned_items, limited_items = '', ''
     try:
         with open(blacklist_path, 'r') as json_file:
             json_str = json_file.read()
-            json_data = json.loads(json_str)
-            logging.debug(f'data [{json_data}] read from [{blacklist_path}]')
-            blacklist = json_data
-        banned_items = blacklist['banned_items']
-        limited_items = blacklist['limited_items']
+            blacklist = json.loads(json_str)
     except Exception as e:
-        logging.error(f'Unable to read data from file [{blacklist_path}]: {e}')
-        blacklist = {}
-        banned_items = ''
-        limited_items = ''
+        logging.error(f'{e}')
+        return Response(f'读取黑名单错误：{e}', 500)
 
-    return banned_items, limited_items
+    return flask.jsonify(blacklist)
 
 
 def get_straight_a_days(include_aminus=False):
@@ -430,8 +471,8 @@ def get_meal_plan():
     return flask.jsonify(meal_plan)
 
 
-@app.route('/notes-history/', methods=['GET'])
-def notes_history():
+@app.route('/history-notes/', methods=['GET'])
+def history_notes():
 
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         username = session[f'{app_name}']['username']
@@ -445,7 +486,7 @@ def notes_history():
     cursor.execute(sql)
     results = cursor.fetchall()
 
-    return render_template('notes-history.html',
+    return render_template('history-notes.html',
                            username=username,
                            results=results)
 
@@ -524,15 +565,7 @@ def index():
     else:
         return redirect(f'{relative_url}/login/')
 
-    if 'banned_items' in request.form and 'limited_items' in request.form:
-        write_blacklist_to_json_file(request.form['banned_items'],
-                                     request.form['limited_items'])
-    banned_items, limited_items = read_blacklist_from_json_file()
-
-    return render_template('index.html',
-                           username=username,
-                           banned_items=banned_items,
-                           limited_items=limited_items)
+    return render_template('index.html', username=username)
 
 
 @app.route('/history-plans/', methods=['GET', 'POST'])

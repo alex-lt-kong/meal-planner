@@ -1,3 +1,62 @@
+class MealPlanDailySelfie extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      selectedFile: null,
+      data: props.data,
+      date: props.date
+    };
+    this.onFileUpload = this.onFileUpload.bind(this);
+    this.onFileChange = this.onFileChange.bind(this);
+  }
+
+  onFileChange(event) { 
+    this.setState({ 
+      selectedFile: event.target.files[0]
+    }); 
+    this.onFileUpload(event.target.files[0]);
+  }; 
+   
+  onFileUpload(selected_file) {
+    console.log('start uploading...')
+    const payload = new FormData(); 
+    payload.append('selected_file', selected_file); 
+    console.log(selected_file); 
+    axios.post("./upload-selfie/", payload)
+    .then(response => {
+      alert(this.state.date.toISOString().slice(0, 10) + '的自拍照上传成功！');
+      this.forceUpdate();
+    })
+    .catch(error => {
+      console.log(error);
+      alert('错误：\n' + error);
+      // You canNOT write error.response or whatever similar here.
+      // The reason is that this catch() catches both network error and other errors,
+      // which may or may not have a response property.
+    });
+  }
+   
+  render() { 
+    return ( 
+      <div> 
+        <div>
+          <p class="w3-text-green p-mealplanitem-title">
+            <b>今日自拍</b>
+          </p>          
+        </div>
+          <div>
+          <img src={`./get-selfie/?date=${this.state.date.toISOString().slice(0, 10)}&${new Date().getTime()}`} alt="Image not found"
+               style={{ width: "100%" }} />
+              <input type="file" onChange={this.onFileChange} />              
+              {/*<button onClick={this.onFileUpload} class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button"> 
+                上传 
+              </button> */}
+          </div> 
+      </div> 
+    ); 
+  } 
+}
+
 class MealPlanDailyRemark extends React.Component {
   constructor(props) {
     super(props);
@@ -8,7 +67,6 @@ class MealPlanDailyRemark extends React.Component {
   }
 
   handleChange(event) {
-    console.log('From MealPlanDailyRemark, change detected: '+ event.target.value);
     var currentData = this.state.data;
     currentData.daily_remark = event.target.value;
     /* The issue is, React.js' setState() cannot handle nested properties so here we
@@ -101,8 +159,7 @@ class MealPlanItem extends React.Component {
           <p class="w3-text-green p-mealplanitem-title">
             <b>{this.state.data[this.state.itemName].title}</b>
             {modificationInfo}
-          </p>
-          
+          </p>          
         </div>
         <div class="w3-cell-row">
           <div class="w3-cell">
@@ -142,7 +199,7 @@ class MealPlan extends React.Component {
       data: null /* Will be initialized in componentDidMount() */
     };
 
-    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleClickUpdate = this.handleClickUpdate.bind(this);
     this.handleAccordionClick = this.handleAccordionClick.bind(this);
     this.handleCopyTodayClick = this.handleCopyTodayClick.bind(this);
     this.handleAccordionShow = this.handleAccordionShow.bind(this);    
@@ -155,7 +212,7 @@ class MealPlan extends React.Component {
   }
 
   fetchDataFromServer() {
-    axios.get('https://monitor.sz.lan/meal-planner/get-meal-plan/?date=' + this.state.date.toISOString().slice(0, 10))
+    axios.get('./get-meal-plan/?date=' + this.state.date.toISOString().slice(0, 10))
       .then(response => {
         // handle success
         this.setState({
@@ -175,7 +232,7 @@ class MealPlan extends React.Component {
   handleCopyTodayClick(event) {
     let today = new Date(this.state.date);
     today.setDate(today.getDate() - 1);
-    axios.get('https://monitor.sz.lan/meal-planner/get-meal-plan/?date=' + today.toISOString().slice(0, 10))
+    axios.get('./get-meal-plan/?date=' + today.toISOString().slice(0, 10))
       .then(response => {
         // handle success
         this.setState({
@@ -213,13 +270,13 @@ class MealPlan extends React.Component {
     console.log('handleAccordionShow');
   }
 
-  handleSubmit(event) {
+  handleClickUpdate(event) {
     const payload = new FormData();
     payload.append('date', this.state.date.toISOString().slice(0, 10));
     payload.append('data', JSON.stringify(this.state.data));
     axios({
       method: "post",
-      url: "https://monitor.sz.lan/meal-planner/update-meal-plan/",
+      url: "./update-meal-plan/",
       data: payload,
     })
     .then(response => {
@@ -269,11 +326,12 @@ class MealPlan extends React.Component {
           <MealPlanItem data={this.state.data} itemName="afternoon_extra_meal" sendData={this.getData} />
           <MealPlanItem data={this.state.data} itemName="dinner" sendData={this.getData} />
           <MealPlanItem data={this.state.data} itemName="evening_extra_meal" sendData={this.getData} />
-          <MealPlanDailyRemark data={this.state.data} sendData={this.getData} />          
+          <MealPlanDailyRemark data={this.state.data} sendData={this.getData} />
+          <MealPlanDailySelfie date={this.state.date} />        
           <div>
-            <form onSubmit={this.handleSubmit}>
-              <input class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button" type="submit" value="提交" />
-            </form>
+            <button class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button" onClick={this.handleClickUpdate}>
+              提交
+            </button>
             {buttonCopyToday}           
           </div>
         </div>

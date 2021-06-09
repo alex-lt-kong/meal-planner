@@ -7,10 +7,12 @@ tomorrow.setDate(tomorrow.getDate() + 1);
 
 ReactDOM.render(
   <div>
+    <CheckHistoricalPlans />
     <MealPlan show={false} convenientDateName="昨日" date={yesterday}  />
     <MealPlan show={true}  convenientDateName="今日" date={today} />
     <MealPlan show={false} convenientDateName="明日" date={tomorrow} />
     <Notes show={false} />
+    <Blacklist show={false} />
   </div>,
   document.getElementById('root')
 );
@@ -25,7 +27,8 @@ async function textAreaAdjust() {
   $('textarea').each(
     function(){  
       $(this)[0].style.height = "inherit";
-      $(this)[0].style.height = (1 + $(this)[0].scrollHeight)+"px";
+      $(this)[0].style.height = (2 + $(this)[0].scrollHeight)+"px";
+      // 1+ seems not enough in some cases, try 2+
     }
   );
 }
