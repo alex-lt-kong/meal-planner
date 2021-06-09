@@ -29,7 +29,7 @@ class MealPlanDailySelfie extends React.Component {
     })
     .catch(error => {
       console.log(error);
-      alert('错误：\n' + error);
+      alert('自拍照上传错误\n' + error);
       // You canNOT write error.response or whatever similar here.
       // The reason is that this catch() catches both network error and other errors,
       // which may or may not have a response property.
@@ -45,15 +45,14 @@ class MealPlanDailySelfie extends React.Component {
           </p>          
         </div>
           <div>
-          <img src={`./get-selfie/?date=${this.state.date.toISOString().slice(0, 10)}&${new Date().getTime()}`} alt="Image not found"
-               style={{ width: "100%" }} />
-              <input type="file" onChange={this.onFileChange} />              
-              {/*<button onClick={this.onFileUpload} class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button"> 
-                上传 
-              </button> */}
-          </div> 
+          <img src={`./get-selfie/?date=${this.state.date.toISOString().slice(0, 10)}&${new Date().getTime()}`} alt=""
+               style={{ display: "block", "margin-left": "auto", "margin-right": "auto", "max-width": "100%", width: "300px" }} />
+          {/* If alt="" is added, the broken image icon won't show if src is not found. */}
+          </div>
+          <input type="file" accept="image/png, image/gif, image/jpeg" onChange={this.onFileChange} />
+          {/* image/jpeg includes jpg and jpeg extensions. */}
       </div> 
-    ); 
+    );
   } 
 }
 
@@ -201,8 +200,7 @@ class MealPlan extends React.Component {
 
     this.handleClickUpdate = this.handleClickUpdate.bind(this);
     this.handleAccordionClick = this.handleAccordionClick.bind(this);
-    this.handleCopyTodayClick = this.handleCopyTodayClick.bind(this);
-    this.handleAccordionShow = this.handleAccordionShow.bind(this);    
+    this.handleCopyTodayClick = this.handleCopyTodayClick.bind(this);  
     this.getData = this.getData.bind(this);
   }
 
@@ -266,10 +264,6 @@ class MealPlan extends React.Component {
     // This call adjusts the height of textareas after accordion expansion.
   }
 
-  handleAccordionShow(event) {
-    console.log('handleAccordionShow');
-  }
-
   handleClickUpdate(event) {
     const payload = new FormData();
     payload.append('date', this.state.date.toISOString().slice(0, 10));
@@ -327,7 +321,7 @@ class MealPlan extends React.Component {
           <MealPlanItem data={this.state.data} itemName="dinner" sendData={this.getData} />
           <MealPlanItem data={this.state.data} itemName="evening_extra_meal" sendData={this.getData} />
           <MealPlanDailyRemark data={this.state.data} sendData={this.getData} />
-          <MealPlanDailySelfie date={this.state.date} />        
+          <MealPlanDailySelfie date={this.state.date} />
           <div>
             <button class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button" onClick={this.handleClickUpdate}>
               提交

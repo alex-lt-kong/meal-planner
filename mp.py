@@ -3,6 +3,7 @@
 
 from flask import Flask, render_template, Response, request, redirect, session
 from flask_cors import CORS
+from PIL import Image
 from waitress import serve
 
 import argparse
@@ -35,12 +36,14 @@ CORS(app)
 #  This necessary for javascript to access a telemetry link without opening it:
 #  https://stackoverflow.com/questions/22181384/javascript-no-access-control-allow-origin-header-is-present-on-the-requested
 
+allowed_ext = ['jpg', 'jpeg', 'png', 'gif']
 app_name = 'meal-planner'
 db_url, db_username, db_password, db_name = '', '', '', ''
 json_data = None
 log_path = f'/var/log/mamsds/{app_name}.log'
 relative_url = f'../{app_name}'
 settings_path = f'/root/bin/{app_name}/settings.json'
+selfies_path = f'/root/bin/{app_name}/resources/selfies'
 stop_signal = False
 blacklist_path = f'/root/bin/{app_name}/blacklist.json'
 users_path = f'/root/bin/{app_name}/users.json'
@@ -56,20 +59,33 @@ def upload_selfie():
 
     if 'selected_file' not in request.files:
         return Response('没有收到自拍图', 400)
+    if request.files['selected_file'] is None:
+        return Response('没有收到自拍图', 400)
 
     selected_file = request.files['selected_file']
+
+    if selected_file.filename.rsplit('.', 1)[1].lower() not in allowed_ext:
+        return Response(f'仅允许上传后缀为{allowed_ext}的文件', 400)
+
     date_string = dt.datetime.now().strftime('%Y-%m-%d')
-    if selected_file:
-        filename = f'{date_string}.png'
-        selected_file.seek(0)
-        selected_file.save(
-            os.path.join('/root/bin/meal-planner/resources/selfies/',
-                         filename))
+
+    oldext = os.path.splitext(selected_file.filename)[1]
+    for ext in allowed_ext:
+        image_path = os.path.join(selfies_path, f'{date_string}.{ext}')
+        if os.path.isfile(image_path):
+            os.remove(image_path)
+
+    filename = f'{date_string}{oldext}'
+    selected_file.seek(0)
+    image = Image.open(selected_file)
+    image.thumbnail((800, 800))
+    # (800, 800): the maximum width and maximum height of the thumbnail
+    image.save(os.path.join(selfies_path, filename))
 
     return Response('自拍照上传成功', 200)
 
 
-@app.route('/if-selfie-exists/', methods = ['GET'])
+@app.route('/if-selfie-exists/', methods=['GET'])
 def check_if_selfie_exists():
 
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
@@ -86,7 +102,8 @@ def check_if_selfie_exists():
 
     return '1' if os.path.isfile(image_path) else '0'
 
-@app.route('/get-selfie/', methods = ['GET'])
+
+@app.route('/get-selfie/', methods=['GET'])
 def get_selfie():
 
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
@@ -99,11 +116,11 @@ def get_selfie():
     else:
         return Response('错误：未指定参数date', 401)
 
-    image_path = f'/root/bin/meal-planner/resources/selfies/{date_string}.png'
-    if os.path.isfile(image_path):
-        return flask.send_file(filename_or_fp=image_path)
-    else:
-        return Response('未找到该自拍图', 404)
+    for ext in allowed_ext:
+        image_path = os.path.join(selfies_path, f'{date_string}.{ext}')
+        if os.path.isfile(image_path):
+            return flask.send_file(filename_or_fp=image_path)
+    return Response('未找到该日期的自拍图', 404)
 
 
 @app.route('/update-blacklist/', methods=['POST'])
