@@ -71,15 +71,49 @@ def get_attachment_list():
     except Exception as e:
         return Response(f'参数date的语法不正确：{e}', 401)
 
-    attachments_path_today = os.path.join(attachments_path, date_string)
     data = {}
-    data['date'] = date_string
+    attachments_path_today = os.path.join(attachments_path, date_string)
     if os.path.isdir(attachments_path_today):
         data['filenames'] = os.listdir(attachments_path_today)
     else:
         data['filenames'] = None
 
     return flask.jsonify(data)
+
+
+@app.route('/rename-attachment/', methods=['GET'])
+def rename_attachment():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        pass
+    else:
+        return Response('错误：未登录', 401)
+    if 'date' in request.args and 'filename_old' in request.args and 'filename_new' in request.args:
+        date_string = request.args['date']
+        filename_old = request.args['filename_old']
+        filename_old = sanitize_filename(filename_old)
+        filename_new = request.args['filename_new']
+        filename_new = sanitize_filename(filename_new)
+    else:
+        return Response('错误：未指定参数date,filename_old或filename_new', 401)
+    try:
+        dt.datetime.strptime(date_string, '%Y-%m-%d')
+    except Exception as e:
+        return Response(f'参数date的语法不正确：{e}', 401)
+
+    attachments_path_today = os.path.join(attachments_path, date_string)
+    if os.path.isdir(attachments_path_today) is False:
+        return Response(f'文件{filename_old}不存在', 401)
+
+    file_path_old = os.path.join(attachments_path_today, filename_old)
+    if os.path.isfile(file_path_old) is False:
+        return Response(f'文件{filename_old}不存在', 401)
+    file_path_new = os.path.join(attachments_path_today, filename_new)
+    try:
+        os.rename(file_path_old, file_path_new)
+    except Exception as e:
+        return Response(f'文件{filename_old}重命名为{filename_new}失败：{e}', 500)
+    return Response('文件{filename_old}重命名为{filename_new}成功！', 200)
 
 
 @app.route('/remove-attachment/', methods=['GET'])
@@ -101,8 +135,6 @@ def remove_attachment():
         return Response(f'参数date的语法不正确：{e}', 401)
 
     attachments_path_today = os.path.join(attachments_path, date_string)
-    data = {}
-    data['date'] = date_string
     if os.path.isdir(attachments_path_today) is False:
         return Response(f'文件{filename}不存在', 401)
     file_path = os.path.join(attachments_path_today, filename)
@@ -135,8 +167,6 @@ def get_attachment():
         return Response(f'参数date的语法不正确：{e}', 401)
 
     attachments_path_today = os.path.join(attachments_path, date_string)
-    data = {}
-    data['date'] = date_string
     if os.path.isdir(attachments_path_today) is False:
         return Response(f'文件{filename}不存在', 401)
     file_path = os.path.join(attachments_path_today, filename)

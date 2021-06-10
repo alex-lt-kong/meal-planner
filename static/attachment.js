@@ -1,5 +1,3 @@
-
-
 class AttachmentsManager extends React.Component {
   constructor(props) {
     super(props);
@@ -8,12 +6,16 @@ class AttachmentsManager extends React.Component {
       date: props.date,
       enableEdit: props.enableEdit,
       enableUpload: props.enableUpload,
+      renameModeFile: null,
+      newFileName: null,
       uploadProgress: null
     };
     this.onFileUpload = this.onFileUpload.bind(this);
     this.handleClickFileName = this.handleClickFileName.bind(this);
+    this.handleNewFilenameChange = this.handleNewFilenameChange.bind(this);
     this.handleClickFileRemove = this.handleClickFileRemove.bind(this);
-    this.handleClickFileRename = this.handleClickFileRename.bind(this);
+    this.handleClickEnableRenameMode = this.handleClickEnableRenameMode.bind(this);
+    this.handleClickSubmitNewFilename = this.handleClickSubmitNewFilename.bind(this);    
     this.onFileChange = this.onFileChange.bind(this);
   }
 
@@ -72,8 +74,34 @@ class AttachmentsManager extends React.Component {
       });
   }
   
-  handleClickFileRename(value) {
+  handleClickSubmitNewFilename(value) {
+    console.log('handleClickSubmitNewFilename' + value);
+      axios.get('https://monitor.sz.lan/meal-planner/rename-attachment/?date=' + this.state.date.toISOString().slice(0, 10) + 
+      '&filename_old=' + this.state.renameModeFile + 
+      '&filename_new=' + this.state.newFileName)
+        .then(response => {
+          this.setState({ 
+          renameModeFile: null
+          }); 
+          this.fetchDataFromServer();
+        })
+        .catch(error => {
+          alert('重命名失败\n' + error);
+        });
+  }
+  
+  handleClickEnableRenameMode(value) {
     console.log('handleClickFileRename:' + value);
+    this.setState({ 
+      renameModeFile: value,
+      newFileName: value
+    }); 
+  }
+
+  handleNewFilenameChange(event) {
+    this.setState({ 
+      newFileName: event.target.value
+    }); 
   }
 
   componentDidMount() {
@@ -110,22 +138,39 @@ class AttachmentsManager extends React.Component {
       for (i = 0; i < this.state.data.filenames.length; i++) {
         var removeButton = null;
         var renameButton = null;
+        var filenameDisplay = null;
         if (this.state.enableEdit === true) {
           removeButton = <span class="w3-bar-item w3-right" value={this.state.data.filenames[i]} 
                                onClick={this.handleClickFileRemove.bind(this, this.state.data.filenames[i])}>&times;</span>;
         }
         if (this.state.enableEdit === true) {
-          renameButton = <span class="w3-bar-item w3-right" value={this.state.data.filenames[i]} 
-                               onClick={this.handleClickFileRename.bind(this, this.state.data.filenames[i])}>🖊️</span>;
+          if (this.state.renameModeFile != this.state.data.filenames[i]) {
+            renameButton = <span class="w3-bar-item w3-right" value={this.state.data.filenames[i]} 
+                                onClick={this.handleClickEnableRenameMode.bind(this, this.state.data.filenames[i])}>🖊️</span>;
+            filenameDisplay = <a href="javascript:;" onClick={this.handleClickFileName.bind(this, this.state.data.filenames[i])}
+                                 style={{"text-decoration": "none", width: "100%"}} >{this.state.data.filenames[i]}</a>;
+                              /* href="javascript:;" a link that goes to nowhere */
+          } else {
+            renameButton = <button class="w3-bar-item w3-right"
+                                   onClick={this.handleClickSubmitNewFilename.bind(this, this.state.newFileName)}>完成</button>;
+            filenameDisplay = <input type="text" style={{ width: "100%"}} value={this.state.newFileName} onChange={this.handleNewFilenameChange}></input>;
+          }
         }
         filenames[i] = (
         <li key={i} class="w3-bar" >
-          {removeButton}
-          {renameButton}       
-          <div class="w3-bar-item" value={this.state.data.filenames[i]} 
-            onClick={this.handleClickFileName.bind(this, this.state.data.filenames[i])}>
-              <a href="javascript:;" style={{"text-decoration": "none"}} >{this.state.data.filenames[i]}</a>
-              {/* href="javascript:;" a link that goes to nowhere */}
+     
+
+          <div class="w3-cell-row">
+          <div class="w3-container w3-cell w3-mobile">
+            <div class="w3-bar-item" value={this.state.data.filenames[i]} >               
+              {filenameDisplay}              
+          </div>
+            </div>
+            <div class="w3-container w3-cell w3-mobile">
+            {removeButton}
+          {renameButton}  
+            </div>
+
           </div>
         </li>
         );
