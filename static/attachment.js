@@ -138,40 +138,36 @@ class AttachmentsManager extends React.Component {
       for (i = 0; i < this.state.data.filenames.length; i++) {
         var removeButton = null;
         var renameButton = null;
-        var filenameDisplay = null;
+        var filenameDisplay = <a href="javascript:;" onClick={this.handleClickFileName.bind(this, this.state.data.filenames[i])}
+                                 style={{"text-decoration": "none", width: "100%"}} >{this.state.data.filenames[i]}</a>;
+                                 /* href="javascript:;" a link that goes to nowhere */;
         if (this.state.enableEdit === true) {
-          removeButton = <span class="w3-bar-item w3-right" value={this.state.data.filenames[i]} 
-                               onClick={this.handleClickFileRemove.bind(this, this.state.data.filenames[i])}>&times;</span>;
+          removeButton = <a class="w3-right" value={this.state.data.filenames[i]} style={{"margin-left": "1em", "text-decoration": "none" }} href="javascript:;"
+                               onClick={this.handleClickFileRemove.bind(this, this.state.data.filenames[i])}>&times;</a>;
         }
         if (this.state.enableEdit === true) {
           if (this.state.renameModeFile != this.state.data.filenames[i]) {
-            renameButton = <span class="w3-bar-item w3-right" value={this.state.data.filenames[i]} 
-                                onClick={this.handleClickEnableRenameMode.bind(this, this.state.data.filenames[i])}>🖊️</span>;
-            filenameDisplay = <a href="javascript:;" onClick={this.handleClickFileName.bind(this, this.state.data.filenames[i])}
-                                 style={{"text-decoration": "none", width: "100%"}} >{this.state.data.filenames[i]}</a>;
-                              /* href="javascript:;" a link that goes to nowhere */
+            renameButton = <a class="w3-right" value={this.state.data.filenames[i]} href="javascript:;" style={{"text-decoration": "none" }}
+                                onClick={this.handleClickEnableRenameMode.bind(this, this.state.data.filenames[i])}>🖊️</a>;
+
           } else {
-            renameButton = <button class="w3-bar-item w3-right"
+            renameButton = <button class="w3-right" 
                                    onClick={this.handleClickSubmitNewFilename.bind(this, this.state.newFileName)}>完成</button>;
             filenameDisplay = <input type="text" style={{ width: "100%"}} value={this.state.newFileName} onChange={this.handleNewFilenameChange}></input>;
           }
         }
         filenames[i] = (
-        <li key={i} class="w3-bar" >
-     
-
-          <div class="w3-cell-row">
-          <div class="w3-container w3-cell w3-mobile">
-            <div class="w3-bar-item" value={this.state.data.filenames[i]} >               
-              {filenameDisplay}              
-          </div>
+        <li key={i} style={{ "padding-left": "0.2em", "padding-right": "0.2em" }}>
+<div class="w3-cell-row">
+            <div class="w3-container w3-cell" style={{ "max-width": "65vw", "word-wrap": "break-word" }}>
+              <div value={this.state.data.filenames[i]} >
+                {filenameDisplay}              
+              </div>
             </div>
-            <div class="w3-container w3-cell w3-mobile">
-            {removeButton}
-          {renameButton}  
-            </div>
-
-          </div>
+            <div class="w3-container w3-cell">
+              {removeButton}
+              {renameButton}  
+            </div></div>
         </li>
         );
       }

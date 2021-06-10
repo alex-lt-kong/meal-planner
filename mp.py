@@ -61,11 +61,11 @@ def get_attachment_list():
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         pass
     else:
-        return Response('错误：未登录', 401)
+        return Response('未登录', 401)
     if 'date' in request.args:
         date_string = request.args['date']
     else:
-        return Response('错误：未指定参数date', 401)
+        return Response('未指定参数date', 401)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
     except Exception as e:
@@ -88,14 +88,16 @@ def rename_attachment():
         pass
     else:
         return Response('错误：未登录', 401)
-    if 'date' in request.args and 'filename_old' in request.args and 'filename_new' in request.args:
+    if ('date' in request.args
+            and 'filename_old' in request.args
+            and 'filename_new' in request.args):
         date_string = request.args['date']
         filename_old = request.args['filename_old']
         filename_old = sanitize_filename(filename_old)
         filename_new = request.args['filename_new']
         filename_new = sanitize_filename(filename_new)
     else:
-        return Response('错误：未指定参数date,filename_old或filename_new', 401)
+        return Response('未指定参数date,filename_old或filename_new', 401)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
     except Exception as e:
@@ -122,13 +124,13 @@ def remove_attachment():
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         pass
     else:
-        return Response('错误：未登录', 401)
+        return Response('未登录', 401)
     if 'date' in request.args and 'filename' in request.args:
         date_string = request.args['date']
         filename = request.args['filename']
         filename = sanitize_filename(filename)
     else:
-        return Response('错误：未指定参数date或filename', 401)
+        return Response('未指定参数date或filename', 401)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
     except Exception as e:
@@ -154,13 +156,13 @@ def get_attachment():
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         pass
     else:
-        return Response('错误：未登录', 401)
+        return Response('未登录', 401)
     if 'date' in request.args and 'filename' in request.args:
         date_string = request.args['date']
         filename = request.args['filename']
         filename = sanitize_filename(filename)
     else:
-        return Response('错误：未指定参数date或filename', 401)
+        return Response('未指定参数date或filename', 401)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
     except Exception as e:
@@ -168,10 +170,10 @@ def get_attachment():
 
     attachments_path_today = os.path.join(attachments_path, date_string)
     if os.path.isdir(attachments_path_today) is False:
-        return Response(f'文件{filename}不存在', 401)
+        return Response(f'文件[{filename}]不存在', 401)
     file_path = os.path.join(attachments_path_today, filename)
     if os.path.isfile(file_path) is False:
-        return Response(f'文件{filename}不存在', 401)
+        return Response(f'文件[{filename}]不存在', 401)
 
     return flask.send_from_directory(directory=attachments_path_today,
                                      filename=filename,  as_attachment=False,

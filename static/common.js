@@ -219,7 +219,7 @@ class MealPlanItem extends React.Component {
               {this.state.data[this.state.itemName].content}
             </textarea>           
           </div>
-          <div class="w3-cell">          
+          <div class="w3-cell" style={{ 'max-width': '2.75em' }}>          
             <select class="w3-select" style={feedbackStyle} value={this.state.data[this.state.itemName].feedback}
                     onChange={this.handleFeedbackChange} readOnly={this.props.sendData == null} >
               {/* If value matches nothing, seems that React.js will simply select the first itm.*/}
