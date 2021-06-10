@@ -16,19 +16,3 @@ ReactDOM.render(
   </div>,
   document.getElementById('root')
 );
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-async function textAreaAdjust() {
-  // As long as the function is decorated as async and there is a sleep() call,
-  // this function can adjust the height of textarea successfully.
-  await sleep(1);
-  $('textarea').each(
-    function(){  
-      $(this)[0].style.height = "inherit";
-      $(this)[0].style.height = (2 + $(this)[0].scrollHeight)+"px";
-      // 1+ seems not enough in some cases, try 2+
-    }
-  );
-}

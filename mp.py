@@ -46,7 +46,6 @@ allowed_ext = ['7z', 'apk', 'avi', 'bmp', 'conf', 'crt', 'csv', 'doc', 'docx',
 app_name = 'meal-planner'
 attachments_path = f'/root/bin/{app_name}/resources/attachments'
 db_url, db_username, db_password, db_name = '', '', '', ''
-json_data = None
 log_path = f'/var/log/mamsds/{app_name}.log'
 relative_url = f'../{app_name}'
 settings_path = f'/root/bin/{app_name}/settings.json'
@@ -153,7 +152,7 @@ def sanitize_filename(filename):
     # This function may be not robust enough... but should be good enough
     # for this use case...
     # also, the security is enhanced by the use of send_from_directory()
-    error_set = ['/', '\\', ':', '*', '?', '"', '|', '<', '>', ' ', '..']
+    error_set = ['/', '\\', ':', '*', '?', '"', '|', '<', '>', ' ']
     for c in filename:
         if c in error_set:
             filename = filename.replace(c, '_')
@@ -301,7 +300,7 @@ def update_blacklist():
         return Response(f'data的值无法解析成JSON字符串：{e}', 400)
     if 'banned_items' not in json_data or 'limited_items' not in json_data:
         return Response(f'JSON数据[{json_data}]格式错误', 400)
-    print(json_data)
+
     try:
         with open(blacklist_path, 'w+') as json_file:
             json.dump(json_data, json_file,
@@ -490,7 +489,7 @@ def update_meal_plan():
         json_data['dinner']['content'], json_data['dinner']['feedback'],
         json_data['evening_extra_meal']['content'],
         json_data['evening_extra_meal']['feedback'],
-        json_data['daily_remark'])
+        json_data['remark']['content'])
 
     try:
         cursor.execute(sql, parameters)
@@ -504,63 +503,55 @@ def update_meal_plan():
     return Response(f'更新{date_string}食谱成功！', 200)
 
 
-def insert_modification_type(meal_plan_new):
-
-    today = dt.datetime.strptime(meal_plan_new['date'], '%Y-%m-%d')
-    yesterday = today - dt.timedelta(days=1)
-    meal_plan_old = convert_meal_plan_to_json(
-        dt.datetime.strftime(yesterday, '%Y-%m-%d'))
+def insert_modification_type(meal_plan):
 
     # type == 0: no modification
     # type == 1: safe modification
     # type == 2: dangerous modification
 
-    meals = ['breakfast', 'morning_extra_meal',
+    items = ['breakfast', 'morning_extra_meal',
              'lunch', 'afternoon_extra_meal',
-             'dinner', 'evening_extra_meal']
+             'dinner', 'evening_extra_meal', 'remark']
 
     re_str = r'(-?\d*\.?\d+)'
     res_old, res_new = {}, {}
-    for meal in meals:
+    for item in items:
         # Iterate meals, not days
-        meal_plan_new[meal]['modification_type'] = 0
+        meal_plan[item]['modification_type'] = 0
 
-        if len(meal_plan_new[meal]['content']) > 0:
-            res_new[meal] = re.split(re_str,
-                                     meal_plan_new[meal]['content'])[2:]
+        if len(meal_plan[item]['content']) > 0:
+            res_new[item] = re.split(re_str, meal_plan[item]['content'])[2:]
         else:
-            res_new[meal] = []
-
-        if len(meal_plan_old[meal]['content']) > 0:
-            res_old[meal] = re.split(re_str,
-                                     meal_plan_old[meal]['content'])[2:]
+            res_new[item] = []
+        if len(meal_plan[item]['previous']) > 0:
+            res_old[item] = re.split(re_str, meal_plan[item]['previous'])[2:]
         else:
-            res_old[meal] = []
+            res_old[item] = []
         # The 1st element from this flawed regex split is a space
         # The 2nd element is the timestamp
 
-        if len(res_old[meal]) != len(res_new[meal]):
-            meal_plan_new[meal]['modification_type'] = 2
+        if len(res_old[item]) != len(res_new[item]):
+            meal_plan[item]['modification_type'] = 2
         else:
-            for j in range(len(res_old[meal])):
-                if res_old[meal][j] != res_new[meal][j]:
+            for j in range(len(res_old[item])):
+                if res_old[item][j] != res_new[item][j]:
                     try:
-                        f1 = float(res_old[meal][j])
-                        f2 = float(res_new[meal][j])
+                        f1 = float(res_old[item][j])
+                        f2 = float(res_new[item][j])
                         if f2 > f1:
-                            meal_plan_new[meal]['modification_type'] = 2
-                        elif meal_plan_new[meal]['modification_type'] == 0:
-                            meal_plan_new[meal]['modification_type'] = 1
+                            meal_plan[item]['modification_type'] = 2
+                        elif meal_plan[item]['modification_type'] == 0:
+                            meal_plan[item]['modification_type'] = 1
                     except Exception as ex:
                         logging.debug(
                             f'{ex}: '
-                            f'{res_old[meal][j]}, {res_new[meal][j]}')
-                        meal_plan_new[meal]['modification_type'] = 2
+                            f'{res_old[item][j]}, {res_new[item][j]}')
+                        meal_plan[item]['modification_type'] = 2
                         break
-    return meal_plan_new
+    return meal_plan
 
 
-def convert_meal_plan_to_json(date_string: str):
+def read_meal_plan_from_db(date_string: str):
 
     conn = pymysql.connect(db_url, db_username, db_password, db_name)
     conn.autocommit(True)
@@ -580,21 +571,68 @@ def convert_meal_plan_to_json(date_string: str):
     cursor.close()
     conn.close()
 
+    return res
+
+
+def insert_previous_plan(meal_plan):
+
+    meal_plan['breakfast']['previous'] = ''
+    meal_plan['morning_extra_meal']['previous'] = ''
+    meal_plan['lunch']['previous'] = ''
+    meal_plan['afternoon_extra_meal']['previous'] = ''
+    meal_plan['dinner']['previous'] = ''
+    meal_plan['evening_extra_meal']['previous'] = ''
+    meal_plan['remark']['previous'] = ''
+
+    today = dt.datetime.strptime(meal_plan['date'], '%Y-%m-%d')
+    yesterday = today - dt.timedelta(days=1)
+    res = read_meal_plan_from_db(dt.datetime.strftime(yesterday, '%Y-%m-%d'))
+    if len(res) > 0:
+        meal_plan['breakfast']['previous'] = res[0][0]
+        meal_plan['morning_extra_meal']['previous'] = res[0][2]
+        meal_plan['lunch']['previous'] = res[0][4]
+        meal_plan['afternoon_extra_meal']['previous'] = res[0][6]
+        meal_plan['dinner']['previous'] = res[0][8]
+        meal_plan['evening_extra_meal']['previous'] = res[0][10]
+        meal_plan['remark']['previous'] = res[0][12]
+
+    return meal_plan
+
+
+def convert_meal_plan_to_json(date_string: str):
+
+    # content abd feedback should be set to '' instead of None
+    # so that len() will always work.
     meal_plan = {}
     meal_plan['date'] = date_string
     meal_plan['breakfast'] = {}
     meal_plan['breakfast']['title'] = '早餐'
+    meal_plan['breakfast']['content'] = ''
+    meal_plan['breakfast']['feedback'] = ''
     meal_plan['morning_extra_meal'] = {}
     meal_plan['morning_extra_meal']['title'] = '上午加餐'
+    meal_plan['morning_extra_meal']['content'] = ''
+    meal_plan['morning_extra_meal']['feedback'] = ''
     meal_plan['lunch'] = {}
     meal_plan['lunch']['title'] = '午餐'
+    meal_plan['lunch']['content'] = ''
+    meal_plan['lunch']['feedback'] = ''
     meal_plan['afternoon_extra_meal'] = {}
     meal_plan['afternoon_extra_meal']['title'] = '下午加餐'
+    meal_plan['afternoon_extra_meal']['content'] = ''
+    meal_plan['afternoon_extra_meal']['feedback'] = ''
     meal_plan['dinner'] = {}
     meal_plan['dinner']['title'] = '晚餐'
+    meal_plan['dinner']['content'] = ''
+    meal_plan['dinner']['feedback'] = ''
     meal_plan['evening_extra_meal'] = {}
     meal_plan['evening_extra_meal']['title'] = '晚上加餐'
+    meal_plan['evening_extra_meal']['content'] = ''
+    meal_plan['evening_extra_meal']['feedback'] = ''
+    meal_plan['remark'] = {}
+    meal_plan['remark']['content'] = ''
 
+    res = read_meal_plan_from_db(date_string)
     if len(res) > 0:
         meal_plan['breakfast']['content'] = res[0][0]
         meal_plan['breakfast']['feedback'] = res[0][1]
@@ -608,21 +646,10 @@ def convert_meal_plan_to_json(date_string: str):
         meal_plan['dinner']['feedback'] = res[0][9]
         meal_plan['evening_extra_meal']['content'] = res[0][10]
         meal_plan['evening_extra_meal']['feedback'] = res[0][11]
-        meal_plan['daily_remark'] = res[0][12]
-    else:
-        meal_plan['breakfast']['content'] = ''
-        meal_plan['breakfast']['feedback'] = ''
-        meal_plan['morning_extra_meal']['content'] = ''
-        meal_plan['morning_extra_meal']['feedback'] = ''
-        meal_plan['lunch']['content'] = ''
-        meal_plan['lunch']['feedback'] = ''
-        meal_plan['afternoon_extra_meal']['content'] = ''
-        meal_plan['afternoon_extra_meal']['feedback'] = ''
-        meal_plan['dinner']['content'] = ''
-        meal_plan['dinner']['feedback'] = ''
-        meal_plan['evening_extra_meal']['content'] = ''
-        meal_plan['evening_extra_meal']['feedback'] = ''
-        meal_plan['daily_remark'] = ''
+        meal_plan['remark']['content'] = res[0][12]
+
+    meal_plan = insert_previous_plan(meal_plan)
+    meal_plan = insert_modification_type(meal_plan)
 
     return meal_plan
 
@@ -641,7 +668,6 @@ def get_meal_plan():
         return Response('错误：未指定参数date', 401)
 
     meal_plan = convert_meal_plan_to_json(date_string)
-    meal_plan = insert_modification_type(meal_plan)
 
     logging.debug(f'meal_plan to be sent to client: {meal_plan}')
 

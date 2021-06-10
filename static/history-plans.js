@@ -2,55 +2,27 @@ class PlanTable extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      date: props.date
    //   data: props.data
     };
   }
 
   render() {
     if (this.props.data === null) { return null; }
-    // For whatever reason, this.props.data works here but this.state.data does not...
-    let itemNames = ['breakfast', 'morning_extra_meal', 'lunch', 'afternoon_extra_meal', 'dinner', 'evening_extra_meal'];
-    let items = new Array(itemNames.length);
-    let i = 0;
-    for (i = 0; i < itemNames.length; i++) {
-
-      var modificationInfo = <span></span>;
-      if (this.props.data[itemNames[i]].modification_type == 1) {
-        modificationInfo = <span style={{ color: 'green' }}> - 安全的改动</span>;
-      } else if (this.props.data[itemNames[i]].modification_type == 2) {
-        modificationInfo = <span style={{ color: 'red', fontWeight: 'bold' }}> - 危险的改动！</span>;
-      }
-
-      items[i] = (<div>
-        <div class="w3-panel w3-leftbar w3-border-green" style={{"margin-bottom": "0px"}}>
-        <span style={{ "margin-left": "0.5em", fontWeight: 'bold' }}>{this.props.data[itemNames[i]].title}</span>{modificationInfo}
-          <span style={{ "text-align": "right", float: "right", "margin-right": "1em" }}>{this.props.data[itemNames[i]].feedback}</span>
-        </div>
-        <hr style={{ "margin-top": "0px", "margin-bottom": "0.5em", "margin-left": "2em", "margin-right": "2em" }}></hr>
-        <div style={{ "margin-left": "2em", "margin-right": "2em" }}>{this.props.data[itemNames[i]].content}</div>
-      </div>);
-    }
 
     return (
       <div style={{ "margin-top": "4em", "margin-bottom": "4em" }}>
-        {items}
-        <div>
-          <div class="w3-panel w3-leftbar w3-border-green" style={{"margin-bottom": "0px"}}>
-          <span style={{ "margin-left": "0.5em", fontWeight: 'bold' }}>今日备注</span>
-          </div>
-          <hr style={{ "margin-top": "0px", "margin-bottom": "0.5em", "margin-left": "2em", "margin-right": "2em" }}></hr>
-          <div style={{ "margin-left": "2em", "margin-right": "2em", "white-space": "pre-wrap" }}>{this.props.data.daily_remark}</div>
-        </div>
-        <div>
-          <div class="w3-panel w3-leftbar w3-border-green" style={{"margin-bottom": "0px"}}>
-            <span style={{ "margin-left": "0.5em", fontWeight: 'bold' }}>今日自拍</span>
-          </div>
-          <img src={`../get-selfie/?date=${new Date(this.props.data.date).toISOString().slice(0, 10)}&${new Date().getTime()}`} alt=""
-               style={{ display: "block", "margin-left": "auto", "margin-right": "auto", "max-width": "100%", width: "300px" }} />
-          {/* If alt="" is added, the broken image icon won't show if src is not found. */}
-          </div>
+          <MealPlanItem data={this.props.data} itemName="breakfast" sendData={this.getData} />
+          <MealPlanItem data={this.props.data} itemName="morning_extra_meal" sendData={this.getData} />
+          <MealPlanItem data={this.props.data} itemName="lunch" sendData={this.getData} />
+          <MealPlanItem data={this.props.data} itemName="afternoon_extra_meal" sendData={this.getData} />
+          <MealPlanItem data={this.props.data} itemName="dinner" sendData={this.getData} />
+          <MealPlanItem data={this.props.data} itemName="evening_extra_meal" sendData={this.getData} />
+          <MealPlanDailyRemark data={this.props.data} sendData={this.getData} />
+          <MealPlanDailySelfie enableUpload={false} date={new Date(this.props.data.date)} />
+          <MealPlanDailyAttachments enableEdit={false} enableUpload={false} date={new Date(this.props.data.date)} />
       </div>
-      );
+    );
   }
 }
 
@@ -109,6 +81,7 @@ class FixedFooter extends React.Component {
           data: response.data
         });
         this.props.sendData(this.state.data);
+        textAreaAdjust();
       })
       .catch(error => {
         alert(date.toISOString().slice(0, 10) + '的食谱项目加载失败！请关闭窗口后重试！\n' + error);
@@ -153,22 +126,20 @@ class App extends React.Component {
   }
 
   render() {
-    // A hacky way of getting UTC+8...
-  const today = new Date(new Date().getTime() + (8*60*60*1000));
-
     return (
     <div>
       <div class="fixed-header">
         <h5>食谱历史记录</h5>
       </div>
-      <PlanTable date={today} data={this.state.data} />
-      <FixedFooter date={today} sendData={this.getData} />
+      <PlanTable data={this.state.data} />
+      <FixedFooter date={this.state.date} sendData={this.getData} />
     </div>
     );
   }
 }
 
 ReactDOM.render(
-  <App />,
+  // A hacky way of getting UTC+8...
+  <App date={new Date(new Date().getTime() + (8*60*60*1000))} />,
   document.getElementById('root')
 );
