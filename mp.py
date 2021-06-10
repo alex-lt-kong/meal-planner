@@ -59,7 +59,7 @@ users_path = f'/root/bin/{app_name}/users.json'
 def get_attachment_list():
 
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        pass
+        username = session[f'{app_name}']['username']
     else:
         return Response('未登录', 401)
     if 'date' in request.args:
@@ -72,6 +72,9 @@ def get_attachment_list():
         return Response(f'参数date的语法不正确：{e}', 401)
 
     data = {}
+    data['metadata'] = {}
+    data['metadata']['date'] = date_string
+    data['metadata']['username'] = username
     attachments_path_today = os.path.join(attachments_path, date_string)
     if os.path.isdir(attachments_path_today):
         data['filenames'] = os.listdir(attachments_path_today)
@@ -208,7 +211,10 @@ def upload_attachment():
 
     selected_file = request.files['selected_file']
 
-    if selected_file.filename.rsplit('.', 1)[1].lower() not in allowed_ext:
+    filename_parts = selected_file.filename.rsplit('.', 1)
+    if (len(filename_parts) > 1 and
+            filename_parts[1].lower() not in allowed_ext):
+        # len(filename_parts) == 1 -> a file without an extension
         return Response(f'仅允许上传后缀为{allowed_ext}的文件', 400)
 
     date_string = dt.datetime.now().strftime('%Y-%m-%d')
@@ -348,7 +354,7 @@ def update_blacklist():
 def get_blacklist():
 
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        pass
+        username = session[f'{app_name}']['username']
     else:
         return Response('错误：未登录', 401)
 
@@ -359,6 +365,10 @@ def get_blacklist():
     except Exception as e:
         logging.error(f'{e}')
         return Response(f'读取黑名单错误：{e}', 500)
+
+    blacklist['metadata'] = {}
+    blacklist['metadata']['username'] = username
+    blacklist['metadata']['date'] = dt.datetime.now().strftime('%Y-%m-%d')
 
     return flask.jsonify(blacklist)
 
@@ -616,7 +626,7 @@ def insert_previous_plan(meal_plan):
     meal_plan['evening_extra_meal']['previous'] = ''
     meal_plan['remark']['previous'] = ''
 
-    today = dt.datetime.strptime(meal_plan['date'], '%Y-%m-%d')
+    today = dt.datetime.strptime(meal_plan['metadata']['date'], '%Y-%m-%d')
     yesterday = today - dt.timedelta(days=1)
     res = read_meal_plan_from_db(dt.datetime.strftime(yesterday, '%Y-%m-%d'))
     if len(res) > 0:
@@ -636,7 +646,8 @@ def convert_meal_plan_to_json(date_string: str):
     # content abd feedback should be set to '' instead of None
     # so that len() will always work.
     meal_plan = {}
-    meal_plan['date'] = date_string
+    meal_plan['metadata'] = {}
+    meal_plan['metadata']['date'] = date_string
     meal_plan['breakfast'] = {}
     meal_plan['breakfast']['title'] = '早餐'
     meal_plan['breakfast']['content'] = ''
@@ -690,7 +701,7 @@ def convert_meal_plan_to_json(date_string: str):
 def get_meal_plan():
 
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        pass
+        username = session[f'{app_name}']['username']
     else:
         return Response('错误：未登录', 401)
 
@@ -700,6 +711,7 @@ def get_meal_plan():
         return Response('错误：未指定参数date', 401)
 
     meal_plan = convert_meal_plan_to_json(date_string)
+    meal_plan['metadata']['username'] = username
 
     logging.debug(f'meal_plan to be sent to client: {meal_plan}')
 
@@ -748,11 +760,14 @@ def convert_notes_to_json():
 def get_notes():
 
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        pass
+        username = session[f'{app_name}']['username']
     else:
         return Response('错误：未登录', 401)
 
     notes_json = convert_notes_to_json()
+    notes_json['metadata'] = {}
+    notes_json['metadata']['date'] = notes_json['date']
+    notes_json['metadata']['username'] = username
     return flask.jsonify(notes_json)
 
 

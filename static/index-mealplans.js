@@ -2,12 +2,13 @@ class MealPlan extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = {
-      id: props.id,
-      date: props.date,
+    this.state = {      
       convenientDateName: props.convenientDateName,
+      data: null, /* Will be initialized in componentDidMount() */
+      date: props.date,
+      id: props.id,
       show: props.show,
-      data: null /* Will be initialized in componentDidMount() */
+      userName: null      
     };
 
     this.handleClickUpdate = this.handleClickUpdate.bind(this);
@@ -89,7 +90,7 @@ class MealPlan extends React.Component {
       alert(this.state.date.toISOString().slice(0, 10) + '的食谱更新成功！');
       this.fetchDataFromServer();
       // Must make this call to ensure UI is refreshed.
-      console.log(response);
+      logUserActivity('[meal-planner] Submit plan of ' + this.state.data.metadata.date, this.state.data.metadata.username);
     })
     .catch(error => {
       console.log(error);
@@ -133,7 +134,7 @@ class MealPlan extends React.Component {
           <MealPlanItem data={this.state.data} itemName="dinner" sendData={this.getData} />
           <MealPlanItem data={this.state.data} itemName="evening_extra_meal" sendData={this.getData} />
           <MealPlanDailyRemark data={this.state.data} sendData={this.getData} />
-          <MealPlanDailySelfie enableUpload={parseInt(this.state.id) === 1} date={this.state.date} />
+          <MealPlanDailySelfie data={this.state.data} enableUpload={parseInt(this.state.id) === 1} date={this.state.date} />
           <MealPlanDailyAttachments enableEdit={parseInt(this.state.id) === 1} enableUpload={parseInt(this.state.id) === 1} date={this.state.date} />
           {/* Selfie and attachments uploads are only enabled for "today"! */}
           <div>

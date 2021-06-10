@@ -34,14 +34,14 @@ class MealPlanDailySelfie extends React.Component {
   }; 
    
   onFileUpload(selected_file) {
-    console.log('start uploading...')
     const payload = new FormData(); 
     payload.append('selected_file', selected_file); 
     console.log(selected_file); 
     axios.post("./upload-selfie/", payload)
     .then(response => {
-    //  alert(this.state.date.toISOString().slice(0, 10) + '的自拍照上传成功！');
     // an alert is not needed since the user will see the change of the thumbnail.
+    console.log('eal-planner] Upload selfi');
+    logUserActivity('[meal-planner] Upload selfie', this.state.data.metadata.username);
     this.forceUpdate();
     // This forceUpdate() is needed so that the new image will be shown
     })
@@ -219,7 +219,8 @@ class MealPlanItem extends React.Component {
               {this.state.data[this.state.itemName].content}
             </textarea>           
           </div>
-          <div class="w3-cell" style={{ 'max-width': '2.75em' }}>          
+          <div class="w3-cell" style={{ 'max-width': '3em' }}>
+          {/* max-width canNOT be too small since some users will enlarge the UI to 125% */}
             <select class="w3-select" style={feedbackStyle} value={this.state.data[this.state.itemName].feedback}
                     onChange={this.handleFeedbackChange} readOnly={this.props.sendData == null} >
               {/* If value matches nothing, seems that React.js will simply select the first itm.*/}
@@ -233,7 +234,7 @@ class MealPlanItem extends React.Component {
           </select>
           </div>          
         </div>
-        <div style={{ "margin-left": "0.5em" }} dangerouslySetInnerHTML={{__html: prettyDiff}}></div>
+        <div style={{ "margin-left": "0.5em", "font-size": "14px" }} dangerouslySetInnerHTML={{__html: prettyDiff}}></div>
       </div>
     );
   }

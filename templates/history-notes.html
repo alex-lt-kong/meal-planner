@@ -42,11 +42,11 @@
 <div class="fixed-footer">
   <div class="w3-cell-row">
     <div class="w3-container w3-cell w3-cell-top">
-      <p><a href="#" onclick="idx=idx-1;loadNotes();">向前</a></p>
+      <p><a href="#" style="text-decoration: none;" onclick="idx=idx-1;loadNotes();"><<</a></p>
     </div>
     <b><p id="date" class="w3-center"></p></b>
     <div class="w3-container w3-cell w3-cell-bottom">
-      <p><a href="#" onclick="idx=idx+1;loadNotes();">向后</a></p>
+      <p><a href="#" style="text-decoration: none;" onclick="idx=idx+1;loadNotes();">>></a></p>
     </div>
   </div>
 </div>
@@ -67,12 +67,9 @@ function loadNotes() {
   $("#content").text(notes[idx][1]);
   $("#content").height(1);
   $("#content").height(1 + $('#content').prop('scrollHeight'));
-  logUserActivity('[meal-planner/notes-history] show notes on' + notes[idx][0], '{{username}}');
+  logUserActivity('[meal-planner/notes-history] show notes on ' + notes[idx][0], '{{username}}');
 }
 
-window.onload = function() {
-  logUserActivity('[meal-planner/notes-history] load', '{{username}}');  
-};
 </script>
 </body>
 </html>

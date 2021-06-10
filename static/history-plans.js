@@ -19,8 +19,8 @@ class PlanTable extends React.Component {
           <MealPlanItem data={this.props.data} itemName="dinner" sendData={this.getData} />
           <MealPlanItem data={this.props.data} itemName="evening_extra_meal" sendData={this.getData} />
           <MealPlanDailyRemark data={this.props.data} sendData={this.getData} />
-          <MealPlanDailySelfie enableUpload={false} date={new Date(this.props.data.date)} />
-          <MealPlanDailyAttachments enableEdit={false} enableUpload={false} date={new Date(this.props.data.date)} />
+          <MealPlanDailySelfie enableUpload={false} date={new Date(this.props.data.metadata.date)} />
+          <MealPlanDailyAttachments enableEdit={false} enableUpload={false} date={new Date(this.props.data.metadata.date)} />
       </div>
     );
   }
@@ -40,6 +40,7 @@ class FixedFooter extends React.Component {
 
   componentDidMount() {
     this.fetchDataFromServer(this.state.date);
+    console.log('FixedFooter componentDidMount()');
   }
 
   handleChange(event) {
@@ -47,6 +48,7 @@ class FixedFooter extends React.Component {
       date: new Date(event.target.value)
     });
     this.fetchDataFromServer(new Date(event.target.value));
+    logUserActivity('[meal-planner/history-plans] ' + this.state.data.metadata.date, this.state.data.metadata.username);
   }
 
   handlePreviousClick(event) {
@@ -56,7 +58,7 @@ class FixedFooter extends React.Component {
       date: yesterday
     }));
     this.fetchDataFromServer(yesterday);
-    
+    logUserActivity('[meal-planner/history-plans] ' + this.state.data.metadata.date, this.state.data.metadata.username);
   }
   
   handleNextClick(event) {
@@ -66,6 +68,7 @@ class FixedFooter extends React.Component {
       date: tomorrow
     }));
     this.fetchDataFromServer(tomorrow);
+    logUserActivity('[meal-planner/history-plans] ' + this.state.data.metadata.date, this.state.data.metadata.username);
   }
 
   fetchDataFromServer(date) {
@@ -82,6 +85,10 @@ class FixedFooter extends React.Component {
         });
         this.props.sendData(this.state.data);
         textAreaAdjust();
+        logUserActivity('[meal-planner/history-plans] ' + response.data.metadata.date, response.data.metadata.username);
+        // Note that you canNOT use this.state.data instead of response.data here.
+        // The reason, as I understand, is that setState() is an asynchronous function so you could get null if you use
+        // this.state.data right after calling the setState() method.
       })
       .catch(error => {
         alert(date.toISOString().slice(0, 10) + '的食谱项目加载失败！请关闭窗口后重试！\n' + error);

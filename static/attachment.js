@@ -45,8 +45,9 @@ class AttachmentsManager extends React.Component {
 
     axios.post("https://monitor.sz.lan/meal-planner/upload-attachment/", payload, config)
     .then(response => {
-      //alert(this.state.date.toISOString().slice(0, 10) + '的附件[' +selected_file.name + ']上传成功！');
       // an alert is not needed since the user will see the change of the files list.
+      logUserActivity('[meal-planner] Upload attachment [' + selected_file.name +  '] to [' + this.state.data.metadata.date + ']',
+                      this.state.data.metadata.username);
       this.fetchDataFromServer();
     })
     .catch(error => {
@@ -60,14 +61,17 @@ class AttachmentsManager extends React.Component {
 
   handleClickFileName(value) {
     window.open('https://monitor.sz.lan/meal-planner/get-attachment/?date=' + this.state.date.toISOString().slice(0, 10) + '&filename=' + value);
+    logUserActivity('[meal-planner] Download attachment [' + value +  '] from [' + this.state.date.toISOString().slice(0, 10) + ']',
+                    this.state.data.metadata.username);
   }
 
   handleClickFileRemove(value) {
     axios.get('https://monitor.sz.lan/meal-planner/remove-attachment/?date=' + this.state.date.toISOString().slice(0, 10) + '&filename=' + value)
       .then(response => {
-      //  alert('文件[' + value + ']删除成功！');
       // an alert is not needed since the user will see the change of the files list.
         this.fetchDataFromServer();
+        logUserActivity('[meal-planner] Remove attachment [' + value +  '] from [' + this.state.data.metadata.date + ']',
+        this.state.data.metadata.username);
       })
       .catch(error => {
         alert('文件[' + value + ']删除成功失败！\n' + error);
@@ -75,14 +79,16 @@ class AttachmentsManager extends React.Component {
   }
   
   handleClickSubmitNewFilename(value) {
-    console.log('handleClickSubmitNewFilename' + value);
       axios.get('https://monitor.sz.lan/meal-planner/rename-attachment/?date=' + this.state.date.toISOString().slice(0, 10) + 
       '&filename_old=' + this.state.renameModeFile + 
       '&filename_new=' + this.state.newFileName)
         .then(response => {
           this.setState({ 
-          renameModeFile: null
-          }); 
+            renameModeFile: null
+          });           
+          logUserActivity('[meal-planner] Rename attachment from [' + this.state.renameModeFile + '](' + 
+                          this.state.date.toISOString().slice(0, 10) + ') to [' + this.state.newFileName + ']',
+                          this.state.data.metadata.username);
           this.fetchDataFromServer();
         })
         .catch(error => {

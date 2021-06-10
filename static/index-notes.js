@@ -50,12 +50,12 @@ class Notes extends React.Component {
   }
 
   handleClickHistory(event) {
+    logUserActivity('[meal-planner] Open history-notes', this.state.data.metadata.username);
     window.open('./history-notes/');
   }
 
   handleClickUpdate(event) {
     const payload = new FormData();
-    console.log('clicked!');
     payload.append('data', JSON.stringify(this.state.data));
     axios({
       method: "post",
@@ -64,9 +64,9 @@ class Notes extends React.Component {
     })
     .then(response => {
       alert('健康笔记更新成功！');
+      logUserActivity('[meal-planner] Submit new notes', this.state.data.metadata.username);
       this.fetchDataFromServer();
       // Must make this call to ensure UI is refreshed.
-      console.log(response);
     })
     .catch(error => {
       console.log(error);

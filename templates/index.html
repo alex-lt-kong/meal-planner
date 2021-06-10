@@ -1,6 +1,8 @@
 <!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<!-- adding maximum-scale could disable the auto zoom of smartphone browser according to this link:
+https://stackoverflow.com/questions/2989263/disable-auto-zoom-in-input-text-tag-safari-on-iphone -->
 <link rel="shortcut icon" href="//monitor.sz.lan/meal_planner/static/favicon.png">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="//monitor.sz.lan/resources/w3.css">
 <link rel="stylesheet" href="https://monitor.sz.lan/meal-planner/static/index.css">
 <link rel="stylesheet" href="//monitor.sz.lan/resources/w3-colors-2017.css">
@@ -15,7 +17,8 @@
 <script src="//monitor.sz.lan/resources/axios@0.21.1/dist/axios.min.js"></script>
 <script src="https://monitor.sz.lan/meal-planner/static/attachment.js" type="text/jsx"></script>
 <script src="https://monitor.sz.lan/meal-planner/static/common.js" type="text/jsx"></script>
-<script src="https://monitor.sz.lan/meal-planner/static/index-misc.js" type="text/jsx"></script>
+<script src="https://monitor.sz.lan/meal-planner/static/checkhistoricalplans.js" type="text/jsx"></script>
+<script src="https://monitor.sz.lan/meal-planner/static/blacklist.js" type="text/jsx"></script>
 <script src="https://monitor.sz.lan/meal-planner/static/index-mealplans.js" type="text/jsx"></script>
 <script src="https://monitor.sz.lan/meal-planner/static/index-notes.js" type="text/jsx"></script>
 <script src="https://monitor.sz.lan/meal-planner/static/index.js" type="text/jsx"></script>
@@ -51,19 +54,6 @@
   </div>
 </div>
 <script>
-window.onload = function() {
-  logUserActivity('[meal-planner/index] load', '{{username}}');
-  
-  $.get('https://monitor.sz.lan/meal_planner/straight_a/',  // url
-      function (statistics, textStatus, jqXHR) {  // success callback
-        showDailyReminder(statistics);
-//          alert('status: ' + textStatus + ', data:' + data);
-    });
-  textAreaAdjust();
-
-};
-
-window.onunload = function() { logUserActivity('[meal-planner/index] unload', '{{username}}'); };
 
 function logout() {
   logUserActivity('[meal-planner/index] logout', '{{username}}');
@@ -136,8 +126,5 @@ function showDailyReminder(statistics) {
   }());
 }
 </script>
-
-
-
 </body>
 </html>
