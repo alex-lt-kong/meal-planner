@@ -14,6 +14,7 @@ ReactDOM.render(
     {/* id is used to identify when to show "沿用今日" */}
     <Notes show={false} />
     <Blacklist show={false} />
+    <Reminder />
   </div>,
   document.getElementById('root')
 );

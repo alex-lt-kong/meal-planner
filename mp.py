@@ -14,6 +14,7 @@ import json
 import logging
 import os
 import pymysql
+import random
 import re
 import signal
 import sys
@@ -828,27 +829,53 @@ def history_plans():
     return render_template('history-plans.html', username=username)
 
 
-@app.route('/straight_a/', methods=['GET', 'POST'])
-def straight_a():
+@app.route('/get-reminder-message/', methods=['GET'])
+def get_reminder_message():
 
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         pass
     else:
-        return redirect(f'{relative_url}/login/')
+        return Response('错误：未登录', 401)
+
+    try:
+        with open(settings_path, 'r') as json_file:
+            json_str = json_file.read()
+            json_data = json.loads(json_str)
+        data = {}
+        data['frequency'] = json_data['reminder']['frequency']
+        rand_idx = random.randrange(len(json_data['reminder']['messages']))
+        data['message'] = json_data['reminder']['messages'][rand_idx]
+    except Exception as e:
+        return Response(f'解析JSON文件失败：{e}', 500)
+
+    if random.uniform(0, 1) > data['frequency']:
+        data['message'] = ''
+
+    return flask.jsonify(data)
+
+
+@app.route('/get-consecutive-a-days/', methods=['GET', 'POST'])
+def get_consecutive_a_days():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        username = session[f'{app_name}']['username']
+    else:
+        return Response('未登录', 401)
 
     deltas_a = get_straight_a_days(False)
     deltas_a_minus = get_straight_a_days(True)
 
-    dayss_a, dayss_a_minus = '', ''
-    for i in range(1, 7):
-        dayss_a = dayss_a + ', ' + str(deltas_a[i])
-        dayss_a_minus = dayss_a_minus + ', ' + str(deltas_a_minus[i])
-    return render_template('straight-a.html',
-                           days_a=deltas_a[0], dayss_a=dayss_a,
-                           days_a_minus=deltas_a_minus[0],
-                           dayss_a_minus=dayss_a_minus,
-                           max_a=max(deltas_a),
-                           max_a_minus=max(deltas_a_minus))
+   # dayss_a, dayss_a_minus = '', ''
+  ##  for i in range(1, 7):
+   #     dayss_a = dayss_a + ', ' + str(deltas_a[i])
+  #      dayss_a_minus = dayss_a_minus + ', ' + str(deltas_a_minus[i])
+    data = {}
+    data['metadata'] = {}
+    data['metadata']['username'] = username
+    data['a_only'] = deltas_a
+    data['a_minus_included'] = deltas_a_minus
+
+    return flask.jsonify(data)
 
 
 def stop_signal_handler(*args):
