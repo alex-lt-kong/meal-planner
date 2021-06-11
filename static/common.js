@@ -167,12 +167,12 @@ class MealPlanItem extends React.Component {
 
   render() {
     const modType = this.state.data[this.state.itemName].modification_type;
-    let modificationInfo;
+    let modificationInfo = null;
     let prettyDiff;
     if (modType == 1) {
       modificationInfo = <span> - 安全</span>;
     } else if (modType == 2) {
-      modificationInfo = <span style={{ color: 'red', fontWeight: 'bold' }}> - 危险！</span>;
+      modificationInfo = <span style={{color: "red", "font-weight": "bold"}}> - 危险!</span>;
 
       let previousText = this.state.data[this.state.itemName].previous;
       let currentText = this.state.data[this.state.itemName].content;
@@ -189,7 +189,11 @@ class MealPlanItem extends React.Component {
       
       var dmp = new diff_match_patch();
       var diff = dmp.diff_main(previousText, currentText);
-      prettyDiff = '<b>对照：</b>' + dmp.diff_prettyHtml(diff);
+      prettyDiff = (
+        <span style={{ "margin-left": "0.5em", "font-size": "12px"}}>
+          <b>对照：</b>
+          <span dangerouslySetInnerHTML={{__html: dmp.diff_prettyHtml(diff)}} />
+        </span>);
     }
 
     var feedbackColor = 'black'
@@ -207,13 +211,13 @@ class MealPlanItem extends React.Component {
     return (
       <div>
         <div>
-          <p class="w3-text-green p-mealplanitem-title">
+          <h5 class="w3-text-green p-mealplanitem-title">
             <b>{this.state.data[this.state.itemName].title}</b>
             {modificationInfo}
-          </p>          
+          </h5>          
         </div>
         <div class="w3-cell-row">
-          <div class="w3-cell">
+          <div class="w3-cell" style={{ "font-size": "14px"}}>
             <textarea class="w3-input textarea-mealplanitem" rows="1" readOnly={this.props.sendData == null}
                       onInput={this.handleContentChange}>
               {this.state.data[this.state.itemName].content}
@@ -234,7 +238,7 @@ class MealPlanItem extends React.Component {
           </select>
           </div>          
         </div>
-        <div style={{ "margin-left": "0.5em", "font-size": "14px" }} dangerouslySetInnerHTML={{__html: prettyDiff}}></div>
+        {prettyDiff}
       </div>
     );
   }

@@ -11,7 +11,7 @@ class PlanTable extends React.Component {
     if (this.props.data === null) { return null; }
 
     return (
-      <div style={{ "margin-top": "4em", "margin-bottom": "4em" }}>
+      <div style={{ width: "98%", "max-width": "1000px", margin: "auto", "margin-top": "4em", "margin-bottom": "4em" }}>
           <MealPlanItem data={this.props.data} itemName="breakfast" sendData={this.getData} />
           <MealPlanItem data={this.props.data} itemName="morning_extra_meal" sendData={this.getData} />
           <MealPlanItem data={this.props.data} itemName="lunch" sendData={this.getData} />

@@ -148,13 +148,14 @@ class AttachmentsManager extends React.Component {
                                  style={{"text-decoration": "none", width: "100%"}} >{this.state.data.filenames[i]}</a>;
                                  /* href="javascript:;" a link that goes to nowhere */;
         if (this.state.enableEdit === true) {
-          removeButton = <a class="w3-right" value={this.state.data.filenames[i]} style={{"margin-left": "1em", "text-decoration": "none" }} href="javascript:;"
-                               onClick={this.handleClickFileRemove.bind(this, this.state.data.filenames[i])}>&times;</a>;
+          removeButton = <img class="w3-right" value={this.state.data.filenames[i]} src="./static/delete.png"
+                              style={{ "margin-left": "1em", "margin-bottom": "0.66em", "max-width": "1.25em" }}
+                              onClick={this.handleClickFileRemove.bind(this, this.state.data.filenames[i])} />;
         }
         if (this.state.enableEdit === true) {
           if (this.state.renameModeFile != this.state.data.filenames[i]) {
-            renameButton = <a class="w3-right" value={this.state.data.filenames[i]} href="javascript:;" style={{"text-decoration": "none" }}
-                                onClick={this.handleClickEnableRenameMode.bind(this, this.state.data.filenames[i])}>🖊️</a>;
+            renameButton = <img class="w3-right" value={this.state.data.filenames[i]} src="./static/rename.png" style={{ "max-width": "1.25em" }}
+                                onClick={this.handleClickEnableRenameMode.bind(this, this.state.data.filenames[i])} />;
 
           } else {
             renameButton = <button class="w3-right" 

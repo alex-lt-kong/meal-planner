@@ -95,7 +95,8 @@ class Notes extends React.Component {
             {this.state.data.content}
           </textarea>
           <div>
-            (<span>最后更新：{new Date(this.state.data.date).toISOString().slice(0, 10)}</span>)
+            <div style={{ "margin-bottom": "-0.5em" }}>(最后更新：{new Date(this.state.data.date).toISOString().slice(0, 10)})</div>
+            {/* set the margin-bottom to -0.5em so that the following two buttons can use exactly same settings. */}
             <button onClick={this.handleClickUpdate} class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button">更新</button>   
             <button onClick={this.handleClickHistory} class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button">翻看历史笔记</button>   
           </div>
