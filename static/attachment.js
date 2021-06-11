@@ -165,7 +165,7 @@ class AttachmentsManager extends React.Component {
         }
         filenames[i] = (
         <li key={i} style={{ "padding-left": "0.2em", "padding-right": "0.2em" }}>
-<div class="w3-cell-row">
+          <div class="w3-cell-row">
             <div class="w3-container w3-cell" style={{ "max-width": "65vw", "word-wrap": "break-word" }}>
               <div value={this.state.data.filenames[i]} >
                 {filenameDisplay}              
@@ -174,7 +174,8 @@ class AttachmentsManager extends React.Component {
             <div class="w3-container w3-cell">
               {removeButton}
               {renameButton}  
-            </div></div>
+            </div>
+          </div>
         </li>
         );
       }

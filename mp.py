@@ -4,7 +4,12 @@
 from flask import Flask, render_template, Response, request, redirect, session
 from flask_cors import CORS
 from PIL import Image
+from sqlalchemy.sql import select, and_
+from sqlalchemy import create_engine
+from sqlalchemy import MetaData, Column, Table, ForeignKey
+from sqlalchemy import Integer, String
 from waitress import serve
+
 
 import argparse
 import datetime as dt
@@ -17,6 +22,7 @@ import pymysql
 import random
 import re
 import signal
+import sqlalchemy
 import sys
 import threading
 
@@ -566,8 +572,8 @@ def insert_modification_type(meal_plan):
             res_new[item] = re.split(re_str, meal_plan[item]['content'])[2:]
         else:
             res_new[item] = []
-        if len(meal_plan[item]['previous']) > 0:
-            res_old[item] = re.split(re_str, meal_plan[item]['previous'])[2:]
+        if len(meal_plan[item]['prev']) > 0:
+            res_old[item] = re.split(re_str, meal_plan[item]['prev'])[2:]
         else:
             res_old[item] = []
         # The 1st element from this flawed regex split is a space
@@ -596,48 +602,64 @@ def insert_modification_type(meal_plan):
 
 def read_meal_plan_from_db(date_string: str):
 
-    conn = pymysql.connect(db_url, db_username, db_password, db_name)
-    conn.autocommit(True)
-    # It appears that both UPDATE and SELECT need "commit"
-    cursor = conn.cursor()
+    # The good old way
+    # conn = pymysql.connect(db_url, db_username, db_password, db_name)
+    # conn.autocommit(True)
+    # # It appears that both UPDATE and SELECT need "commit"
+    # cursor = conn.cursor()
 
-    sql = '''
-         SELECT `breakfast`, `breakfast_feedback`,
-         `morning_extra_meal`, `morning_extra_meal_feedback`,
-         `lunch`, `lunch_feedback`,
-         `afternoon_extra_meal`, `afternoon_extra_meal_feedback`,
-         `dinner`, `dinner_feedback`,
-         `evening_extra_meal`, `evening_extra_meal_feedback`, `daily_remark`
-         FROM `meal_plan` WHERE `date` = %s'''
-    cursor.execute(sql, (date_string))
-    res = cursor.fetchall()
-    cursor.close()
-    conn.close()
+    # sql = '''
+    #      SELECT `breakfast`, `breakfast_feedback`,
+    #      `morning_extra_meal`, `morning_extra_meal_feedback`,
+    #      `lunch`, `lunch_feedback`,
+    #      `afternoon_extra_meal`, `afternoon_extra_meal_feedback`,
+    #      `dinner`, `dinner_feedback`,
+    #      `evening_extra_meal`, `evening_extra_meal_feedback`, `daily_remark`
+    #      FROM `meal_plan` WHERE `date` = %s'''
+    # cursor.execute(sql, (date_string))
+    # res = cursor.fetchall()
+    # cursor.close()
+    # conn.close()
 
-    return res
+    conn_str = (f'mysql+pymysql://{db_username}:{db_password}@'
+                f'{db_url}/{db_name}')
+    engine = create_engine(conn_str)
+
+    # Reflection - may have performance issues if done each time.
+    # But let's make everything work before optimizing it!
+    metadata = MetaData(bind=engine)
+    mp = Table('meal_plan', metadata, autoload_with=engine)
+
+    s = select([mp]).where(mp.columns.date == date_string)
+    with engine.begin() as conn:
+        result = conn.execute(s).one()
+
+    return result
 
 
 def insert_previous_plan(meal_plan):
 
-    meal_plan['breakfast']['previous'] = ''
-    meal_plan['morning_extra_meal']['previous'] = ''
-    meal_plan['lunch']['previous'] = ''
-    meal_plan['afternoon_extra_meal']['previous'] = ''
-    meal_plan['dinner']['previous'] = ''
-    meal_plan['evening_extra_meal']['previous'] = ''
-    meal_plan['remark']['previous'] = ''
-
     today = dt.datetime.strptime(meal_plan['metadata']['date'], '%Y-%m-%d')
     yesterday = today - dt.timedelta(days=1)
-    res = read_meal_plan_from_db(dt.datetime.strftime(yesterday, '%Y-%m-%d'))
-    if len(res) > 0:
-        meal_plan['breakfast']['previous'] = res[0][0]
-        meal_plan['morning_extra_meal']['previous'] = res[0][2]
-        meal_plan['lunch']['previous'] = res[0][4]
-        meal_plan['afternoon_extra_meal']['previous'] = res[0][6]
-        meal_plan['dinner']['previous'] = res[0][8]
-        meal_plan['evening_extra_meal']['previous'] = res[0][10]
-        meal_plan['remark']['previous'] = res[0][12]
+
+    try:
+        res = read_meal_plan_from_db(dt.datetime.strftime(yesterday,
+                                                          '%Y-%m-%d'))
+        meal_plan['breakfast']['prev'] = res['breakfast']
+        meal_plan['morning_extra_meal']['prev'] = res['morning_extra_meal']
+        meal_plan['lunch']['prev'] = res['lunch']
+        meal_plan['afternoon_extra_meal']['prev'] = res['afternoon_extra_meal']
+        meal_plan['dinner']['prev'] = res['dinner']
+        meal_plan['evening_extra_meal']['prev'] = res['evening_extra_meal']
+        meal_plan['remark']['prev'] = res['daily_remark']
+    except sqlalchemy.exc.NoResultFound:
+        meal_plan['breakfast']['prev'] = ''
+        meal_plan['morning_extra_meal']['prev'] = ''
+        meal_plan['lunch']['prev'] = ''
+        meal_plan['afternoon_extra_meal']['prev'] = ''
+        meal_plan['dinner']['prev'] = ''
+        meal_plan['evening_extra_meal']['prev'] = ''
+        meal_plan['remark']['prev'] = ''
 
     return meal_plan
 
@@ -646,56 +668,62 @@ def convert_meal_plan_to_json(date_string: str):
 
     # content abd feedback should be set to '' instead of None
     # so that len() will always work.
-    meal_plan = {}
-    meal_plan['metadata'] = {}
-    meal_plan['metadata']['date'] = date_string
-    meal_plan['breakfast'] = {}
-    meal_plan['breakfast']['title'] = '早餐'
-    meal_plan['breakfast']['content'] = ''
-    meal_plan['breakfast']['feedback'] = ''
-    meal_plan['morning_extra_meal'] = {}
-    meal_plan['morning_extra_meal']['title'] = '上午加餐'
-    meal_plan['morning_extra_meal']['content'] = ''
-    meal_plan['morning_extra_meal']['feedback'] = ''
-    meal_plan['lunch'] = {}
-    meal_plan['lunch']['title'] = '午餐'
-    meal_plan['lunch']['content'] = ''
-    meal_plan['lunch']['feedback'] = ''
-    meal_plan['afternoon_extra_meal'] = {}
-    meal_plan['afternoon_extra_meal']['title'] = '下午加餐'
-    meal_plan['afternoon_extra_meal']['content'] = ''
-    meal_plan['afternoon_extra_meal']['feedback'] = ''
-    meal_plan['dinner'] = {}
-    meal_plan['dinner']['title'] = '晚餐'
-    meal_plan['dinner']['content'] = ''
-    meal_plan['dinner']['feedback'] = ''
-    meal_plan['evening_extra_meal'] = {}
-    meal_plan['evening_extra_meal']['title'] = '晚上加餐'
-    meal_plan['evening_extra_meal']['content'] = ''
-    meal_plan['evening_extra_meal']['feedback'] = ''
-    meal_plan['remark'] = {}
-    meal_plan['remark']['content'] = ''
+    mp = {}
+    mp['metadata'] = {}
+    mp['metadata']['date'] = date_string
+    mp['breakfast'] = {}
+    mp['breakfast']['title'] = '早餐'
+    mp['morning_extra_meal'] = {}
+    mp['morning_extra_meal']['title'] = '上午加餐'
+    mp['lunch'] = {}
+    mp['lunch']['title'] = '午餐'
+    mp['afternoon_extra_meal'] = {}
+    mp['afternoon_extra_meal']['title'] = '下午加餐'
+    mp['dinner'] = {}
+    mp['dinner']['title'] = '晚餐'
+    mp['evening_extra_meal'] = {}
+    mp['evening_extra_meal']['title'] = '晚上加餐'
+    mp['remark'] = {}
 
-    res = read_meal_plan_from_db(date_string)
-    if len(res) > 0:
-        meal_plan['breakfast']['content'] = res[0][0]
-        meal_plan['breakfast']['feedback'] = res[0][1]
-        meal_plan['morning_extra_meal']['content'] = res[0][2]
-        meal_plan['morning_extra_meal']['feedback'] = res[0][3]
-        meal_plan['lunch']['content'] = res[0][4]
-        meal_plan['lunch']['feedback'] = res[0][5]
-        meal_plan['afternoon_extra_meal']['content'] = res[0][6]
-        meal_plan['afternoon_extra_meal']['feedback'] = res[0][7]
-        meal_plan['dinner']['content'] = res[0][8]
-        meal_plan['dinner']['feedback'] = res[0][9]
-        meal_plan['evening_extra_meal']['content'] = res[0][10]
-        meal_plan['evening_extra_meal']['feedback'] = res[0][11]
-        meal_plan['remark']['content'] = res[0][12]
+    try:
+        res = read_meal_plan_from_db(date_string)
 
-    meal_plan = insert_previous_plan(meal_plan)
-    meal_plan = insert_modification_type(meal_plan)
+        mp['breakfast']['content'] = res['breakfast']
+        mp['breakfast']['feedback'] = res['breakfast_feedback']
+        mp['morning_extra_meal']['content'] = res['morning_extra_meal']
+        mp['morning_extra_meal'][
+           'feedback'] = res['morning_extra_meal_feedback']
+        mp['lunch']['content'] = res['lunch']
+        mp['lunch']['feedback'] = res['lunch_feedback']
+        mp['afternoon_extra_meal'][
+           'content'] = res['afternoon_extra_meal']
+        mp['afternoon_extra_meal'][
+           'feedback'] = res['afternoon_extra_meal_feedback']
+        mp['dinner']['content'] = res['dinner']
+        mp['dinner']['feedback'] = res['dinner_feedback']
+        mp['evening_extra_meal']['content'] = res['evening_extra_meal']
+        mp['evening_extra_meal'][
+           'feedback'] = res['evening_extra_meal_feedback']
+        mp['remark']['content'] = res['daily_remark']
+    except sqlalchemy.exc.NoResultFound:
+        mp['breakfast']['content'] = ''
+        mp['breakfast']['feedback'] = ''
+        mp['morning_extra_meal']['content'] = ''
+        mp['morning_extra_meal']['feedback'] = ''
+        mp['lunch']['content'] = ''
+        mp['lunch']['feedback'] = ''
+        mp['afternoon_extra_meal']['content'] = ''
+        mp['afternoon_extra_meal']['feedback'] = ''
+        mp['dinner']['content'] = ''
+        mp['dinner']['feedback'] = ''
+        mp['evening_extra_meal']['content'] = ''
+        mp['evening_extra_meal']['feedback'] = ''
+        mp['remark']['content'] = ''
 
-    return meal_plan
+    mp = insert_previous_plan(mp)
+    mp = insert_modification_type(mp)
+
+    return mp
 
 
 @app.route('/get-meal-plan/', methods=['GET'])
@@ -710,9 +738,16 @@ def get_meal_plan():
         date_string = request.args['date']
     else:
         return Response('错误：未指定参数date', 401)
+    try:
+        dt.datetime.strptime(date_string, '%Y-%m-%d')
+    except Exception as e:
+        return Response(f'参数date的语法不正确：{e}', 401)
 
-    meal_plan = convert_meal_plan_to_json(date_string)
-    meal_plan['metadata']['username'] = username
+    try:
+        meal_plan = convert_meal_plan_to_json(date_string)
+        meal_plan['metadata']['username'] = username
+    except Exception as e:
+        return Response(f'内部错误：{e}', 500)
 
     logging.debug(f'meal_plan to be sent to client: {meal_plan}')
 

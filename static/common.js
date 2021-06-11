@@ -174,7 +174,7 @@ class MealPlanItem extends React.Component {
     } else if (modType == 2) {
       modificationInfo = <span style={{color: "red", "font-weight": "bold"}}> - 危险!</span>;
 
-      let previousText = this.state.data[this.state.itemName].previous;
+      let previousText = this.state.data[this.state.itemName].prev;
       let currentText = this.state.data[this.state.itemName].content;
       if (previousText.length >= 4) {
         if (isNaN(previousText.substring(0, 4)) == false) {
