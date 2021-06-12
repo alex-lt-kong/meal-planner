@@ -35,9 +35,7 @@ class SelfieItem extends React.Component {
 
     return (
       <div class="gallery">
-        <a target="_blank" href="img_forest.jpg">
-          <img src={`https://monitor.sz.lan/meal-planner/get-selfie/?date=${this.state.date}`} alt={`${this.state.date}的自拍`} width="47vw" />
-        </a>
+        <img src={`https://monitor.sz.lan/meal-planner/get-selfie/?date=${this.state.date}`} alt={`${this.state.date}的自拍`} width="47vw" />
         <div class="desc">{this.state.date}</div>
       </div>
     );

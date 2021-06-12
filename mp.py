@@ -358,6 +358,17 @@ def get_blacklist():
     return flask.jsonify(blacklist)
 
 
+@app.route('/get-username/', methods=['GET'])
+def get_username():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        username = session[f'{app_name}']['username']
+    else:
+        return Response('错误：未登录', 401)
+
+    return flask.jsonify({'username': username})
+
+
 def calculate_consecutive_a_days(include_aminus=False):
 
     conn = pymysql.connect(db_url, db_username, db_password, db_name)
