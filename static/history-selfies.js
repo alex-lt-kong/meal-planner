@@ -50,7 +50,7 @@ class App extends React.Component {
   render() {
     // A hacky way of getting UTC+8...
     const today = new Date(new Date().getTime() + (8*60*60*1000));
-    const daysCount = 90;
+    const daysCount = 730;
     let images = new Array(daysCount);
     let i = 0;
     for (i = 0; i < daysCount; i++) {

@@ -72,11 +72,11 @@ def get_attachment_list():
     if 'date' in request.args:
         date_string = request.args['date']
     else:
-        return Response('未指定参数date', 401)
+        return Response('未指定参数date', 400)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
     except Exception as e:
-        return Response(f'参数date的语法不正确：{e}', 401)
+        return Response(f'参数date的语法不正确：{e}', 400)
 
     data = {}
     data['metadata'] = {}
@@ -107,19 +107,19 @@ def rename_attachment():
         filename_new = request.args['filename_new']
         filename_new = sanitize_filename(filename_new)
     else:
-        return Response('未指定参数date,filename_old或filename_new', 401)
+        return Response('未指定参数date,filename_old或filename_new', 400)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
     except Exception as e:
-        return Response(f'参数date的语法不正确：{e}', 401)
+        return Response(f'参数date的语法不正确：{e}', 400)
 
     attachments_path_today = os.path.join(attachments_path, date_string)
     if os.path.isdir(attachments_path_today) is False:
-        return Response(f'文件{filename_old}不存在', 401)
+        return Response(f'文件{filename_old}不存在', 400)
 
     file_path_old = os.path.join(attachments_path_today, filename_old)
     if os.path.isfile(file_path_old) is False:
-        return Response(f'文件{filename_old}不存在', 401)
+        return Response(f'文件{filename_old}不存在', 400)
     file_path_new = os.path.join(attachments_path_today, filename_new)
     try:
         os.rename(file_path_old, file_path_new)
@@ -140,18 +140,18 @@ def remove_attachment():
         filename = request.args['filename']
         filename = sanitize_filename(filename)
     else:
-        return Response('未指定参数date或filename', 401)
+        return Response('未指定参数date或filename', 400)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
     except Exception as e:
-        return Response(f'参数date的语法不正确：{e}', 401)
+        return Response(f'参数date的语法不正确：{e}', 400)
 
     attachments_path_today = os.path.join(attachments_path, date_string)
     if os.path.isdir(attachments_path_today) is False:
-        return Response(f'文件{filename}不存在', 401)
+        return Response(f'文件{filename}不存在', 400)
     file_path = os.path.join(attachments_path_today, filename)
     if os.path.isfile(file_path) is False:
-        return Response(f'文件{filename}不存在', 401)
+        return Response(f'文件{filename}不存在', 400)
 
     try:
         os.remove(file_path)
@@ -172,18 +172,18 @@ def get_attachment():
         filename = request.args['filename']
         filename = sanitize_filename(filename)
     else:
-        return Response('未指定参数date或filename', 401)
+        return Response('未指定参数date或filename', 400)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
     except Exception as e:
-        return Response(f'参数date的语法不正确：{e}', 401)
+        return Response(f'参数date的语法不正确：{e}', 400)
 
     attachments_path_today = os.path.join(attachments_path, date_string)
     if os.path.isdir(attachments_path_today) is False:
-        return Response(f'文件[{filename}]不存在', 401)
+        return Response(f'文件[{filename}]不存在', 400)
     file_path = os.path.join(attachments_path_today, filename)
     if os.path.isfile(file_path) is False:
-        return Response(f'文件[{filename}]不存在', 401)
+        return Response(f'文件[{filename}]不存在', 400)
 
     return flask.send_from_directory(directory=attachments_path_today,
                                      filename=filename,  as_attachment=False,
@@ -269,7 +269,7 @@ def upload_selfie():
     selected_file.seek(0)
     try:
         image = Image.open(selected_file).convert('RGB')
-        image.thumbnail((800, 800))
+        image.thumbnail((1024, 1024))
         # (800, 800): the maximum width and maximum height of the thumbnail
         image.save(os.path.join(selfies_path, filename))
     except Exception as e:
@@ -289,11 +289,11 @@ def get_selfie():
     if 'date' in request.args:
         date_string = request.args['date']
     else:
-        return Response('错误：未指定参数date', 401)
+        return Response('错误：未指定参数date', 400)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
     except Exception as e:
-        return Response(f'参数date的语法不正确：{e}', 401)
+        return Response(f'参数date的语法不正确：{e}', 400)
 
     for ext in allowed_ext:
         image_path = os.path.join(selfies_path, f'{date_string}.{ext}')
@@ -726,11 +726,11 @@ def get_meal_plan():
     if 'date' in request.args:
         date_string = request.args['date']
     else:
-        return Response('错误：未指定参数date', 401)
+        return Response('错误：未指定参数date', 400)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
     except Exception as e:
-        return Response(f'参数date的语法不正确：{e}', 401)
+        return Response(f'参数date的语法不正确：{e}', 400)
 
     try:
         meal_plan = convert_meal_plan_to_json(date_string)
