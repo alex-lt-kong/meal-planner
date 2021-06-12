@@ -380,7 +380,7 @@ def get_blacklist():
     return flask.jsonify(blacklist)
 
 
-def get_straight_a_days(include_aminus=False):
+def calculate_consecutive_a_days(include_aminus=False):
 
     conn = pymysql.connect(db_url, db_username, db_password, db_name)
     conn.autocommit(True)
@@ -762,16 +762,51 @@ def history_notes():
     else:
         return redirect(f'{relative_url}/login/')
 
-    conn = pymysql.connect(db_url, db_username, db_password, db_name)
-    cursor = conn.cursor()
-    sql = '''SELECT DATE_FORMAT(`date`,'%Y-%m-%d'), `content`
-             FROM `notes` ORDER BY `date` ASC'''
-    cursor.execute(sql)
-    results = cursor.fetchall()
+    return render_template('history-notes.html', username=username)
 
-    return render_template('history-notes.html',
-                           username=username,
-                           results=results)
+
+@app.route('/get-history-notes/', methods=['GET'])
+def get_history_notes():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        username = session[f'{app_name}']['username']
+    else:
+        return redirect(f'{relative_url}/login/')
+
+    # conn = pymysql.connect(db_url, db_username, db_password, db_name)
+    # cursor = conn.cursor()
+    # sql = '''SELECT DATE_FORMAT(`date`,'%Y-%m-%d'), `content`
+    #          FROM `notes` ORDER BY `date` ASC'''
+    # cursor.execute(sql)
+    # results = cursor.fetchall()
+
+    conn_str = (f'mysql+pymysql://{db_username}:{db_password}@'
+                f'{db_url}/{db_name}')
+    engine = create_engine(conn_str)
+
+    # Reflection - may have performance issues if done each time.
+    # But let's make everything work before optimizing it!
+    metadata = MetaData(bind=engine)
+    notes = Table('notes', metadata, autoload_with=engine)
+
+    s = select([notes.c.date, notes.c.content]).order_by(notes.c.date.asc())
+    with engine.begin() as conn:
+        result = conn.execute(s).fetchall()
+        # If you fecthall(), the result is a list
+        # If you just execute(), the result is a ResultProxy object
+        # which has to be iterated to get a list.
+
+    dicts = []
+    for row in result:
+        d = {}
+        d['metadata'] = {}
+        d['metadata']['date'] = dt.datetime.strftime(row['date'], '%Y-%m-%d')
+        d['metadata']['username'] = username
+        d['content'] = row['content']
+
+        dicts.append(d)
+
+    return flask.jsonify(dicts)
 
 
 def convert_notes_to_json():
@@ -897,13 +932,9 @@ def get_consecutive_a_days():
     else:
         return Response('未登录', 401)
 
-    deltas_a = get_straight_a_days(False)
-    deltas_a_minus = get_straight_a_days(True)
+    deltas_a = calculate_consecutive_a_days(False)
+    deltas_a_minus = calculate_consecutive_a_days(True)
 
-   # dayss_a, dayss_a_minus = '', ''
-  ##  for i in range(1, 7):
-   #     dayss_a = dayss_a + ', ' + str(deltas_a[i])
-  #      dayss_a_minus = dayss_a_minus + ', ' + str(deltas_a_minus[i])
     data = {}
     data['metadata'] = {}
     data['metadata']['username'] = username

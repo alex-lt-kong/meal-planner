@@ -40,7 +40,6 @@ class FixedFooter extends React.Component {
 
   componentDidMount() {
     this.fetchDataFromServer(this.state.date);
-    console.log('FixedFooter componentDidMount()');
   }
 
   handleChange(event) {
