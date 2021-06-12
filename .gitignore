@@ -4,6 +4,7 @@ users.json
 resources/selfies
 resources/attachments
 blacklist.json
+test.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
