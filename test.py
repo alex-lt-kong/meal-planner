@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import MetaData, Column, Table, ForeignKey
 from sqlalchemy import Integer, String
 
-engine = create_engine('mysql+pymysql://meal-planner:ZmkA2QJ3dFrVyMmk@localhost/meal-planner')
+engine = create_engine('mysql+pymysql://meal-planner:cACnUS5gBTRCeTQg@localhost/meal-planner')
 
 metadata = MetaData(bind=engine)
 mp = Table('meal_plan', metadata, autoload_with=engine)

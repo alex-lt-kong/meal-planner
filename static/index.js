@@ -6,8 +6,8 @@ yesterday.setDate(yesterday.getDate() - 1);
 tomorrow.setDate(tomorrow.getDate() + 1);
 
 ReactDOM.render(
-  <div>
-    <CheckHistoricalPlans />
+  <div> 
+    <History />
     <MealPlan id="0" show={false} convenientDateName="昨日" date={yesterday}  />
     <MealPlan id="1" show={true}  convenientDateName="今日" date={today} />
     <MealPlan id="2" show={false} convenientDateName="明日" date={tomorrow} />

@@ -765,6 +765,17 @@ def history_notes():
     return render_template('history-notes.html', username=username)
 
 
+@app.route('/history-selfies/', methods=['GET'])
+def history_selfies():
+
+    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+        username = session[f'{app_name}']['username']
+    else:
+        return redirect(f'{relative_url}/login/')
+
+    return render_template('history-selfies.html', username=username)
+
+
 @app.route('/get-history-notes/', methods=['GET'])
 def get_history_notes():
 
