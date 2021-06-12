@@ -3,6 +3,7 @@ class Notes extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      appAddress: props.appAddress,
       show: props.show,
       data: null /* Will be initialized in componentDidMount() */
     };
@@ -24,7 +25,7 @@ class Notes extends React.Component {
   }
 
   fetchDataFromServer() {
-    axios.get('./get-notes/')
+    axios.get(this.state.appAddress + 'get-notes/')
       .then(response => {
         this.setState({
           data: null
@@ -51,7 +52,7 @@ class Notes extends React.Component {
 
   handleClickHistory(event) {
     logUserActivity('[meal-planner] Open history-notes', this.state.data.metadata.username);
-    window.open('./history-notes/');
+    window.open(this.state.appAddress + '?page=history-notes');
   }
 
   handleClickUpdate(event) {
@@ -59,7 +60,7 @@ class Notes extends React.Component {
     payload.append('data', JSON.stringify(this.state.data));
     axios({
       method: "post",
-      url: "https://monitor.sz.lan/meal-planner/update-notes/",
+      url: this.state.appAddress + "update-notes/",
       data: payload,
     })
     .then(response => {

@@ -3,6 +3,7 @@ class History extends React.Component {
     constructor(props) {
       super(props);
       this.state = {
+        appAddress: props.appAddress,
         username: null
       };
       this.handleClickPlans = this.handleClickPlans.bind(this);
@@ -11,7 +12,7 @@ class History extends React.Component {
     }
 
     fetchDataFromServer() {
-      axios.get('https://monitor.sz.lan/meal-planner/get-username/')
+      axios.get(this.state.appAddress + 'get-username/')
         .then(response => {       
           this.setState({
             username: response.data.username
@@ -23,12 +24,12 @@ class History extends React.Component {
     }
 
     handleClickPlans(event) {
-      window.open('./history-plans/');
+      window.open(this.state.appAddress + '?page=history-plans');
     }
 
     handleClickSelfies(event) {
       logUserActivity('[meal-planner/history-selfies]', this.state.username);
-      window.open('./history-selfies/');
+      window.open(this.state.appAddress + '?page=history-selfies');
     }
 
     render() {

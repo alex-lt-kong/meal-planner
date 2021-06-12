@@ -51,10 +51,10 @@ allowed_ext = ['7z', 'apk', 'avi', 'bmp', 'conf', 'crt', 'csv', 'doc', 'docx',
                'sqlite', 'tif', 'tiff', 'ttf', 'txt', 'wav', 'm4a', 'webm',
                'wma', 'wmv', 'xls', 'xlsx', 'xml', 'zip']
 app_name = 'meal-planner'
+app_address = ''
 attachments_path = f'/root/bin/{app_name}/resources/attachments'
 db_url, db_username, db_password, db_name = '', '', '', ''
 log_path = f'/var/log/mamsds/{app_name}.log'
-relative_url = f'../{app_name}'
 settings_path = f'/root/bin/{app_name}/settings.json'
 selfies_path = f'/root/bin/{app_name}/resources/selfies'
 stop_signal = False
@@ -439,7 +439,7 @@ def logout():
     if f'{app_name}' in session:
         session[f'{app_name}'].pop('username', None)
 
-    return redirect(f'{relative_url}/')
+    return redirect(f'{app_address}/')
 
 
 @app.before_request
@@ -452,7 +452,7 @@ def make_session_permanent():
 def login():
 
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        return redirect(f'{relative_url}/')
+        return redirect(f'{app_address}/')
 
     if request.method == 'POST':
         try:
@@ -470,7 +470,7 @@ def login():
         session[f'{app_name}'] = {}
         session[f'{app_name}']['username'] = request.form['username']
 
-        return redirect(f'{relative_url}/')
+        return redirect(f'{app_address}/')
 
     return render_template('login.html', message='')
 
@@ -743,26 +743,26 @@ def get_meal_plan():
     return flask.jsonify(meal_plan)
 
 
-@app.route('/history-notes/', methods=['GET'])
-def history_notes():
+# @app.route('/history-notes/', methods=['GET'])
+# def history_notes():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        username = session[f'{app_name}']['username']
-    else:
-        return redirect(f'{relative_url}/login/')
+#     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+#         username = session[f'{app_name}']['username']
+#     else:
+#         return redirect(f'{app_address}/login/')
 
-    return render_template('history-notes.html', username=username)
+#     return render_template('history-notes.html', username=username)
 
 
-@app.route('/history-selfies/', methods=['GET'])
-def history_selfies():
+# @app.route('/history-selfies/', methods=['GET'])
+# def history_selfies():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        username = session[f'{app_name}']['username']
-    else:
-        return redirect(f'{relative_url}/login/')
+#     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+#         username = session[f'{app_name}']['username']
+#     else:
+#         return redirect(f'{app_address}/login/')
 
-    return render_template('history-selfies.html', username=username)
+#     return render_template('history-selfies.html', username=username)
 
 
 @app.route('/get-history-notes/', methods=['GET'])
@@ -771,7 +771,7 @@ def get_history_notes():
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         username = session[f'{app_name}']['username']
     else:
-        return redirect(f'{relative_url}/login/')
+        return redirect(f'{app_address}/login/')
 
     # conn = pymysql.connect(db_url, db_username, db_password, db_name)
     # cursor = conn.cursor()
@@ -880,23 +880,34 @@ def update_notes():
 
 @app.route('/', methods=['GET'])
 def index():
-
+    # Render all pages (except login.html) at root dir to avoid
+    # the difference of relative URLs.
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         username = session[f'{app_name}']['username']
     else:
-        return redirect(f'{relative_url}/login/')
+        return redirect(f'{app_address}/login/')
 
+    if 'page' not in request.args:
+        return render_template('index.html', username=username)
+
+    page = request.args['page']
+    if page == 'history-plans':
+        return render_template('history-plans.html', username=username)
+    if page == 'history-selfies':
+        return render_template('history-selfies.html', username=username)
+    if page == 'history-notes':
+        return render_template('history-notes.html', username=username)
     return render_template('index.html', username=username)
 
 
-@app.route('/history-plans/', methods=['GET', 'POST'])
-def history_plans():
+# @app.route('/history-plans/', methods=['GET', 'POST'])
+# def history_plans():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        username = session[f'{app_name}']['username']
-    else:
-        return redirect(f'{relative_url}/login/')
-    return render_template('history-plans.html', username=username)
+#     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+#         username = session[f'{app_name}']['username']
+#     else:
+#         return redirect(f'{app_address}/login/')
+#     return render_template('history-plans.html', username=username)
 
 
 @app.route('/get-reminder-message/', methods=['GET'])
@@ -985,7 +996,7 @@ def main():
     logging.info(f'{app_name} server')
 
     port = -1
-    global db_url, db_username, db_password, db_name
+    global app_address, db_url, db_username, db_password, db_name
 
     try:
         with open(settings_path, 'r') as json_file:
@@ -993,6 +1004,7 @@ def main():
             data = json.loads(json_str)
         app.secret_key = data['flask']['secret_key']
         app.config['MAX_CONTENT_LENGTH'] = data['flask']['max_upload_size']
+        app_address = data['app']['address']
         port = data['flask']['port']
         db_url = data['database']['url']
         db_username = data['database']['username']

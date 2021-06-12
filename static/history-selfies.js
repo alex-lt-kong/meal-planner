@@ -45,6 +45,7 @@ class SelfieItem extends React.Component {
 class App extends React.Component {
   constructor(props) {
     super(props);
+    console.log(window.location.href);
   }
 
   render() {

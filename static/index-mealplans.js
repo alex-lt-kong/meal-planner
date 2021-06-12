@@ -2,7 +2,8 @@ class MealPlan extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = {      
+    this.state = {
+      appAddress: props.appAddress,
       convenientDateName: props.convenientDateName,
       data: null, /* Will be initialized in componentDidMount() */
       date: props.date,
@@ -23,7 +24,7 @@ class MealPlan extends React.Component {
   }
 
   fetchDataFromServer() {
-    axios.get('./get-meal-plan/?date=' + this.state.date.toISOString().slice(0, 10))
+    axios.get(this.state.appAddress + '/get-meal-plan/?date=' + this.state.date.toISOString().slice(0, 10))
       .then(response => {
         // handle success
         this.setState({
@@ -43,7 +44,7 @@ class MealPlan extends React.Component {
   handleCopyTodayClick(event) {
     let today = new Date(this.state.date);
     today.setDate(today.getDate() - 1);
-    axios.get('./get-meal-plan/?date=' + today.toISOString().slice(0, 10))
+    axios.get(this.state.appAddress + 'get-meal-plan/?date=' + today.toISOString().slice(0, 10))
       .then(response => {
         // handle success
         this.setState({
@@ -83,7 +84,7 @@ class MealPlan extends React.Component {
     payload.append('data', JSON.stringify(this.state.data));
     axios({
       method: "post",
-      url: "./update-meal-plan/",
+      url: this.state.appAddress + "update-meal-plan/",
       data: payload,
     })
     .then(response => {

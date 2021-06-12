@@ -142,7 +142,6 @@ class MealPlanItem extends React.Component {
   }
 
   handleContentChange(event) {
-    console.log('handleContentChange');
     event.target.style.height = 'inherit';
     event.target.style.height = `${event.target.scrollHeight}px`; 
 
