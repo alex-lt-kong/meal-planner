@@ -278,28 +278,6 @@ def upload_selfie():
     return Response('自拍照上传成功', 200)
 
 
-@app.route('/if-selfie-exists/', methods=['GET'])
-def check_if_selfie_exists():
-
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        pass
-    else:
-        return Response('错误：未登录', 401)
-
-    if 'date' in request.args:
-        date_string = request.args['date']
-    else:
-        return Response('未指定参数date', 401)
-    try:
-        dt.datetime.strptime(date_string, '%Y-%m-%d')
-    except Exception as e:
-        return Response(f'参数date的语法不正确：{e}', 401)
-
-    image_path = f'/root/bin/meal-planner/resources/selfies/{date_string}.png'
-
-    return '1' if os.path.isfile(image_path) else '0'
-
-
 @app.route('/get-selfie/', methods=['GET'])
 def get_selfie():
 
