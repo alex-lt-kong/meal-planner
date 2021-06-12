@@ -7,7 +7,8 @@ from PIL import Image
 from sqlalchemy.sql import select, and_
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData, Column, Table, ForeignKey
-from sqlalchemy import Integer, String
+from sqlalchemy import func
+from sqlalchemy import and_, or_
 from waitress import serve
 
 
@@ -371,62 +372,45 @@ def get_username():
 
 def calculate_consecutive_a_days(include_aminus=False):
 
-    conn = pymysql.connect(db_url, db_username, db_password, db_name)
-    conn.autocommit(True)
-    # It appears that both UPDATE and SELECT need "commit"
-    cursor = conn.cursor()
-    if include_aminus is True:
-        sql = '''
-        SELECT `date` FROM meal_plan WHERE
-        ((`breakfast_feedback` != "A" AND `breakfast_feedback` != "A-"
-          AND `breakfast_feedback` != "没吃") OR
-         (`morning_extra_meal_feedback` != "A"  AND
-          `morning_extra_meal_feedback` != "A-"  AND
-          `morning_extra_meal_feedback` != "没吃") OR
-         (`lunch_feedback` != "A" AND `lunch_feedback` != "A-" AND
-          `lunch_feedback` != "没吃") OR
-         (`afternoon_extra_meal_feedback` != "A" AND
-          `afternoon_extra_meal_feedback` != "A-"
-          AND `afternoon_extra_meal_feedback` != "没吃") OR
-         (`dinner_feedback` != "A"  AND `dinner_feedback` != "A-"  AND
-          `dinner_feedback` != "没吃") OR
-         (`evening_extra_meal_feedback` != "A" AND
-          `evening_extra_meal_feedback` != "A-" AND
-          `evening_extra_meal_feedback` != "没吃")) AND
-         `date` <= CURDATE()
-         ORDER BY `date` DESC
-        '''
-    else:
-        sql = '''
-        SELECT `date` FROM meal_plan WHERE
-        ((`breakfast_feedback` != "A" AND `breakfast_feedback` != "没吃") OR
-         (`morning_extra_meal_feedback` != "A"  AND
-          `morning_extra_meal_feedback` != "没吃") OR
-         (`lunch_feedback` != "A" AND `lunch_feedback` != "没吃") OR
-         (`afternoon_extra_meal_feedback` != "A"AND
-          `afternoon_extra_meal_feedback` != "没吃") OR
-         (`dinner_feedback` != "A"  AND
-          `dinner_feedback` != "没吃") OR
-         (`evening_extra_meal_feedback` != "A" AND
-          `evening_extra_meal_feedback` != "没吃")) AND
-         `date` <= CURDATE()
-         ORDER BY `date` DESC
-        '''
-    cursor.execute(sql,)
-    last_failure = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    if len(last_failure) == 0:
-        return None
-    else:
-        deltas = []
-        for i in range(len(last_failure) - 1):
-            deltas.append((last_failure[i][0] - last_failure[i+1][0]).days - 1)
-            logging.debug(
-                f'Include A- [{include_aminus}], from {last_failure[i][0]} to '
-                f'{last_failure[i+1][0]}: {deltas[i]} days')
+    conds = ['A', '没吃']
+    if include_aminus:
+        conds.append('A-')
 
-        return deltas
+    conn_str = (f'mysql+pymysql://{db_username}:{db_password}@'
+                f'{db_url}/{db_name}')
+    engine = create_engine(conn_str)
+
+    # Reflection - may have performance issues if done each time.
+    # But let's make everything work before optimizing it!
+    metadata = MetaData(bind=engine)
+    mp = Table('meal_plan', metadata, autoload_with=engine)
+
+    s = (select([mp.c.date]).where(
+         and_(
+          or_(
+           and_(mp.c.breakfast_feedback != c for c in conds),
+           and_(mp.c.morning_extra_meal_feedback != c for c in conds),
+           and_(mp.c.lunch_feedback != c for c in conds),
+           and_(mp.c.afternoon_extra_meal_feedback != c for c in conds),
+           and_(mp.c.dinner_feedback != c for c in conds),
+           and_(mp.c.evening_extra_meal_feedback != c for c in conds)),
+          mp.c.date <= dt.date.today()))
+         .order_by(mp.c.date.desc())
+         )
+
+    with engine.begin() as conn:
+        result = conn.execute(s).fetchall()
+
+    if len(result) == 0:
+        return None
+
+    deltas = []
+    for i in range(len(result) - 1):
+        deltas.append((result[i]['date'] - result[i+1]['date']).days - 1)
+        logging.debug(
+            f'Include A- [{include_aminus}], from {result[i]["date"]} to '
+            f'{result[i+1]["date"]}: {deltas[i]} days')
+    return deltas
 
 
 @app.route('/logout/')
@@ -591,25 +575,6 @@ def insert_modification_type(meal_plan):
 
 def read_meal_plan_from_db(date_string: str):
 
-    # The good old way
-    # conn = pymysql.connect(db_url, db_username, db_password, db_name)
-    # conn.autocommit(True)
-    # # It appears that both UPDATE and SELECT need "commit"
-    # cursor = conn.cursor()
-
-    # sql = '''
-    #      SELECT `breakfast`, `breakfast_feedback`,
-    #      `morning_extra_meal`, `morning_extra_meal_feedback`,
-    #      `lunch`, `lunch_feedback`,
-    #      `afternoon_extra_meal`, `afternoon_extra_meal_feedback`,
-    #      `dinner`, `dinner_feedback`,
-    #      `evening_extra_meal`, `evening_extra_meal_feedback`, `daily_remark`
-    #      FROM `meal_plan` WHERE `date` = %s'''
-    # cursor.execute(sql, (date_string))
-    # res = cursor.fetchall()
-    # cursor.close()
-    # conn.close()
-
     conn_str = (f'mysql+pymysql://{db_username}:{db_password}@'
                 f'{db_url}/{db_name}')
     engine = create_engine(conn_str)
@@ -743,28 +708,6 @@ def get_meal_plan():
     return flask.jsonify(meal_plan)
 
 
-# @app.route('/history-notes/', methods=['GET'])
-# def history_notes():
-
-#     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-#         username = session[f'{app_name}']['username']
-#     else:
-#         return redirect(f'{app_address}/login/')
-
-#     return render_template('history-notes.html', username=username)
-
-
-# @app.route('/history-selfies/', methods=['GET'])
-# def history_selfies():
-
-#     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-#         username = session[f'{app_name}']['username']
-#     else:
-#         return redirect(f'{app_address}/login/')
-
-#     return render_template('history-selfies.html', username=username)
-
-
 @app.route('/get-history-notes/', methods=['GET'])
 def get_history_notes():
 
@@ -772,13 +715,6 @@ def get_history_notes():
         username = session[f'{app_name}']['username']
     else:
         return redirect(f'{app_address}/login/')
-
-    # conn = pymysql.connect(db_url, db_username, db_password, db_name)
-    # cursor = conn.cursor()
-    # sql = '''SELECT DATE_FORMAT(`date`,'%Y-%m-%d'), `content`
-    #          FROM `notes` ORDER BY `date` ASC'''
-    # cursor.execute(sql)
-    # results = cursor.fetchall()
 
     conn_str = (f'mysql+pymysql://{db_username}:{db_password}@'
                 f'{db_url}/{db_name}')
@@ -811,18 +747,32 @@ def get_history_notes():
 
 def convert_notes_to_json():
 
-    conn = pymysql.connect(db_url, db_username, db_password, db_name)
-    cursor = conn.cursor()
-    sql = '''SELECT `id`, `date`, `content` FROM `notes`
-             WHERE `date` = (SELECT MAX(`date`) FROM `notes`)'''
-    cursor.execute(sql)
-    results = cursor.fetchall()
+    conn_str = (f'mysql+pymysql://{db_username}:{db_password}@'
+                f'{db_url}/{db_name}')
+    engine = create_engine(conn_str)
+
+    # Reflection - may have performance issues if done each time.
+    # But let's make everything work before optimizing it!
+    metadata = MetaData(bind=engine)
+    notes = Table('notes', metadata, autoload_with=engine)
 
     notes_json = {}
-    notes_json['date'], notes_json['content'] = None, None
-    if len(results) > 0:
-        notes_json['date'] = results[0][1]
-        notes_json['content'] = results[0][2]
+    try:
+        s = select(func.max(notes.c.date))
+        with engine.begin() as conn:
+            max_date = conn.execute(s).scalar()
+
+        s = (select([notes.c.date, notes.c.content])
+             .where(notes.c.date == max_date))
+        with engine.begin() as conn:
+            result = conn.execute(s).one()
+    except sqlalchemy.exc.NoResultFound:
+        # This exception is acceptable if the database is empty.
+        # Other exceptions will be caught at a higher level
+        notes_json['date'], notes_json['content'] = '', ''
+    else:
+        notes_json['date'] = result['date']
+        notes_json['content'] = result['content']
 
     return notes_json
 
@@ -833,12 +783,17 @@ def get_notes():
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         username = session[f'{app_name}']['username']
     else:
-        return Response('错误：未登录', 401)
+        return Response('未登录', 401)
 
-    notes_json = convert_notes_to_json()
-    notes_json['metadata'] = {}
-    notes_json['metadata']['date'] = notes_json['date']
-    notes_json['metadata']['username'] = username
+    try:
+        notes_json = convert_notes_to_json()
+    except Exception as e:
+        return Response(f'数据读取错误：{e}', 500)
+    else:
+        notes_json['metadata'] = {}
+        notes_json['metadata']['date'] = notes_json['date']
+        notes_json['metadata']['username'] = username
+
     return flask.jsonify(notes_json)
 
 
@@ -848,7 +803,7 @@ def update_notes():
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         pass
     else:
-        return Response('错误：未登录', 401)
+        return Response('未登录', 401)
 
     if 'data' not in request.form or len(request.form['data']) == 0:
         return Response('没有收到数据', 400)
@@ -898,16 +853,6 @@ def index():
     if page == 'history-notes':
         return render_template('history-notes.html', username=username)
     return render_template('index.html', username=username)
-
-
-# @app.route('/history-plans/', methods=['GET', 'POST'])
-# def history_plans():
-
-#     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-#         username = session[f'{app_name}']['username']
-#     else:
-#         return redirect(f'{app_address}/login/')
-#     return render_template('history-plans.html', username=username)
 
 
 @app.route('/get-reminder-message/', methods=['GET'])
