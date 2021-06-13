@@ -814,25 +814,29 @@ def update_notes():
         json_data = json.loads(data)
     except Exception as e:
         return Response(f'data的值无法解析成JSON字符串：{e}', 400)
-    conn = pymysql.connect(db_url, db_username, db_password, db_name)
-    conn.autocommit(True)
-    #  It appears that both UPDATE and SELECT need "commit"
-    cursor = conn.cursor()
-    sql = 'DELETE FROM `notes` WHERE `date` = CURDATE()'
-    cursor.execute(sql)
 
-    sql = 'INSERT INTO `notes` (`date`, `content`) VALUES (CURDATE(), %s)'
+    conn_str = (f'mysql+pymysql://{db_username}:{db_password}@'
+                f'{db_url}/{db_name}')
+    engine = create_engine(conn_str)
+
+    # Reflection - may have performance issues if done each time.
+    # But let's make everything work before optimizing it!
+    metadata = MetaData(bind=engine)
+    notes = Table('notes', metadata, autoload_with=engine)
+
     try:
-        cursor.execute(sql, (json_data['content']))
+        with engine.begin() as conn, conn.begin():
+            # begin() starts a transaction
+            today = dt.date.today()
+            d = notes.delete(notes.c.date == today)
+            conn.execute(d)
+            i = notes.insert().values(date=today,
+                                      content=json_data['content'])
+            conn.execute(i)
     except Exception as e:
-        cursor.close()
-        conn.close()
-        logging.error(f'{e}')
-        return Response(f'数据库更新错误：{e}', 500)
+        return Response(f'笔记更新失败：{e}', 500)
 
-    cursor.close()
-    conn.close()
-    return Response('更新成功', 200)
+    return Response('笔记更新成功', 200)
 
 
 @app.route('/', methods=['GET'])
