@@ -4,11 +4,10 @@
 from flask import Flask, render_template, Response, request, redirect, session
 from flask_cors import CORS
 from PIL import Image
-from sqlalchemy.sql import select, and_
+from sqlalchemy.sql import select, and_, or_
 from sqlalchemy import create_engine
-from sqlalchemy import MetaData, Column, Table, ForeignKey
+from sqlalchemy import MetaData, Column, Table
 from sqlalchemy import func
-from sqlalchemy import and_, or_
 from waitress import serve
 
 
@@ -19,7 +18,6 @@ import hashlib
 import json
 import logging
 import os
-import pymysql
 import random
 import re
 import signal
@@ -52,15 +50,18 @@ allowed_ext = ['7z', 'apk', 'avi', 'bmp', 'conf', 'crt', 'csv', 'doc', 'docx',
                'sqlite', 'tif', 'tiff', 'ttf', 'txt', 'wav', 'm4a', 'webm',
                'wma', 'wmv', 'xls', 'xlsx', 'xml', 'zip']
 app_name = 'meal-planner'
+# app_address: the app's address on the Internet
 app_address = ''
-attachments_path = f'/root/bin/{app_name}/resources/attachments'
+# app_dir: the app's real address on the filesystem
+app_dir = os.path.dirname(os.path.realpath(__file__))
+attachments_path = os.path.join(app_dir, 'resources/attachments')
+blacklist_path = os.path.join(app_dir, 'blacklist.json')
 db_url, db_username, db_password, db_name = '', '', '', ''
-log_path = f'/var/log/mamsds/{app_name}.log'
-settings_path = f'/root/bin/{app_name}/settings.json'
-selfies_path = f'/root/bin/{app_name}/resources/selfies'
+log_path = ''
+selfies_path = os.path.join(app_dir, 'resources/selfies')
+settings_path = os.path.join(app_dir, 'settings.json')
 stop_signal = False
-blacklist_path = f'/root/bin/{app_name}/blacklist.json'
-users_path = f'/root/bin/{app_name}/users.json'
+users_path = os.path.join(app_dir, 'users.json')
 
 
 @app.route('/get-attachments-list/', methods=['GET'])
@@ -924,6 +925,28 @@ def main():
     args = vars(ap.parse_args())
     debug_mode = args['debug']
 
+    port = -1
+    global app_address, db_url, db_username, db_password, db_name, log_path
+
+    try:
+        with open(settings_path, 'r') as json_file:
+            json_str = json_file.read()
+            data = json.loads(json_str)
+        app.secret_key = data['flask']['secret_key']
+        app.config['MAX_CONTENT_LENGTH'] = data['flask']['max_upload_size']
+        app_address = data['app']['address']
+        port = data['flask']['port']
+        db_url = data['database']['url']
+        db_username = data['database']['username']
+        db_password = data['database']['password']
+        db_name = data['database']['name']
+        log_path = data['app']['log_path']
+        logging.debug(f'data: {data}')
+    except Exception as e:
+        data = None
+        print(f'{e}')
+        return
+
     logging.basicConfig(
         filename=log_path,
         level=logging.DEBUG if debug_mode else logging.INFO,
@@ -948,27 +971,6 @@ def main():
                                         'delay': 0 if debug_mode else 300})
     th_email.start()
     logging.info(f'{app_name} server')
-
-    port = -1
-    global app_address, db_url, db_username, db_password, db_name
-
-    try:
-        with open(settings_path, 'r') as json_file:
-            json_str = json_file.read()
-            data = json.loads(json_str)
-        app.secret_key = data['flask']['secret_key']
-        app.config['MAX_CONTENT_LENGTH'] = data['flask']['max_upload_size']
-        app_address = data['app']['address']
-        port = data['flask']['port']
-        db_url = data['database']['url']
-        db_username = data['database']['username']
-        db_password = data['database']['password']
-        db_name = data['database']['name']
-        logging.debug(f'data: {data}')
-    except Exception as e:
-        data = None
-        logging.error(f'data error: {e}')
-        return
 
     serve(app, host="127.0.0.1", port=port)
 
