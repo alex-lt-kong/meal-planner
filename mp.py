@@ -459,6 +459,42 @@ def login():
     return render_template('login.html', message='')
 
 
+def write_meal_plan_to_db(json_data, date_string):
+
+    conn_str = (f'mysql+pymysql://{db_username}:{db_password}@'
+                f'{db_url}/{db_name}')
+    engine = create_engine(conn_str)
+
+    # Reflection - may have performance issues if done each time.
+    # But let's make everything work before optimizing it!
+    metadata = MetaData(bind=engine)
+    mp = Table('meal_plan', metadata, autoload_with=engine)
+
+    with engine.begin() as conn, conn.begin():
+        # begin() starts a transaction
+        d = mp.delete(mp.c.date == date_string)
+        conn.execute(d)
+        i = mp.insert().values(
+            date=date_string,
+            breakfast=json_data['breakfast']['content'],
+            breakfast_feedback=json_data['breakfast']['feedback'],
+            morning_extra_meal=json_data['morning_extra_meal']['content'],
+            morning_extra_meal_feedback=json_data[
+                'morning_extra_meal']['feedback'],
+            lunch=json_data['lunch']['content'],
+            lunch_feedback=json_data['lunch']['feedback'],
+            afternoon_extra_meal=json_data['afternoon_extra_meal']['content'],
+            afternoon_extra_meal_feedback=json_data[
+                'afternoon_extra_meal']['feedback'],
+            dinner=json_data['dinner']['content'],
+            dinner_feedback=json_data['dinner']['feedback'],
+            evening_extra_meal=json_data['evening_extra_meal']['content'],
+            evening_extra_meal_feedback=json_data[
+                'evening_extra_meal']['feedback'],
+            daily_remark=json_data['remark']['content'])
+        conn.execute(i)
+
+
 @app.route('/update-meal-plan/', methods=['POST'])
 def update_meal_plan():
 
@@ -471,6 +507,7 @@ def update_meal_plan():
         return Response('错误：未指定参数date或data', 400)
     date = request.form['date']
     data = request.form['data']
+
     try:
         date_string = dt.datetime.strptime(date, '%Y-%m-%d')
     except Exception as e:
@@ -482,46 +519,11 @@ def update_meal_plan():
 
     logging.debug(f'raw string submitted by client: [{json_data}]')
 
-    conn = pymysql.connect(db_url, db_username, db_password, db_name)
-    conn.autocommit(True)
-    #  It appears that both UPDATE and SELECT need "commit"
-    cursor = conn.cursor()
-    sql = 'DELETE FROM `meal_plan` WHERE `date` = %s'
-    cursor.execute(sql, (date_string))
-
-    sql = '''
-    INSERT INTO `meal_plan` (`date`,
-    `breakfast`, `breakfast_feedback`,
-    `morning_extra_meal`, `morning_extra_meal_feedback`,
-    `lunch`, `lunch_feedback`,
-    `afternoon_extra_meal`, `afternoon_extra_meal_feedback`,
-    `dinner`, `dinner_feedback`,
-    `evening_extra_meal`, `evening_extra_meal_feedback`,
-    `daily_remark`)
-     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'''
-
-    parameters = (
-        date_string,
-        json_data['breakfast']['content'], json_data['breakfast']['feedback'],
-        json_data['morning_extra_meal']['content'],
-        json_data['morning_extra_meal']['feedback'],
-        json_data['lunch']['content'], json_data['lunch']['feedback'],
-        json_data['afternoon_extra_meal']['content'],
-        json_data['afternoon_extra_meal']['feedback'],
-        json_data['dinner']['content'], json_data['dinner']['feedback'],
-        json_data['evening_extra_meal']['content'],
-        json_data['evening_extra_meal']['feedback'],
-        json_data['remark']['content'])
-
     try:
-        cursor.execute(sql, parameters)
+        write_meal_plan_to_db(json_data, date_string)
     except Exception as e:
-        cursor.close()
-        conn.close()
-        return Response(f'数据库更新错误：{e}', 500)
+        return Response(f'写入数据库失败：{e}', 500)
 
-    cursor.close()
-    conn.close()
     return Response(f'更新{date_string}食谱成功！', 200)
 
 
@@ -686,12 +688,12 @@ def get_meal_plan():
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         username = session[f'{app_name}']['username']
     else:
-        return Response('错误：未登录', 401)
+        return Response('未登录', 401)
 
     if 'date' in request.args:
         date_string = request.args['date']
     else:
-        return Response('错误：未指定参数date', 400)
+        return Response('未指定参数date', 400)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
     except Exception as e:
@@ -728,7 +730,7 @@ def get_history_notes():
     s = select([notes.c.date, notes.c.content]).order_by(notes.c.date.asc())
     with engine.begin() as conn:
         result = conn.execute(s).fetchall()
-        # If you fecthall(), the result is a list
+        # If you fetchall(), the result is a list
         # If you just execute(), the result is a ResultProxy object
         # which has to be iterated to get a list.
 
@@ -861,7 +863,7 @@ def get_reminder_message():
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         pass
     else:
-        return Response('错误：未登录', 401)
+        return Response('未登录', 401)
 
     try:
         with open(settings_path, 'r') as json_file:
@@ -888,8 +890,11 @@ def get_consecutive_a_days():
     else:
         return Response('未登录', 401)
 
-    deltas_a = calculate_consecutive_a_days(False)
-    deltas_a_minus = calculate_consecutive_a_days(True)
+    try:
+        deltas_a = calculate_consecutive_a_days(False)
+        deltas_a_minus = calculate_consecutive_a_days(True)
+    except Exception as e:
+        return Response(f'数据库读取错误：{e}', 500)
 
     data = {}
     data['metadata'] = {}
