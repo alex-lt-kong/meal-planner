@@ -22,27 +22,11 @@
 <script src="https://monitor.sz.lan/meal-planner/static/index-notes.js" type="text/jsx"></script>
 <script src="https://monitor.sz.lan/meal-planner/static/index.js" type="text/jsx"></script>
 
-
 <html>
 <head>
-<title>每日食谱[{{username}}]</title>
+  <title>每日食谱[{{username}}]</title>
 </head>
 <body>
-<div class="w3-container w3-responsive" style="max-width: 50em; padding:0.75rem; display: block; margin-left: auto; margin-right: auto;">
-  <div class="w3-container w3-green">
-    <h3>
-      每日食谱<span class="w3-right" style="margin-bottom:1rem;font-size:0.65em;">[{{username}}], <a href="#" onclick="logout();">退出</a></span>
-    </h3>
-  </div>  
   <div id="root"></div>
-</div>
-<script>
-
-function logout() {
-  logUserActivity('[meal-planner/index] logout', '{{username}}');
-  window.location.replace('../meal_planner/logout/');
-}
-
-</script>
 </body>
 </html>

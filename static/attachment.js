@@ -83,12 +83,13 @@ class AttachmentsManager extends React.Component {
       '&filename_old=' + this.state.renameModeFile + 
       '&filename_new=' + this.state.newFileName)
         .then(response => {
+          logUserActivity('[meal-planner] Rename attachment from [' + this.state.renameModeFile + '](' + 
+            this.state.date.toISOString().slice(0, 10) + ') to [' + this.state.newFileName + ']',
+            this.state.data.metadata.username);
+          // Need to logUserActivity() before setState()!
           this.setState({ 
             renameModeFile: null
-          });           
-          logUserActivity('[meal-planner] Rename attachment from [' + this.state.renameModeFile + '](' + 
-                          this.state.date.toISOString().slice(0, 10) + ') to [' + this.state.newFileName + ']',
-                          this.state.data.metadata.username);
+          });
           this.fetchDataFromServer();
         })
         .catch(error => {
