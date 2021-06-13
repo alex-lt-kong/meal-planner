@@ -21,6 +21,10 @@ class IndexHeader extends React.Component {
       })
       .catch(error => {});
   }
+  
+  componentDidMount() {
+    this.fetchDataFromServer();    
+  }
 
   render() {
     return (

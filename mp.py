@@ -57,6 +57,7 @@ app_dir = os.path.dirname(os.path.realpath(__file__))
 attachments_path = os.path.join(app_dir, 'resources/attachments')
 blacklist_path = os.path.join(app_dir, 'blacklist.json')
 db_url, db_username, db_password, db_name = '', '', '', ''
+external_script_dir = ''
 log_path = ''
 selfies_path = os.path.join(app_dir, 'resources/selfies')
 settings_path = os.path.join(app_dir, 'settings.json')
@@ -386,19 +387,19 @@ def calculate_consecutive_a_days(include_aminus=False):
     metadata = MetaData(bind=engine)
     mp = Table('meal_plan', metadata, autoload_with=engine)
 
-    s = (select([mp.c.date]).where(
-         and_(
-          or_(
+    s = (select([mp.c.date]).where(or_(
            and_(mp.c.breakfast_feedback != c for c in conds),
            and_(mp.c.morning_extra_meal_feedback != c for c in conds),
            and_(mp.c.lunch_feedback != c for c in conds),
            and_(mp.c.afternoon_extra_meal_feedback != c for c in conds),
            and_(mp.c.dinner_feedback != c for c in conds),
            and_(mp.c.evening_extra_meal_feedback != c for c in conds)),
-          mp.c.date <= dt.date.today()))
+          mp.c.date <= dt.date.today())
          .order_by(mp.c.date.desc())
          )
-
+    # You can just call where(cond1, cond2). It will be implicitly
+    # translated to cond1 AND cond2. Note that you canNOT remove
+    # the and_()'s inside or_()
     with engine.begin() as conn:
         result = conn.execute(s).fetchall()
 
@@ -849,17 +850,20 @@ def index():
     else:
         return redirect(f'{app_address}/login/')
 
+    kwargs = {'username': username, 'app_address': app_address,
+              'external_script_dir': external_script_dir}
+
     if 'page' not in request.args:
-        return render_template('index.html', username=username)
+        return render_template('index.html', **kwargs)
 
     page = request.args['page']
     if page == 'history-plans':
-        return render_template('history-plans.html', username=username)
+        return render_template('history-plans.html', **kwargs)
     if page == 'history-selfies':
-        return render_template('history-selfies.html', username=username)
+        return render_template('history-selfies.html', **kwargs)
     if page == 'history-notes':
-        return render_template('history-notes.html', username=username)
-    return render_template('index.html', username=username)
+        return render_template('history-notes.html', **kwargs)
+    return render_template('index.html', **kwargs)
 
 
 @app.route('/get-reminder-message/', methods=['GET'])
@@ -926,7 +930,8 @@ def main():
     debug_mode = args['debug']
 
     port = -1
-    global app_address, db_url, db_username, db_password, db_name, log_path
+    global app_address, db_url, db_username, db_password, db_name
+    global external_script_dir, log_path
 
     try:
         with open(settings_path, 'r') as json_file:
@@ -940,6 +945,7 @@ def main():
         db_username = data['database']['username']
         db_password = data['database']['password']
         db_name = data['database']['name']
+        external_script_dir = data['app']['external_script_dir']
         log_path = data['app']['log_path']
         logging.debug(f'data: {data}')
     except Exception as e:
