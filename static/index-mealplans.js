@@ -135,15 +135,17 @@ class MealPlan extends React.Component {
           <MealPlanItem data={this.state.data} itemName="dinner" sendData={this.getData} />
           <MealPlanItem data={this.state.data} itemName="evening_extra_meal" sendData={this.getData} />
           <MealPlanDailyRemark data={this.state.data} sendData={this.getData} />
-          <MealPlanDailySelfie data={this.state.data} enableUpload={parseInt(this.state.id) === 1} date={this.state.date} />
-          <MealPlanDailyAttachments enableEdit={parseInt(this.state.id) === 1} enableUpload={parseInt(this.state.id) === 1} date={this.state.date} />
-          {/* Selfie and attachments uploads are only enabled for "today"! */}
-          <div>
+          <div style={{ "margin-bottom": "3em" }}>
+          {/* By applying w3-right to button, the button will not occupy any vertical space at all
+              to compensate this, a "margin-bottom" is added... */}
             <button class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button" onClick={this.handleClickUpdate}>
               提交
             </button>
             {buttonCopyToday}           
           </div>
+          <MealPlanDailySelfie data={this.state.data} enableUpload={parseInt(this.state.id) === 1} date={this.state.date} />
+          <MealPlanDailyAttachments enableEdit={parseInt(this.state.id) === 1} enableUpload={parseInt(this.state.id) === 1} date={this.state.date} />
+          {/* Selfie and attachments uploads are only enabled for "today"! */}
         </div>
       </div>
     );

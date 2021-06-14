@@ -24,6 +24,13 @@ class MealPlanDailySelfie extends React.Component {
       enableUpload: props.enableUpload
     };
     this.onFileChange = this.onFileChange.bind(this);
+    this.handleUploadSelfieButtonClick = this.handleUploadSelfieButtonClick.bind(this);  
+  }
+
+  handleUploadSelfieButtonClick(event) {
+    $('#input-fileupload-selfie').click();
+    // It is used to apply unified button style to file upload button...
+    // It is jQuery...but ...it works!
   }
 
   onFileChange(event) { 
@@ -58,7 +65,15 @@ class MealPlanDailySelfie extends React.Component {
 
     var buttonUpload = null;
     if (this.state.enableUpload === true) {
-      buttonUpload = <input type="file" accept="image/png, image/gif, image/jpeg" onChange={this.onFileChange} />;
+      buttonUpload = (
+      <div style={{ "margin-bottom": "3em" }}>
+        <button class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button"
+                onClick={this.handleUploadSelfieButtonClick}>
+          上传自拍
+        </button>
+        <input id="input-fileupload-selfie" onChange={this.onFileChange} type="file" style={{ display: "none" }} accept="image/png, image/gif, image/jpeg" />
+        {/* button and input is bound using jQuery... */}
+      </div>);
     }
 
     return ( 

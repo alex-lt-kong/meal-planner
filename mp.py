@@ -472,7 +472,7 @@ def write_meal_plan_to_db(json_data, date_string):
     metadata = MetaData(bind=engine)
     mp = Table('meal_plan', metadata, autoload_with=engine)
 
-    with engine.begin() as conn, conn.begin():
+    with engine.begin() as conn:
         # begin() starts a transaction
         d = mp.delete(mp.c.date == date_string)
         conn.execute(d)
@@ -503,10 +503,10 @@ def update_meal_plan():
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         pass
     else:
-        return Response('错误：未登录', 401)
+        return Response('未登录', 401)
 
     if 'date' not in request.form or 'data' not in request.form:
-        return Response('错误：未指定参数date或data', 400)
+        return Response('未指定参数date或data', 400)
     date = request.form['date']
     data = request.form['data']
 

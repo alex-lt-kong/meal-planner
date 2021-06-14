@@ -1,4 +1,5 @@
 class AttachmentsManager extends React.Component {
+
   constructor(props) {
     super(props);
     this.state = {
@@ -17,6 +18,8 @@ class AttachmentsManager extends React.Component {
     this.handleClickEnableRenameMode = this.handleClickEnableRenameMode.bind(this);
     this.handleClickSubmitNewFilename = this.handleClickSubmitNewFilename.bind(this);    
     this.onFileChange = this.onFileChange.bind(this);
+    this.handleUploadAttachmentButtonClick = this.handleUploadAttachmentButtonClick.bind(this);  
+
   }
 
   onFileChange(event) { 
@@ -30,6 +33,12 @@ class AttachmentsManager extends React.Component {
     this.onFileUpload(event.target.files[0]);
   }; 
    
+  handleUploadAttachmentButtonClick(event) {
+    $('#input-fileupload-attachment').click();
+    // It is used to apply unified button style to file upload button...
+    // It is jQuery...but ...it works!
+  }
+
   onFileUpload(selected_file) {
     const payload = new FormData(); 
     payload.append('selected_file', selected_file); 
@@ -98,7 +107,6 @@ class AttachmentsManager extends React.Component {
   }
   
   handleClickEnableRenameMode(value) {
-    console.log('handleClickFileRename:' + value);
     this.setState({ 
       renameModeFile: value,
       newFileName: value
@@ -115,6 +123,7 @@ class AttachmentsManager extends React.Component {
     this.fetchDataFromServer();
   }
 
+
   fetchDataFromServer() {
     axios.get('https://monitor.sz.lan/meal-planner/get-attachments-list/?date=' + this.state.date.toISOString().slice(0, 10))
       .then(response => {
@@ -126,7 +135,6 @@ class AttachmentsManager extends React.Component {
         this.setState({
           data: response.data
         });
-        console.log(this.state.data);
       })
       .catch(error => {
         alert(this.state.date.toISOString().slice(0, 10) + '的附件列表加载失败！请关闭窗口后重试！\n' + error);
@@ -187,10 +195,17 @@ class AttachmentsManager extends React.Component {
     else{
       progressBar = <span>（上传进度：{this.state.uploadProgress}%）</span>;
     }
-    
+
     var uploadButton = null;
     if (this.state.enableUpload === true) {
-      uploadButton = <input type="file" onChange={this.onFileChange} />;
+      uploadButton = <div>
+                      <button id="button-addfile-attachment" class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button" 
+                              onClick={this.handleUploadAttachmentButtonClick}>
+                        上传附件
+                      </button>
+                      <input id="input-fileupload-attachment" onChange={this.onFileChange} type="file" style={{ display: "none" }}></input>
+                      {/* button and input is bound using jQuery... */}
+                     </div>;
     }
     return ( 
       <div> 
