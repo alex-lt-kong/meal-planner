@@ -68,7 +68,8 @@ class MealPlanDailySelfie extends React.Component {
       buttonUpload = (
       <div style={{ "margin-bottom": "3em" }}>
         <button class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button"
-                onClick={this.handleUploadSelfieButtonClick}>
+                onClick={this.handleUploadSelfieButtonClick} style={{ clear: "right"}}>
+                {/* without clear: right, a button will interfere other buttons, causing other buttons to be left to it */}
           上传自拍
         </button>
         <input id="input-fileupload-selfie" onChange={this.onFileChange} type="file" style={{ display: "none" }} accept="image/png, image/gif, image/jpeg" />

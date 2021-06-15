@@ -199,11 +199,12 @@ class AttachmentsManager extends React.Component {
     var uploadButton = null;
     if (this.state.enableUpload === true) {
       uploadButton = <div>
-                      <button id="button-addfile-attachment" class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button" 
-                              onClick={this.handleUploadAttachmentButtonClick}>
-                        上传附件
-                      </button>
                       <input id="input-fileupload-attachment" onChange={this.onFileChange} type="file" style={{ display: "none" }}></input>
+                      <button id="button-addfile-attachment" class="w3-button w3-border w3-highway-green w3-right w3-margin-bottom input-button" 
+                              style={{ clear: "right"}} onClick={this.handleUploadAttachmentButtonClick}>
+                              {/* without clear: right, a button will interfere other buttons, causing other buttons to be left to it */}
+                        上传附件
+                      </button>                      
                       {/* button and input is bound using jQuery... */}
                      </div>;
     }
