@@ -730,7 +730,7 @@ def get_history_notes():
 
     dicts = []
     # There is one more difficulty in making this iteration into list
-    # comprehensive...I need to pass two parameters, i.e., row and username
+    # comprehension...I need to pass two parameters, i.e., row and username
     # to the function. But username per se is a string, which can not be
     # iterated without extra treatment...
     for row in result:
