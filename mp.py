@@ -6,15 +6,15 @@ from flask_cors import CORS
 from PIL import Image
 from sqlalchemy.sql import select, and_, or_
 from sqlalchemy import create_engine
-from sqlalchemy import MetaData, Column, Table
+from sqlalchemy import MetaData, Table
 from sqlalchemy import func
 from waitress import serve
 
-
-import argparse
+import click
 import datetime as dt
 import flask
 import hashlib
+import importlib.machinery as im
 import json
 import logging
 import os
@@ -24,11 +24,6 @@ import signal
 import sqlalchemy
 import sys
 import threading
-
-import importlib.machinery
-loader = importlib.machinery.SourceFileLoader('emailer',
-                                              '/root/bin/emailer/emailer.py')
-emailer = loader.load_module()
 
 app = Flask(__name__)
 app.secret_key = b''
@@ -43,12 +38,7 @@ CORS(app)
 #  This necessary for javascript to access a telemetry link without opening it:
 #  https://stackoverflow.com/questions/22181384/javascript-no-access-control-allow-origin-header-is-present-on-the-requested
 
-allowed_ext = ['7z', 'apk', 'avi', 'bmp', 'conf', 'crt', 'csv', 'doc', 'docx',
-               'flv', 'gif', 'ico', 'iso', 'jpeg', 'jpg', 'key', 'mp3', 'mp4',
-               'mkv', 'mov', 'mpg', 'mpeg', 'ods', 'odt', 'ovpn', 'pdf',
-               'pem', 'png', 'ppt', 'pptx', 'psd', 'rar', 'rtf', 'srt', 'sql',
-               'sqlite', 'tif', 'tiff', 'ttf', 'txt', 'wav', 'm4a', 'webm',
-               'wma', 'wmv', 'xls', 'xlsx', 'xml', 'zip']
+allowed_ext = None
 app_name = 'meal-planner'
 # app_address: the app's address on the Internet
 app_address = ''
@@ -58,6 +48,8 @@ attachments_path = os.path.join(app_dir, 'resources/attachments')
 blacklist_path = os.path.join(app_dir, 'blacklist.json')
 db_url, db_username, db_password, db_name = '', '', '', ''
 external_script_dir = ''
+loader = im.SourceFileLoader('emailer', f'{app_dir}/../emailer/emailer.py')
+emailer = loader.load_module()
 log_path = ''
 selfies_path = os.path.join(app_dir, 'resources/selfies')
 settings_path = os.path.join(app_dir, 'settings.json')
@@ -100,7 +92,7 @@ def rename_attachment():
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         pass
     else:
-        return Response('错误：未登录', 401)
+        return Response('未登录', 401)
     if ('date' in request.args
             and 'filename_old' in request.args
             and 'filename_new' in request.args):
@@ -160,7 +152,7 @@ def remove_attachment():
         os.remove(file_path)
     except Exception as e:
         return Response(f'文件{filename}删除失败：{e}', 500)
-    return Response('文件{filename}删除成功', 200)
+    return Response(f'文件{filename}删除成功', 200)
 
 
 @app.route('/get-attachment/', methods=['GET'])
@@ -248,7 +240,7 @@ def upload_selfie():
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         pass
     else:
-        return Response('错误：未登录', 401)
+        return Response('未登录', 401)
 
     if 'selected_file' not in request.files:
         return Response('没有收到自拍图', 400)
@@ -287,12 +279,12 @@ def get_selfie():
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         pass
     else:
-        return Response('错误：未登录', 401)
+        return Response('未登录', 401)
 
     if 'date' in request.args:
         date_string = request.args['date']
     else:
-        return Response('错误：未指定参数date', 400)
+        return Response('未指定参数date', 400)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
     except Exception as e:
@@ -314,10 +306,10 @@ def update_blacklist():
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         pass
     else:
-        return Response('错误：未登录', 401)
+        return Response('未登录', 401)
 
     if 'data' not in request.form:
-        return Response('错误：未指定参数data', 400)
+        return Response('未指定参数data', 400)
 
     data = request.form['data']
     try:
@@ -344,7 +336,7 @@ def get_blacklist():
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         username = session[f'{app_name}']['username']
     else:
-        return Response('错误：未登录', 401)
+        return Response('未登录', 401)
 
     try:
         with open(blacklist_path, 'r') as json_file:
@@ -367,7 +359,7 @@ def get_username():
     if f'{app_name}' in session and 'username' in session[f'{app_name}']:
         username = session[f'{app_name}']['username']
     else:
-        return Response('错误：未登录', 401)
+        return Response('未登录', 401)
 
     return flask.jsonify({'username': username})
 
@@ -388,15 +380,15 @@ def calculate_consecutive_a_days(include_aminus=False):
     mp = Table('meal_plan', metadata, autoload_with=engine)
 
     s = (select([mp.c.date]).where(or_(
-           and_(mp.c.breakfast_feedback != c for c in conds),
-           and_(mp.c.morning_extra_meal_feedback != c for c in conds),
-           and_(mp.c.lunch_feedback != c for c in conds),
-           and_(mp.c.afternoon_extra_meal_feedback != c for c in conds),
-           and_(mp.c.dinner_feedback != c for c in conds),
-           and_(mp.c.evening_extra_meal_feedback != c for c in conds)),
-          mp.c.date <= dt.date.today())
-         .order_by(mp.c.date.desc())
-         )
+        and_(mp.c.breakfast_feedback != c for c in conds),
+        and_(mp.c.morning_extra_meal_feedback != c for c in conds),
+        and_(mp.c.lunch_feedback != c for c in conds),
+        and_(mp.c.afternoon_extra_meal_feedback != c for c in conds),
+        and_(mp.c.dinner_feedback != c for c in conds),
+        and_(mp.c.evening_extra_meal_feedback != c for c in conds)),
+        mp.c.date <= dt.date.today())
+        .order_by(mp.c.date.desc())
+    )
     # You can just call where(cond1, cond2). It will be implicitly
     # translated to cond1 AND cond2. Note that you canNOT remove
     # the and_()'s inside or_()
@@ -568,9 +560,9 @@ def insert_modification_type(meal_plan):
                             meal_plan[item]['modification_type'] = 2
                         elif meal_plan[item]['modification_type'] == 0:
                             meal_plan[item]['modification_type'] = 1
-                    except Exception as ex:
+                    except Exception as e:
                         logging.debug(
-                            f'{ex}: '
+                            f'{e}: '
                             f'{res_old[item][j]}, {res_new[item][j]}')
                         meal_plan[item]['modification_type'] = 2
                         break
@@ -624,7 +616,7 @@ def insert_previous_plan(meal_plan):
 
 def convert_meal_plan_to_json(date_string: str):
 
-    # content abd feedback should be set to '' instead of None
+    # content and feedback should be set to '' instead of None
     # so that len() will always work.
     mp = {}
     mp['metadata'] = {}
@@ -650,18 +642,18 @@ def convert_meal_plan_to_json(date_string: str):
         mp['breakfast']['feedback'] = res['breakfast_feedback']
         mp['morning_extra_meal']['content'] = res['morning_extra_meal']
         mp['morning_extra_meal'][
-           'feedback'] = res['morning_extra_meal_feedback']
+            'feedback'] = res['morning_extra_meal_feedback']
         mp['lunch']['content'] = res['lunch']
         mp['lunch']['feedback'] = res['lunch_feedback']
         mp['afternoon_extra_meal'][
-           'content'] = res['afternoon_extra_meal']
+            'content'] = res['afternoon_extra_meal']
         mp['afternoon_extra_meal'][
-           'feedback'] = res['afternoon_extra_meal_feedback']
+            'feedback'] = res['afternoon_extra_meal_feedback']
         mp['dinner']['content'] = res['dinner']
         mp['dinner']['feedback'] = res['dinner_feedback']
         mp['evening_extra_meal']['content'] = res['evening_extra_meal']
         mp['evening_extra_meal'][
-           'feedback'] = res['evening_extra_meal_feedback']
+            'feedback'] = res['evening_extra_meal_feedback']
         mp['remark']['content'] = res['daily_remark']
     except sqlalchemy.exc.NoResultFound:
         mp['breakfast']['content'] = ''
@@ -737,6 +729,10 @@ def get_history_notes():
         # which has to be iterated to get a list.
 
     dicts = []
+    # There is one more difficulty in making this iteration into list
+    # comprehensive...I need to pass two parameters, i.e., row and username
+    # to the function. But username per se is a string, which can not be
+    # iterated without extra treatment...
     for row in result:
         d = {}
         d['metadata'] = {}
@@ -827,8 +823,9 @@ def update_notes():
     notes = Table('notes', metadata, autoload_with=engine)
 
     try:
-        with engine.begin() as conn, conn.begin():
+        with engine.begin() as conn:
             # begin() starts a transaction
+            # without conn.begin() it is still a transaction
             today = dt.date.today()
             d = notes.delete(notes.c.date == today)
             conn.execute(d)
@@ -922,15 +919,12 @@ def stop_signal_handler(*args):
     sys.exit(0)
 
 
-def main():
-
-    ap = argparse.ArgumentParser()
-    ap.add_argument('--debug', dest='debug', action='store_true')
-    args = vars(ap.parse_args())
-    debug_mode = args['debug']
+@click.command()
+@click.option('--debug', is_flag=True)
+def main(debug):
 
     port = -1
-    global app_address, db_url, db_username, db_password, db_name
+    global allowed_ext, app_address, db_url, db_username, db_password, db_name
     global external_script_dir, log_path
 
     try:
@@ -939,6 +933,7 @@ def main():
             data = json.loads(json_str)
         app.secret_key = data['flask']['secret_key']
         app.config['MAX_CONTENT_LENGTH'] = data['flask']['max_upload_size']
+        allowed_ext = data['app']['allowed_ext']
         app_address = data['app']['address']
         port = data['flask']['port']
         db_url = data['database']['url']
@@ -955,14 +950,14 @@ def main():
 
     logging.basicConfig(
         filename=log_path,
-        level=logging.DEBUG if debug_mode else logging.INFO,
+        level=logging.DEBUG if debug else logging.INFO,
         format=('%(asctime)s %(levelname)s '
                 '%(module)s-%(funcName)s: %(message)s'),
         datefmt='%Y-%m-%d %H:%M:%S',
     )
     logging.info(f'{app_name} started')
 
-    if debug_mode is True:
+    if debug:
         print('Running in debug mode')
         logging.info('Running in debug mode')
     else:
@@ -974,9 +969,8 @@ def main():
                                 kwargs={'settings_path': settings_path,
                                         'service_name': f'{app_name}',
                                         'log_path': log_path,
-                                        'delay': 0 if debug_mode else 300})
+                                        'delay': 0 if debug else 300})
     th_email.start()
-    logging.info(f'{app_name} server')
 
     serve(app, host="127.0.0.1", port=port)
 
