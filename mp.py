@@ -60,8 +60,8 @@ users_path = os.path.join(app_dir, 'users.json')
 @app.route('/get-attachments-list/', methods=['GET'])
 def get_attachment_list():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        username = session[f'{app_name}']['username']
+    if app_name in session and 'username' in session[app_name]:
+        username = session[app_name]['username']
     else:
         return Response('未登录', 401)
     if 'date' in request.args:
@@ -89,7 +89,7 @@ def get_attachment_list():
 @app.route('/rename-attachment/', methods=['GET'])
 def rename_attachment():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+    if app_name in session and 'username' in session[app_name]:
         pass
     else:
         return Response('未登录', 401)
@@ -126,7 +126,7 @@ def rename_attachment():
 @app.route('/remove-attachment/', methods=['GET'])
 def remove_attachment():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+    if app_name in session and 'username' in session[app_name]:
         pass
     else:
         return Response('未登录', 401)
@@ -158,7 +158,7 @@ def remove_attachment():
 @app.route('/get-attachment/', methods=['GET'])
 def get_attachment():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+    if app_name in session and 'username' in session[app_name]:
         pass
     else:
         return Response('未登录', 401)
@@ -201,7 +201,7 @@ def sanitize_filename(filename):
 @app.route('/upload-attachment/', methods=['POST'])
 def upload_attachment():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+    if app_name in session and 'username' in session[app_name]:
         pass
     else:
         return Response('错误：未登录', 401)
@@ -237,7 +237,7 @@ def upload_attachment():
 @app.route('/upload-selfie/', methods=['POST'])
 def upload_selfie():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+    if app_name in session and 'username' in session[app_name]:
         pass
     else:
         return Response('未登录', 401)
@@ -276,7 +276,7 @@ def upload_selfie():
 @app.route('/get-selfie/', methods=['GET'])
 def get_selfie():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+    if app_name in session and 'username' in session[app_name]:
         pass
     else:
         return Response('未登录', 401)
@@ -303,7 +303,7 @@ def get_selfie():
 @app.route('/update-blacklist/', methods=['POST'])
 def update_blacklist():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+    if app_name in session and 'username' in session[app_name]:
         pass
     else:
         return Response('未登录', 401)
@@ -333,8 +333,8 @@ def update_blacklist():
 @app.route('/get-blacklist/', methods=['GET'])
 def get_blacklist():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        username = session[f'{app_name}']['username']
+    if app_name in session and 'username' in session[app_name]:
+        username = session[app_name]['username']
     else:
         return Response('未登录', 401)
 
@@ -356,8 +356,8 @@ def get_blacklist():
 @app.route('/get-username/', methods=['GET'])
 def get_username():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        username = session[f'{app_name}']['username']
+    if app_name in session and 'username' in session[app_name]:
+        username = session[app_name]['username']
     else:
         return Response('未登录', 401)
 
@@ -410,12 +410,12 @@ def calculate_consecutive_a_days(include_aminus=False):
 @app.route('/logout/')
 def logout():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        username = session[f'{app_name}']['username']
-        session[f'{app_name}'].pop(f'{username}_last_reminder', None)
+    if app_name in session and 'username' in session[app_name]:
+        username = session[app_name]['username']
+        session[app_name].pop(f'{username}_last_reminder', None)
 
-    if f'{app_name}' in session:
-        session[f'{app_name}'].pop('username', None)
+    if app_name in session:
+        session[app_name].pop('username', None)
 
     return redirect(f'{app_address}/')
 
@@ -429,7 +429,7 @@ def make_session_permanent():
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+    if app_name in session and 'username' in session[app_name]:
         return redirect(f'{app_address}/')
 
     if request.method == 'POST':
@@ -445,8 +445,8 @@ def login():
         if (hashlib.sha256(password).hexdigest()
                 != json_data['users'][request.form['username']]):
             return render_template('login.html', message='用户名或密码错误')
-        session[f'{app_name}'] = {}
-        session[f'{app_name}']['username'] = request.form['username']
+        session[app_name] = {}
+        session[app_name]['username'] = request.form['username']
 
         return redirect(f'{app_address}/')
 
@@ -492,7 +492,7 @@ def write_meal_plan_to_db(json_data, date_string):
 @app.route('/update-meal-plan/', methods=['POST'])
 def update_meal_plan():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+    if app_name in session and 'username' in session[app_name]:
         pass
     else:
         return Response('未登录', 401)
@@ -679,8 +679,8 @@ def convert_meal_plan_to_json(date_string: str):
 @app.route('/get-meal-plan/', methods=['GET'])
 def get_meal_plan():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        username = session[f'{app_name}']['username']
+    if app_name in session and 'username' in session[app_name]:
+        username = session[app_name]['username']
     else:
         return Response('未登录', 401)
 
@@ -707,8 +707,8 @@ def get_meal_plan():
 @app.route('/get-history-notes/', methods=['GET'])
 def get_history_notes():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        username = session[f'{app_name}']['username']
+    if app_name in session and 'username' in session[app_name]:
+        username = session[app_name]['username']
     else:
         return redirect(f'{app_address}/login/')
 
@@ -780,8 +780,8 @@ def convert_notes_to_json():
 @app.route('/get-notes/', methods=['GET'])
 def get_notes():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        username = session[f'{app_name}']['username']
+    if app_name in session and 'username' in session[app_name]:
+        username = session[app_name]['username']
     else:
         return Response('未登录', 401)
 
@@ -800,7 +800,7 @@ def get_notes():
 @app.route('/update-notes/', methods=['POST'])
 def update_notes():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+    if app_name in session and 'username' in session[app_name]:
         pass
     else:
         return Response('未登录', 401)
@@ -842,8 +842,8 @@ def update_notes():
 def index():
     # Render all pages (except login.html) at root dir to avoid
     # the difference of relative URLs.
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        username = session[f'{app_name}']['username']
+    if app_name in session and 'username' in session[app_name]:
+        username = session[app_name]['username']
     else:
         return redirect(f'{app_address}/login/')
 
@@ -866,7 +866,7 @@ def index():
 @app.route('/get-reminder-message/', methods=['GET'])
 def get_reminder_message():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
+    if app_name in session and 'username' in session[app_name]:
         pass
     else:
         return Response('未登录', 401)
@@ -891,8 +891,8 @@ def get_reminder_message():
 @app.route('/get-consecutive-a-days/', methods=['GET', 'POST'])
 def get_consecutive_a_days():
 
-    if f'{app_name}' in session and 'username' in session[f'{app_name}']:
-        username = session[f'{app_name}']['username']
+    if app_name in session and 'username' in session[app_name]:
+        username = session[app_name]['username']
     else:
         return Response('未登录', 401)
 
@@ -942,7 +942,6 @@ def main(debug):
         db_name = data['database']['name']
         external_script_dir = data['app']['external_script_dir']
         log_path = data['app']['log_path']
-        logging.debug(f'data: {data}')
     except Exception as e:
         data = None
         print(f'{e}')
@@ -967,7 +966,7 @@ def main(debug):
     signal.signal(signal.SIGTERM, stop_signal_handler)
     th_email = threading.Thread(target=emailer.send_service_start_notification,
                                 kwargs={'settings_path': settings_path,
-                                        'service_name': f'{app_name}',
+                                        'service_name': app_name,
                                         'log_path': log_path,
                                         'delay': 0 if debug else 300})
     th_email.start()
