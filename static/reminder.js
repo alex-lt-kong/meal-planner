@@ -89,14 +89,14 @@ class Reminder extends React.Component {
             <p style={{ "font-size": "large" }}>{this.state.reminderData.message}</p>
             <div style={{ "font-size": "large", "text-align": "center" }}>
               <p>
-                全A天数(最高{Math.max(...aDays.a_only)})：<span style={{ "font-size": "xx-large" }}>{aDays.a_only[0]}, </span>
+                全A({Math.max(...aDays.a_only)})：<span style={{ "font-size": "xx-large" }}>{aDays.a_only[0]}, </span>
                 {/* Without "..." (called a spread operator) you get an NaN since it considers the array as one parameter.
                     By adding ..., max() considers it to be an array. */}
                 {aDays.a_only.slice(1, 6).map((day) => <span>{day}, </span>)}
                 {/* slice(1, 7) turns out to be too long on smaller screens. */}
               </p>
               <p>
-                包含A-(最高{Math.max(...aDays.a_minus_included)})：<span style={{ "font-size": "xx-large" }}>{aDays.a_minus_included[0]}, </span>
+                含A-({Math.max(...aDays.a_minus_included)})：<span style={{ "font-size": "xx-large" }}>{aDays.a_minus_included[0]}, </span>
                 {aDays.a_minus_included.slice(1, 6).map((day) => <span>{day}, </span> )}
               </p>
             </div>

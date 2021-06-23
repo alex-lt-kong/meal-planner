@@ -70,8 +70,9 @@ def get_attachment_list():
         return Response('未指定参数date', 400)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
-    except Exception as e:
-        return Response(f'参数date的语法不正确：{e}', 400)
+    except Exception:
+        logging.exception('')
+        return Response('参数date的语法不正确', 400)
 
     data = {}
     data['metadata'] = {}
@@ -105,8 +106,8 @@ def rename_attachment():
         return Response('未指定参数date,filename_old或filename_new', 400)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
-    except Exception as e:
-        return Response(f'参数date的语法不正确：{e}', 400)
+    except Exception:
+        return Response('参数date的语法不正确', 400)
 
     attachments_path_today = os.path.join(attachments_path, date_string)
     if os.path.isdir(attachments_path_today) is False:
@@ -119,8 +120,9 @@ def rename_attachment():
     try:
         os.rename(file_path_old, file_path_new)
     except Exception as e:
-        return Response(f'文件{filename_old}重命名为{filename_new}失败：{e}', 500)
-    return Response('文件{filename_old}重命名为{filename_new}成功！', 200)
+        logging.exception('')
+        return Response(f'文件{filename_old}重命名为{filename_new}失败', 500)
+    return Response(f'文件{filename_old}重命名为{filename_new}成功！', 200)
 
 
 @app.route('/remove-attachment/', methods=['GET'])
@@ -138,8 +140,9 @@ def remove_attachment():
         return Response('未指定参数date或filename', 400)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
-    except Exception as e:
-        return Response(f'参数date的语法不正确：{e}', 400)
+    except Exception:
+        logging.exception('')
+        return Response('参数date的语法不正确', 400)
 
     attachments_path_today = os.path.join(attachments_path, date_string)
     if os.path.isdir(attachments_path_today) is False:
@@ -150,8 +153,9 @@ def remove_attachment():
 
     try:
         os.remove(file_path)
-    except Exception as e:
-        return Response(f'文件{filename}删除失败：{e}', 500)
+    except Exception:
+        logging.exception('')
+        return Response(f'文件{filename}删除失败', 500)
     return Response(f'文件{filename}删除成功', 200)
 
 
@@ -170,8 +174,9 @@ def get_attachment():
         return Response('未指定参数date或filename', 400)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
-    except Exception as e:
-        return Response(f'参数date的语法不正确：{e}', 400)
+    except Exception:
+        logging.exception('')
+        return Response('参数date的语法不正确', 400)
 
     attachments_path_today = os.path.join(attachments_path, date_string)
     if os.path.isdir(attachments_path_today) is False:
@@ -204,7 +209,7 @@ def upload_attachment():
     if app_name in session and 'username' in session[app_name]:
         pass
     else:
-        return Response('错误：未登录', 401)
+        return Response('未登录', 401)
 
     if 'selected_file' not in request.files:
         return Response('没有收到附件', 400)
@@ -225,7 +230,8 @@ def upload_attachment():
         try:
             os.mkdir(attachments_path_today)
         except Exception as e:
-            return Response(f'无法创建文件：{e}', 500)
+            logging.exception('')
+            return Response('无法创建文件', 500)
 
     filename = sanitize_filename(selected_file.filename)
     selected_file.seek(0)
@@ -267,8 +273,9 @@ def upload_selfie():
         image.thumbnail((1024, 1024))
         # (800, 800): the maximum width and maximum height of the thumbnail
         image.save(os.path.join(selfies_path, filename))
-    except Exception as e:
-        return Response(f'自拍图保存错误：{e}', 500)
+    except Exception:
+        logging.exception('')
+        return Response('自拍图保存错误', 500)
 
     return Response('自拍照上传成功', 200)
 
@@ -287,8 +294,9 @@ def get_selfie():
         return Response('未指定参数date', 400)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
-    except Exception as e:
-        return Response(f'参数date的语法不正确：{e}', 400)
+    except Exception:
+        logging.exception('')
+        return Response('参数date的语法不正确', 400)
 
     for ext in allowed_ext:
         image_path = os.path.join(selfies_path, f'{date_string}.{ext}')
@@ -314,8 +322,9 @@ def update_blacklist():
     data = request.form['data']
     try:
         json_data = json.loads(data)
-    except Exception as e:
-        return Response(f'data的值无法解析成JSON字符串：{e}', 400)
+    except Exception:
+        logging.exception('')
+        return Response('data的值无法解析成JSON字符串', 400)
     if 'banned_items' not in json_data or 'limited_items' not in json_data:
         return Response(f'JSON数据[{json_data}]格式错误', 400)
 
@@ -323,9 +332,9 @@ def update_blacklist():
         with open(blacklist_path, 'w+') as json_file:
             json.dump(json_data, json_file,
                       sort_keys=True, indent=4, ensure_ascii=False)
-    except Exception as e:
-        logging.error(f'{e}')
-        return Response(f'黑名单写入错误：{e}', 500)
+    except Exception:
+        logging.exception('')
+        return Response('黑名单写入错误', 500)
 
     return Response('黑名单更新成功！', 200)
 
@@ -342,9 +351,9 @@ def get_blacklist():
         with open(blacklist_path, 'r') as json_file:
             json_str = json_file.read()
             blacklist = json.loads(json_str)
-    except Exception as e:
-        logging.error(f'{e}')
-        return Response(f'读取黑名单错误：{e}', 500)
+    except Exception:
+        logging.exception('')
+        return Response('读取黑名单错误', 500)
 
     blacklist['metadata'] = {}
     blacklist['metadata']['username'] = username
@@ -379,16 +388,20 @@ def calculate_consecutive_a_days(include_aminus=False):
     metadata = MetaData(bind=engine)
     mp = Table('meal_plan', metadata, autoload_with=engine)
 
-    s = (select([mp.c.date]).where(or_(
-        and_(mp.c.breakfast_feedback != c for c in conds),
-        and_(mp.c.morning_extra_meal_feedback != c for c in conds),
-        and_(mp.c.lunch_feedback != c for c in conds),
-        and_(mp.c.afternoon_extra_meal_feedback != c for c in conds),
-        and_(mp.c.dinner_feedback != c for c in conds),
-        and_(mp.c.evening_extra_meal_feedback != c for c in conds)),
-        mp.c.date <= dt.date.today())
-        .order_by(mp.c.date.desc())
+    s = (select([mp.c.date]).where(
+        or_(
+          and_(mp.c.breakfast_feedback != c for c in conds),
+          and_(mp.c.morning_extra_meal_feedback != c for c in conds),
+          and_(mp.c.lunch_feedback != c for c in conds),
+          and_(mp.c.afternoon_extra_meal_feedback != c for c in conds),
+          and_(mp.c.dinner_feedback != c for c in conds),
+          and_(mp.c.evening_extra_meal_feedback != c for c in conds)
+        ),
+        mp.c.date <= dt.date.today()
+      ).order_by(mp.c.date.desc())
     )
+    # The above statement select all the dates where consecutive A are
+    # broken.
     # You can just call where(cond1, cond2). It will be implicitly
     # translated to cond1 AND cond2. Note that you canNOT remove
     # the and_()'s inside or_()
@@ -399,6 +412,11 @@ def calculate_consecutive_a_days(include_aminus=False):
         return None
 
     deltas = []
+    print(type(result[0]['date']))
+    deltas.append((dt.date.today() - result[0]['date']).days - 1)
+    # Note that we have to manually append today as the first broken date;
+    # otherwise the last consecutive period will not have a broken date
+    # then it will NOT be calculated.
     for i in range(len(result) - 1):
         deltas.append((result[i]['date'] - result[i+1]['date']).days - 1)
         logging.debug(
@@ -504,19 +522,22 @@ def update_meal_plan():
 
     try:
         date_string = dt.datetime.strptime(date, '%Y-%m-%d')
-    except Exception as e:
-        return Response(f'date的值[{date}]不正确：{e}', 400)
+    except Exception:
+        logging.exception('')
+        return Response(f'date的值[{date}]不正确', 400)
     try:
         json_data = json.loads(data)
-    except Exception as e:
-        return Response(f'data的值无法解析成JSON字符串：{e}', 400)
+    except Exception:
+        logging.exception('')
+        return Response('data的值无法解析成JSON字符串', 400)
 
     logging.debug(f'raw string submitted by client: [{json_data}]')
 
     try:
         write_meal_plan_to_db(json_data, date_string)
-    except Exception as e:
-        return Response(f'写入数据库失败：{e}', 500)
+    except Exception:
+        logging.exception('')
+        return Response('写入数据库失败', 500)
 
     return Response(f'更新{date_string}食谱成功！', 200)
 
@@ -690,14 +711,16 @@ def get_meal_plan():
         return Response('未指定参数date', 400)
     try:
         dt.datetime.strptime(date_string, '%Y-%m-%d')
-    except Exception as e:
-        return Response(f'参数date的语法不正确：{e}', 400)
+    except Exception:
+        logging.exception('')
+        return Response('参数date的语法不正确', 400)
 
     try:
         meal_plan = convert_meal_plan_to_json(date_string)
         meal_plan['metadata']['username'] = username
-    except Exception as e:
-        return Response(f'内部错误：{e}', 500)
+    except Exception:
+        logging.exception('')
+        return Response('内部错误', 500)
 
     logging.debug(f'meal_plan to be sent to client: {meal_plan}')
 
@@ -787,8 +810,9 @@ def get_notes():
 
     try:
         notes_json = convert_notes_to_json()
-    except Exception as e:
-        return Response(f'数据读取错误：{e}', 500)
+    except Exception:
+        logging.exception('')
+        return Response('数据读取错误', 500)
     else:
         notes_json['metadata'] = {}
         notes_json['metadata']['date'] = notes_json['date']
@@ -810,8 +834,9 @@ def update_notes():
     data = request.form['data']
     try:
         json_data = json.loads(data)
-    except Exception as e:
-        return Response(f'data的值无法解析成JSON字符串：{e}', 400)
+    except Exception:
+        logging.exception('')
+        return Response('data的值无法解析成JSON字符串', 400)
 
     conn_str = (f'mysql+pymysql://{db_username}:{db_password}@'
                 f'{db_url}/{db_name}')
@@ -832,8 +857,9 @@ def update_notes():
             i = notes.insert().values(date=today,
                                       content=json_data['content'])
             conn.execute(i)
-    except Exception as e:
-        return Response(f'笔记更新失败：{e}', 500)
+    except Exception:
+        logging.exception('')
+        return Response('笔记更新失败', 500)
 
     return Response('笔记更新成功', 200)
 
@@ -879,8 +905,9 @@ def get_reminder_message():
         data['frequency'] = json_data['reminder']['frequency']
         rand_idx = random.randrange(len(json_data['reminder']['messages']))
         data['message'] = json_data['reminder']['messages'][rand_idx]
-    except Exception as e:
-        return Response(f'解析JSON文件失败：{e}', 500)
+    except Exception:
+        logging.exception('')
+        return Response('解析JSON文件失败', 500)
 
     if random.uniform(0, 1) > data['frequency']:
         data['message'] = ''
@@ -899,8 +926,9 @@ def get_consecutive_a_days():
     try:
         deltas_a = calculate_consecutive_a_days(False)
         deltas_a_minus = calculate_consecutive_a_days(True)
-    except Exception as e:
-        return Response(f'数据库读取错误：{e}', 500)
+    except Exception:
+        logging.exception('')
+        return Response('数据库读取错误', 500)
 
     data = {}
     data['metadata'] = {}
