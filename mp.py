@@ -397,11 +397,11 @@ def calculate_consecutive_a_days(include_aminus=False):
           and_(mp.c.dinner_feedback != c for c in conds),
           and_(mp.c.evening_extra_meal_feedback != c for c in conds)
         ),
-        mp.c.date <= dt.date.today()
+        mp.c.date < dt.date.today()
       ).order_by(mp.c.date.desc())
     )
     # The above statement select all the dates where consecutive A are
-    # broken.
+    # broken BEFORE today. (not selecting today is a key)
     # You can just call where(cond1, cond2). It will be implicitly
     # translated to cond1 AND cond2. Note that you canNOT remove
     # the and_()'s inside or_()
@@ -412,11 +412,14 @@ def calculate_consecutive_a_days(include_aminus=False):
         return None
 
     deltas = []
-    print(type(result[0]['date']))
-    deltas.append((dt.date.today() - result[0]['date']).days - 1)
-    # Note that we have to manually append today as the first broken date;
-    # otherwise the last consecutive period will not have a broken date
-    # then it will NOT be calculated.
+
+    first_period = (dt.date.today() - result[0]['date']).days - 1
+    # first_period will definitely be >= 0
+    # first_period == 0: yesterday has sub-A ratings
+    # first_period > 0: yesterday does not have sub-A ratings, so we add
+    # today as a broken day.
+   # if first_period > 0:
+    deltas.append(first_period)
     for i in range(len(result) - 1):
         deltas.append((result[i]['date'] - result[i+1]['date']).days - 1)
         logging.debug(
