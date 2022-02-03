@@ -418,7 +418,7 @@ def calculate_consecutive_a_days(include_aminus=False):
     # first_period == 0: yesterday has sub-A ratings
     # first_period > 0: yesterday does not have sub-A ratings, so we add
     # today as a broken day.
-   # if first_period > 0:
+    # if first_period > 0:
     deltas.append(first_period)
     for i in range(len(result) - 1):
         deltas.append((result[i]['date'] - result[i+1]['date']).days - 1)
@@ -998,7 +998,7 @@ def main(debug):
     th_email = threading.Thread(target=emailer.send_service_start_notification,
                                 kwargs={'settings_path': settings_path,
                                         'service_name': app_name,
-                                        'log_path': log_path,
+                                        'path_of_logs_to_send': log_path,
                                         'delay': 0 if debug else 300})
     th_email.start()
 

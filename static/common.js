@@ -240,7 +240,7 @@ class MealPlanItem extends React.Component {
           </div>
           <div class="w3-cell" style={{ 'max-width': '3em' }}>
           {/* max-width canNOT be too small since some users will enlarge the UI to 125% */}
-            <select class="w3-select" style={feedbackStyle} value={this.state.data[this.state.itemName].feedback}
+          <select class="w3-select" style={feedbackStyle} value={this.state.data[this.state.itemName].feedback}
                     onChange={this.handleFeedbackChange} readOnly={this.props.sendData == null} >
               {/* If value matches nothing, seems that React.js will simply select the first itm.*/}
               <option class="w3-text-black" value="待填">待填</option>
