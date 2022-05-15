@@ -180,6 +180,35 @@ class MealPlanItem extends React.Component {
     }
   }
 
+  getFeedbackSelect() {
+    let optionsValueList = [
+      'A - 大便成形，饮食正常量，无饱胀/腹痛/不适',
+      'B - 大便不成形', 'B - 饮食减量', 'B - 轻微腹痛或轻微不适',
+      'C - 拉稀', 'C - 饮食较大减量', 'C - 腹痛或较严重不适', '待填'
+    ];
+    if (optionsValueList.includes(this.state.data[this.state.itemName].feedback) == false) {
+      optionsValueList.push(this.state.data[this.state.itemName].feedback);
+    }
+    let optionsList = [];
+    for (let i = 0; i < optionsValueList.length; i ++) {
+      optionsList.push(<option class="w3-text-black" value={optionsValueList[i]}>{optionsValueList[i]}</option>);
+    }
+    var feedbackColor = 'black'
+    if (this.state.data[this.state.itemName].feedback === optionsValueList[0]) {
+      feedbackColor = 'green';
+    } else if (optionsValueList.slice(1,7).includes(this.state.data[this.state.itemName].feedback)) {
+      feedbackColor = 'red';
+    }
+    const feedbackStyle = {
+      color: feedbackColor,
+      fontWeight: 'bold'
+    };
+    return (<select class="w3-select" style={feedbackStyle} value={this.state.data[this.state.itemName].feedback}
+        onChange={this.handleFeedbackChange} readOnly={this.props.sendData == null} >
+        {optionsList}
+    </select>);
+  }
+
   render() {
     const modType = this.state.data[this.state.itemName].modification_type;
     let modificationInfo = null;
@@ -211,18 +240,6 @@ class MealPlanItem extends React.Component {
         </span>);
     }
 
-    var feedbackColor = 'black'
-    if (this.state.data[this.state.itemName].feedback === 'A') {
-      feedbackColor = 'green';
-    } else if (this.state.data[this.state.itemName].feedback === 'B+' || 
-            this.state.data[this.state.itemName].feedback === 'B' ||
-            this.state.data[this.state.itemName].feedback === 'C') {
-      feedbackColor = 'red';
-    }
-    const feedbackStyle = {
-      color: feedbackColor,
-      fontWeight: 'bold'
-    };
     return (
       <div>
         <div>
@@ -240,17 +257,7 @@ class MealPlanItem extends React.Component {
           </div>
           <div class="w3-cell" style={{ 'max-width': '3em' }}>
           {/* max-width canNOT be too small since some users will enlarge the UI to 125% */}
-          <select class="w3-select" style={feedbackStyle} value={this.state.data[this.state.itemName].feedback}
-                    onChange={this.handleFeedbackChange} readOnly={this.props.sendData == null} >
-              {/* If value matches nothing, seems that React.js will simply select the first itm.*/}
-              <option class="w3-text-black" value="待填">待填</option>
-              <option class="w3-text-black" value="A">A</option>  
-              <option class="w3-text-black" value="A-">A-</option>  
-              <option class="w3-text-black" value="B+">B+</option>
-              <option class="w3-text-black" value="B">B</option>
-              <option class="w3-text-black" value="C">C</option>
-              <option class="w3-text-black" value="没吃">没吃</option>
-          </select>
+          {this.getFeedbackSelect()}
           </div>          
         </div>
         {prettyDiff}
