@@ -1,0 +1,35 @@
+{
+  "name": "meal-planner",
+  "version": "1.0.0",
+  "description": "A web-based meal planner app for family use.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alex-lt-kong/meal-planner.git"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.5",
+    "@babel/plugin-proposal-class-properties": "^7.17.12",
+    "babelify": "^10.0.0"
+  },
+  "dependencies": {
+    "@babel/core": "^7.13.14",
+    "@babel/preset-env": "^7.18.2",
+    "@babel/preset-react": "^7.17.12",
+    "axios": "^0.27.2",
+    "bootstrap": "^5.1.3",
+    "browserify": "^17.0.0",
+    "react": "^18.2.0",
+    "react-bootstrap": "^2.4.0",
+    "react-dom": "^18.2.0"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alex-lt-kong/meal-planner/issues"
+  },
+  "homepage": "https://github.com/alex-lt-kong/meal-planner#readme"
+}

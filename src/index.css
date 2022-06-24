@@ -1,0 +1,17 @@
+.textarea-mealplanitem {
+  width: 99%;
+}
+.textarea-dailyremark {
+  width: 99%;
+}
+.p-mealplanitem-title{ 
+  margin-top: 0.5em;
+  margin-bottom: 0.1em;
+  font-size: 15px;
+}
+.input-button {
+  margin-top:0.85rem;
+}
+.accordion {
+  margin-top:0.35em;
+}
