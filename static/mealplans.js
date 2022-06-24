@@ -7272,7 +7272,7 @@ var AttachmentsManager = /*#__PURE__*/function (_React$Component) {
           });
         }.bind(this)
       };
-      axios.post("https://monitor.sz.lan/meal-planner/upload-attachment/", payload, config).then(function (response) {
+      axios.post("./upload-attachment/", payload, config).then(function (response) {
         // an alert is not needed since the user will see the change of the files list.
         logUserActivity('[meal-planner] Upload attachment [' + selected_file.name + '] to [' + _this2.state.data.metadata.date + ']', _this2.state.data.metadata.username);
 
@@ -7287,15 +7287,15 @@ var AttachmentsManager = /*#__PURE__*/function (_React$Component) {
   }, {
     key: "handleClickFileName",
     value: function handleClickFileName(value) {
-      window.open('https://monitor.sz.lan/meal-planner/get-attachment/?date=' + this.state.date.toISOString().slice(0, 10) + '&filename=' + value);
-      logUserActivity('[meal-planner] Download attachment [' + value + '] from [' + this.state.date.toISOString().slice(0, 10) + ']', this.state.data.metadata.username);
+      window.open('./get-attachment/?date=' + this.props.date.toISOString().slice(0, 10) + '&filename=' + value);
+      logUserActivity('[meal-planner] Download attachment [' + value + '] from [' + this.props.date.toISOString().slice(0, 10) + ']', this.state.data.metadata.username);
     }
   }, {
     key: "handleClickFileRemove",
     value: function handleClickFileRemove(value) {
       var _this3 = this;
 
-      axios.get('https://monitor.sz.lan/meal-planner/remove-attachment/?date=' + this.state.date.toISOString().slice(0, 10) + '&filename=' + value).then(function (response) {
+      axios.get('./remove-attachment/?date=' + this.props.date.toISOString().slice(0, 10) + '&filename=' + value).then(function (response) {
         // an alert is not needed since the user will see the change of the files list.
         _this3.fetchDataFromServer();
 
@@ -7309,8 +7309,8 @@ var AttachmentsManager = /*#__PURE__*/function (_React$Component) {
     value: function handleClickSubmitNewFilename(value) {
       var _this4 = this;
 
-      axios.get('https://monitor.sz.lan/meal-planner/rename-attachment/?date=' + this.state.date.toISOString().slice(0, 10) + '&filename_old=' + this.state.renameModeFile + '&filename_new=' + this.state.newFileName).then(function (response) {
-        logUserActivity('[meal-planner] Rename attachment from [' + _this4.state.renameModeFile + '](' + _this4.state.date.toISOString().slice(0, 10) + ') to [' + _this4.state.newFileName + ']', _this4.state.data.metadata.username); // Need to logUserActivity() before setState()!
+      axios.get('./rename-attachment/?date=' + this.props.date.toISOString().slice(0, 10) + '&filename_old=' + this.state.renameModeFile + '&filename_new=' + this.state.newFileName).then(function (response) {
+        logUserActivity('[meal-planner] Rename attachment from [' + _this4.state.renameModeFile + '](' + _this4.props.date.toISOString().slice(0, 10) + ') to [' + _this4.state.newFileName + ']', _this4.state.data.metadata.username); // Need to logUserActivity() before setState()!
 
         _this4.setState({
           renameModeFile: null
@@ -7346,7 +7346,7 @@ var AttachmentsManager = /*#__PURE__*/function (_React$Component) {
     value: function fetchDataFromServer() {
       var _this5 = this;
 
-      axios.get('https://monitor.sz.lan/meal-planner/get-attachments-list/?date=' + this.state.date.toISOString().slice(0, 10)).then(function (response) {
+      axios.get('./get-attachments-list/?date=' + this.props.date.toISOString().slice(0, 10)).then(function (response) {
         // handle success
         _this5.setState({
           data: null // make it empty before fill it in again to force a re-rendering.
@@ -7357,7 +7357,7 @@ var AttachmentsManager = /*#__PURE__*/function (_React$Component) {
           data: response.data
         });
       })["catch"](function (error) {
-        alert(_this5.state.date.toISOString().slice(0, 10) + '的附件列表加载失败！请关闭窗口后重试！\n' + error);
+        alert(_this5.props.date.toISOString().slice(0, 10) + '的附件列表加载失败！请关闭窗口后重试！\n' + error);
       });
     }
   }, {
@@ -7381,7 +7381,7 @@ var AttachmentsManager = /*#__PURE__*/function (_React$Component) {
             href: "javascript:;",
             onClick: this.handleClickFileName.bind(this, this.state.data.filenames[i]),
             style: {
-              "text-decoration": "none",
+              "textDecoration": "none",
               width: "100%"
             }
           }, this.state.data.filenames[i]);
@@ -7443,7 +7443,7 @@ var AttachmentsManager = /*#__PURE__*/function (_React$Component) {
             className: "w3-container w3-cell",
             style: {
               "maxWidth": "65vw",
-              "word-wrap": "break-word"
+              "wordWrap": "break-word"
             }
           }, /*#__PURE__*/_react["default"].createElement("div", {
             value: this.state.data.filenames[i]
@@ -7513,9 +7513,9 @@ var MealPlanDailyAttachments = /*#__PURE__*/function (_React$Component2) {
       return /*#__PURE__*/_react["default"].createElement("div", null, /*#__PURE__*/_react["default"].createElement("div", null, /*#__PURE__*/_react["default"].createElement("p", {
         className: "w3-text-green p-mealplanitem-title"
       }, /*#__PURE__*/_react["default"].createElement("b", null, "\u9644\u4EF6"))), /*#__PURE__*/_react["default"].createElement(AttachmentsManager, {
-        enableUpload: this.state.enableUpload,
-        enableEdit: this.state.enableEdit,
-        date: this.state.date
+        enableUpload: this.props.enableUpload,
+        enableEdit: this.props.enableEdit,
+        date: this.props.date
       }));
     }
   }]);
@@ -7666,7 +7666,7 @@ var MealPlanDailySelfie = /*#__PURE__*/function (_React$Component) {
     value: function render() {
       var buttonUpload = null;
 
-      if (this.state.enableUpload === true) {
+      if (this.props.enableUpload === true) {
         buttonUpload = /*#__PURE__*/_react["default"].createElement("div", {
           style: {
             "marginBottom": "3em"
@@ -7691,7 +7691,7 @@ var MealPlanDailySelfie = /*#__PURE__*/function (_React$Component) {
       return /*#__PURE__*/_react["default"].createElement("div", null, /*#__PURE__*/_react["default"].createElement("div", null, /*#__PURE__*/_react["default"].createElement("p", {
         className: "w3-text-green p-mealplanitem-title"
       }, /*#__PURE__*/_react["default"].createElement("b", null, "\u81EA\u62CD"))), /*#__PURE__*/_react["default"].createElement("div", null, /*#__PURE__*/_react["default"].createElement("img", {
-        src: "https://monitor.sz.lan/meal-planner/get-selfie/?date=".concat(this.state.date.toISOString().slice(0, 10), "&").concat(new Date().getTime()),
+        src: "./get-selfie/?date=".concat(this.props.date.toISOString().slice(0, 10), "&").concat(new Date().getTime()),
         alt: "",
         style: {
           display: "block",
@@ -7744,7 +7744,7 @@ var MealPlanDailyRemark = /*#__PURE__*/function (_React$Component2) {
     value: function render() {
       var modificationInfo;
 
-      if (this.state.data.remark.modification_type == 0) {
+      if (this.props.data.remark.modification_type == 0) {
         modificationInfo = /*#__PURE__*/_react["default"].createElement("span", {
           style: {
             color: 'red',
@@ -7761,7 +7761,7 @@ var MealPlanDailyRemark = /*#__PURE__*/function (_React$Component2) {
         className: "w3-cell"
       }, /*#__PURE__*/_react["default"].createElement("textarea", {
         className: "w3-input textarea-dailyremark",
-        value: this.state.data.remark.content,
+        value: this.props.data.remark.content,
         rows: "3",
         onChange: this.handleChange,
         readOnly: this.props.sendData == null
@@ -7791,8 +7791,6 @@ var MealPlanItem = /*#__PURE__*/function (_React$Component3) {
     };
     _this4.handleContentChange = _this4.handleContentChange.bind(_assertThisInitialized(_this4));
     _this4.handleFeedbackChange = _this4.handleFeedbackChange.bind(_assertThisInitialized(_this4));
-    console.log("MealPlanItem inited");
-    console.log(_this4.state.data);
     return _this4;
   }
 
@@ -7875,7 +7873,6 @@ var MealPlanItem = /*#__PURE__*/function (_React$Component3) {
   }, {
     key: "render",
     value: function render() {
-      console.log("MealPlanItem render()'ing");
       var modType = this.props.data[this.props.itemName].modification_type;
       var modificationInfo = null;
       var prettyDiff;

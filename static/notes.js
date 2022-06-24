@@ -7307,7 +7307,7 @@ var MealPlanDailySelfie = /*#__PURE__*/function (_React$Component) {
     value: function render() {
       var buttonUpload = null;
 
-      if (this.state.enableUpload === true) {
+      if (this.props.enableUpload === true) {
         buttonUpload = /*#__PURE__*/_react["default"].createElement("div", {
           style: {
             "marginBottom": "3em"
@@ -7332,7 +7332,7 @@ var MealPlanDailySelfie = /*#__PURE__*/function (_React$Component) {
       return /*#__PURE__*/_react["default"].createElement("div", null, /*#__PURE__*/_react["default"].createElement("div", null, /*#__PURE__*/_react["default"].createElement("p", {
         className: "w3-text-green p-mealplanitem-title"
       }, /*#__PURE__*/_react["default"].createElement("b", null, "\u81EA\u62CD"))), /*#__PURE__*/_react["default"].createElement("div", null, /*#__PURE__*/_react["default"].createElement("img", {
-        src: "https://monitor.sz.lan/meal-planner/get-selfie/?date=".concat(this.state.date.toISOString().slice(0, 10), "&").concat(new Date().getTime()),
+        src: "./get-selfie/?date=".concat(this.props.date.toISOString().slice(0, 10), "&").concat(new Date().getTime()),
         alt: "",
         style: {
           display: "block",
@@ -7385,7 +7385,7 @@ var MealPlanDailyRemark = /*#__PURE__*/function (_React$Component2) {
     value: function render() {
       var modificationInfo;
 
-      if (this.state.data.remark.modification_type == 0) {
+      if (this.props.data.remark.modification_type == 0) {
         modificationInfo = /*#__PURE__*/_react["default"].createElement("span", {
           style: {
             color: 'red',
@@ -7402,7 +7402,7 @@ var MealPlanDailyRemark = /*#__PURE__*/function (_React$Component2) {
         className: "w3-cell"
       }, /*#__PURE__*/_react["default"].createElement("textarea", {
         className: "w3-input textarea-dailyremark",
-        value: this.state.data.remark.content,
+        value: this.props.data.remark.content,
         rows: "3",
         onChange: this.handleChange,
         readOnly: this.props.sendData == null
@@ -7432,8 +7432,6 @@ var MealPlanItem = /*#__PURE__*/function (_React$Component3) {
     };
     _this4.handleContentChange = _this4.handleContentChange.bind(_assertThisInitialized(_this4));
     _this4.handleFeedbackChange = _this4.handleFeedbackChange.bind(_assertThisInitialized(_this4));
-    console.log("MealPlanItem inited");
-    console.log(_this4.state.data);
     return _this4;
   }
 
@@ -7516,7 +7514,6 @@ var MealPlanItem = /*#__PURE__*/function (_React$Component3) {
   }, {
     key: "render",
     value: function render() {
-      console.log("MealPlanItem render()'ing");
       var modType = this.props.data[this.props.itemName].modification_type;
       var modificationInfo = null;
       var prettyDiff;

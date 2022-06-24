@@ -55,7 +55,7 @@ class AttachmentsManager extends React.Component {
       }.bind(this)
   };
 
-    axios.post("https://monitor.sz.lan/meal-planner/upload-attachment/", payload, config)
+    axios.post("./upload-attachment/", payload, config)
     .then(response => {
       // an alert is not needed since the user will see the change of the files list.
       logUserActivity('[meal-planner] Upload attachment [' + selected_file.name +  '] to [' + this.state.data.metadata.date + ']',
@@ -72,13 +72,13 @@ class AttachmentsManager extends React.Component {
   }
 
   handleClickFileName(value) {
-    window.open('https://monitor.sz.lan/meal-planner/get-attachment/?date=' + this.state.date.toISOString().slice(0, 10) + '&filename=' + value);
-    logUserActivity('[meal-planner] Download attachment [' + value +  '] from [' + this.state.date.toISOString().slice(0, 10) + ']',
+    window.open('./get-attachment/?date=' + this.props.date.toISOString().slice(0, 10) + '&filename=' + value);
+    logUserActivity('[meal-planner] Download attachment [' + value +  '] from [' + this.props.date.toISOString().slice(0, 10) + ']',
                     this.state.data.metadata.username);
   }
 
   handleClickFileRemove(value) {
-    axios.get('https://monitor.sz.lan/meal-planner/remove-attachment/?date=' + this.state.date.toISOString().slice(0, 10) + '&filename=' + value)
+    axios.get('./remove-attachment/?date=' + this.props.date.toISOString().slice(0, 10) + '&filename=' + value)
       .then(response => {
       // an alert is not needed since the user will see the change of the files list.
         this.fetchDataFromServer();
@@ -91,12 +91,12 @@ class AttachmentsManager extends React.Component {
   }
   
   handleClickSubmitNewFilename(value) {
-      axios.get('https://monitor.sz.lan/meal-planner/rename-attachment/?date=' + this.state.date.toISOString().slice(0, 10) + 
+      axios.get('./rename-attachment/?date=' + this.props.date.toISOString().slice(0, 10) + 
       '&filename_old=' + this.state.renameModeFile + 
       '&filename_new=' + this.state.newFileName)
         .then(response => {
           logUserActivity('[meal-planner] Rename attachment from [' + this.state.renameModeFile + '](' + 
-            this.state.date.toISOString().slice(0, 10) + ') to [' + this.state.newFileName + ']',
+            this.props.date.toISOString().slice(0, 10) + ') to [' + this.state.newFileName + ']',
             this.state.data.metadata.username);
           // Need to logUserActivity() before setState()!
           this.setState({ 
@@ -128,7 +128,7 @@ class AttachmentsManager extends React.Component {
 
 
   fetchDataFromServer() {
-    axios.get('https://monitor.sz.lan/meal-planner/get-attachments-list/?date=' + this.state.date.toISOString().slice(0, 10))
+    axios.get('./get-attachments-list/?date=' + this.props.date.toISOString().slice(0, 10))
       .then(response => {
         // handle success
         this.setState({
@@ -140,7 +140,7 @@ class AttachmentsManager extends React.Component {
         });
       })
       .catch(error => {
-        alert(this.state.date.toISOString().slice(0, 10) + '的附件列表加载失败！请关闭窗口后重试！\n' + error);
+        alert(this.props.date.toISOString().slice(0, 10) + '的附件列表加载失败！请关闭窗口后重试！\n' + error);
       });
   }
   
@@ -157,7 +157,7 @@ class AttachmentsManager extends React.Component {
         var removeButton = null;
         var renameButton = null;
         var filenameDisplay = <a href="javascript:;" onClick={this.handleClickFileName.bind(this, this.state.data.filenames[i])}
-                                 style={{"text-decoration": "none", width: "100%"}} >{this.state.data.filenames[i]}</a>;
+                                 style={{"textDecoration": "none", width: "100%"}} >{this.state.data.filenames[i]}</a>;
                                  /* href="javascript:;" a link that goes to nowhere */;
         if (this.state.enableEdit === true) {
           removeButton = <img className="w3-right" value={this.state.data.filenames[i]} src="./static/delete.png"
@@ -178,7 +178,7 @@ class AttachmentsManager extends React.Component {
         filenames[i] = (
         <li key={i} style={{ "paddingLeft": "0.2em", "paddingRight": "0.2em" }}>
           <div className="w3-cell-row">
-            <div className="w3-container w3-cell" style={{ "maxWidth": "65vw", "word-wrap": "break-word" }}>
+            <div className="w3-container w3-cell" style={{ "maxWidth": "65vw", "wordWrap": "break-word" }}>
               <div value={this.state.data.filenames[i]} >
                 {filenameDisplay}              
               </div>
@@ -241,7 +241,7 @@ class MealPlanDailyAttachments extends React.Component {
             <b>附件</b>
           </p>
         </div>
-        <AttachmentsManager enableUpload={this.state.enableUpload} enableEdit={this.state.enableEdit} date={this.state.date} />
+        <AttachmentsManager enableUpload={this.props.enableUpload} enableEdit={this.props.enableEdit} date={this.props.date} />
       </div>
     );
   }

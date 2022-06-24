@@ -72,7 +72,6 @@ class Reminder extends React.Component {
   }
 
   handleClickMessageBoxOK(event) {
-    console.log('handleClickMessageBoxOK');
     this.setState(prevState => ({
       show: !prevState.show
     }));

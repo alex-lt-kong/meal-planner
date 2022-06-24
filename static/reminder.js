@@ -7300,7 +7300,6 @@ var Reminder = /*#__PURE__*/function (_React$Component) {
   }, {
     key: "handleClickMessageBoxOK",
     value: function handleClickMessageBoxOK(event) {
-      console.log('handleClickMessageBoxOK');
       this.setState(function (prevState) {
         return {
           show: !prevState.show

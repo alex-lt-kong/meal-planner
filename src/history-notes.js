@@ -34,8 +34,7 @@ class App extends React.Component {
   }
   
   fetchDataFromServer() {
-    console.log('fetchDataFromServer');
-    axios.get('https://monitor.sz.lan/meal-planner/get-history-notes/')
+    axios.get('./get-history-notes/')
       .then(response => {       
         this.setState({
           data: null,

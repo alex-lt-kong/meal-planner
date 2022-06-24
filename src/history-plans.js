@@ -18,11 +18,8 @@ class PlanTable extends React.Component {
 
   render() {
     if (this.props.data === null) {
-      console.log('Server returned NULL?');
       return null; 
     }
-    console.log(`PlanTable render()'ing`);
-    console.log(this.props.data);
     return (
       <div style={{ width: "98%", "maxWidth": "1000px", margin: "auto", "marginTop": "4em", "marginBottom": "4em" }}>
           <MealPlanItem data={this.props.data} itemName="breakfast" />

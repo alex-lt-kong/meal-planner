@@ -68,7 +68,7 @@ class MealPlanDailySelfie extends React.Component {
   render() { 
 
     var buttonUpload = null;
-    if (this.state.enableUpload === true) {
+    if (this.props.enableUpload === true) {
       buttonUpload = (
       <div style={{ "marginBottom": "3em" }}>
         <button className="w3-button w3-border w3-highway-green w3-right w3-marginBottom input-button"
@@ -89,7 +89,7 @@ class MealPlanDailySelfie extends React.Component {
           </p>          
         </div>
           <div>
-          <img src={`https://monitor.sz.lan/meal-planner/get-selfie/?date=${this.state.date.toISOString().slice(0, 10)}&${new Date().getTime()}`} alt=""
+          <img src={`./get-selfie/?date=${this.props.date.toISOString().slice(0, 10)}&${new Date().getTime()}`} alt=""
                style={{ display: "block", "marginLeft": "auto", "marginRight": "auto", "maxWidth": "100%", width: "300px" }} />
           {/* If alt="" is added, the broken image icon won't show if src is not found. */}
           </div>
@@ -121,7 +121,7 @@ class MealPlanDailyRemark extends React.Component {
 
   render() {
     let modificationInfo;
-    if (this.state.data.remark.modification_type == 0) {
+    if (this.props.data.remark.modification_type == 0) {
       modificationInfo = <span style={{ color: 'red', fontWeight: 'bold' }}> - 与昨日完全相同！</span>;
     }
 
@@ -130,7 +130,7 @@ class MealPlanDailyRemark extends React.Component {
         <div><p className="w3-text-green p-mealplanitem-title"><b>备注</b>{modificationInfo}</p></div>
         <div className="w3-cell-row">
           <div className="w3-cell">
-            <textarea className="w3-input textarea-dailyremark" value={this.state.data.remark.content} rows="3" onChange={this.handleChange} readOnly={this.props.sendData == null} />
+            <textarea className="w3-input textarea-dailyremark" value={this.props.data.remark.content} rows="3" onChange={this.handleChange} readOnly={this.props.sendData == null} />
           </div>
         </div>
       </div>
@@ -147,8 +147,6 @@ class MealPlanItem extends React.Component {
     };
     this.handleContentChange = this.handleContentChange.bind(this);
     this.handleFeedbackChange = this.handleFeedbackChange.bind(this);
-    console.log(`MealPlanItem inited`);
-    console.log(this.state.data);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -214,7 +212,6 @@ class MealPlanItem extends React.Component {
   }
 
   render() {
-    console.log(`MealPlanItem render()'ing`);
     const modType = this.props.data[this.props.itemName].modification_type;
     let modificationInfo = null;
     let prettyDiff;
