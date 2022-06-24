@@ -126,9 +126,7 @@ class MealPlanDailyRemark extends React.Component {
         <div><p class="w3-text-green p-mealplanitem-title"><b>备注</b>{modificationInfo}</p></div>
         <div class="w3-cell-row">
           <div class="w3-cell">
-            <textarea class="w3-input textarea-dailyremark" rows="3" onChange={this.handleChange} readOnly={this.props.sendData == null}>
-              {this.state.data.remark.content}
-            </textarea>
+            <textarea class="w3-input textarea-dailyremark" value={this.state.data.remark.content} rows="3" onChange={this.handleChange} readOnly={this.props.sendData == null}/>
           </div>
         </div>
       </div>
@@ -250,10 +248,8 @@ class MealPlanItem extends React.Component {
         </div>
         <div class="w3-cell-row">
           <div class="w3-cell" style={{ "font-size": "14px"}}>
-            <textarea class="w3-input textarea-mealplanitem" rows="1" readOnly={this.props.sendData == null}
-                      onInput={this.handleContentChange}>
-              {this.state.data[this.state.itemName].content}
-            </textarea>           
+            <textarea class="w3-input textarea-mealplanitem" value={this.state.data[this.state.itemName].content} rows="1" readOnly={this.props.sendData == null}
+                      onInput={this.handleContentChange}/>
           </div>
           <div class="w3-cell" style={{ 'max-width': '3em' }}>
           {/* max-width canNOT be too small since some users will enlarge the UI to 125% */}
