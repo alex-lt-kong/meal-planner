@@ -39215,10 +39215,174 @@ var History = /*#__PURE__*/function (_React$Component) {
     return _this;
   }
 
-// A hacky way to convert to local time...
-const today = new Date(new Date().getTime() + (8*60*60*1000));
-const yesterday = new Date(today);
-const tomorrow = new Date(today);
+  _createClass(History, [{
+    key: "fetchDataFromServer",
+    value: function fetchDataFromServer() {
+      var _this2 = this;
+
+      axios.get(this.state.appAddress + 'get-username/').then(function (response) {
+        _this2.setState({
+          username: response.data.username
+        });
+      })["catch"](function (error) {
+        console.log('ERROR!');
+      });
+    }
+  }, {
+    key: "handleClickPlans",
+    value: function handleClickPlans(event) {
+      window.open(this.state.appAddress + '?page=history-plans');
+    }
+  }, {
+    key: "handleClickSelfies",
+    value: function handleClickSelfies(event) {
+      logUserActivity('[meal-planner/history-selfies]', this.state.username);
+      window.open(this.state.appAddress + '?page=history-selfies');
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return /*#__PURE__*/_react["default"].createElement("div", {
+        className: "w3-cell-row",
+        style: {
+          "marginTop": "0.35em"
+        }
+      }, /*#__PURE__*/_react["default"].createElement("div", {
+        className: "w3-container w3-cell",
+        style: {
+          padding: "0px",
+          "paddingRight": "0.175em"
+        }
+      }, /*#__PURE__*/_react["default"].createElement("button", {
+        className: "w3-button w3-block w3-left-align w3-green",
+        onClick: this.handleClickPlans
+      }, "\u5386\u53F2\u98DF\u8C31...")), /*#__PURE__*/_react["default"].createElement("div", {
+        className: "w3-container w3-cell",
+        style: {
+          padding: "0px",
+          "paddingLeft": "0.175em"
+        }
+      }, /*#__PURE__*/_react["default"].createElement("button", {
+        className: "w3-button w3-block w3-left-align w3-green",
+        onClick: this.handleClickSelfies
+      }, "\u5386\u53F2\u81EA\u62CD...")));
+    }
+  }]);
+
+  return History;
+}(_react["default"].Component);
+
+exports.History = History;
+
+},{"axios":1,"react":43}],52:[function(require,module,exports){
+"use strict";
+
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+
+var _react = _interopRequireDefault(require("react"));
+
+var _client = require("react-dom/client");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+var axios = require('axios')["default"];
+
+var Reminder = require('./reminder.js').Reminder;
+
+var History = require('./history.js').History;
+
+var MealPlan = require('./mealplans.js').MealPlan;
+
+var Notes = require('./notes').Notes;
+
+var Blacklist = require('./blacklist.js').Blacklist;
+
+var IndexHeader = /*#__PURE__*/function (_React$Component) {
+  _inherits(IndexHeader, _React$Component);
+
+  var _super = _createSuper(IndexHeader);
+
+  function IndexHeader(props) {
+    var _this;
+
+    _classCallCheck(this, IndexHeader);
+
+    _this = _super.call(this, props);
+    _this.state = {
+      username: null
+    };
+    _this.onClickLogout = _this.onClickLogout.bind(_assertThisInitialized(_this));
+    return _this;
+  }
+
+  _createClass(IndexHeader, [{
+    key: "onClickLogout",
+    value: function onClickLogout(event) {
+      logUserActivity('[meal-planner/index] logout', '{{username}}');
+      ReactDOM.render(document.getElementById('root'));
+      window.location.replace('../meal_planner/logout/');
+    }
+  }, {
+    key: "fetchDataFromServer",
+    value: function fetchDataFromServer() {
+      var _this2 = this;
+
+      axios.get(window.location.href + 'get-username/').then(function (response) {
+        _this2.setState({
+          username: response.data.username
+        });
+      })["catch"](function (error) {});
+    }
+  }, {
+    key: "componentDidMount",
+    value: function componentDidMount() {
+      this.fetchDataFromServer();
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return /*#__PURE__*/_react["default"].createElement("div", {
+        className: "w3-container w3-green"
+      }, /*#__PURE__*/_react["default"].createElement("h3", null, "\u6BCF\u65E5\u98DF\u8C31", /*#__PURE__*/_react["default"].createElement("span", {
+        className: "w3-right",
+        style: {
+          "marginBottom": "1rem",
+          "fontSize": "0.65em"
+        }
+      }, "[", this.state.username, "],", /*#__PURE__*/_react["default"].createElement("a", {
+        href: "#",
+        onClick: this.onClickLogout
+      }, "\u9000\u51FA"))));
+    }
+  }]);
+
+  return IndexHeader;
+}(_react["default"].Component); // A hacky way of getting UTC+8...
+
+
+var today = new Date(new Date().getTime() + 8 * 60 * 60 * 1000);
+var yesterday = new Date(today);
+var tomorrow = new Date(today);
 yesterday.setDate(yesterday.getDate() - 1);
 tomorrow.setDate(tomorrow.getDate() + 1);
 var container = document.getElementById('root');

@@ -7263,15 +7263,6 @@ var Reminder = /*#__PURE__*/function (_React$Component) {
         _this2.setState({
           reminderData: null // make it empty before fill it in again to force a re-rendering.
 
-<<<<<<< HEAD
-  fetchDataFromServer() {
-    axios.get('./get-reminder-message/')
-      .then(response => {
-        this.setState({
-          reminderData: null
-          // make it empty before fill it in again to force a re-rendering.
-=======
->>>>>>> 53cef828bbc39b2727981789b0b5e600566eb3ad
         });
 
         _this2.setState({
@@ -7295,14 +7286,6 @@ var Reminder = /*#__PURE__*/function (_React$Component) {
         _this2.setState({
           consecutiveAData: null // make it empty before fill it in again to force a re-rendering.
 
-<<<<<<< HEAD
-    axios.get('./get-consecutive-a-days/')
-      .then(response => {
-        this.setState({
-          consecutiveAData: null
-          // make it empty before fill it in again to force a re-rendering.
-=======
->>>>>>> 53cef828bbc39b2727981789b0b5e600566eb3ad
         });
 
         _this2.setState({
