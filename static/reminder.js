@@ -28,7 +28,7 @@ class Reminder extends React.Component {
   
 
   fetchDataFromServer() {
-    axios.get('https://monitor.sz.lan/meal-planner/get-reminder-message/')
+    axios.get('./get-reminder-message/')
       .then(response => {
         this.setState({
           reminderData: null
@@ -52,7 +52,7 @@ class Reminder extends React.Component {
         alert('加载每日提醒失败！\n' + error);
       });
 
-    axios.get('https://monitor.sz.lan/meal-planner/get-consecutive-a-days/')
+    axios.get('./get-consecutive-a-days/')
       .then(response => {
         this.setState({
           consecutiveAData: null
@@ -69,7 +69,7 @@ class Reminder extends React.Component {
   }
 
   handleClickMessageBoxOK(event) {
-    console.log('handleClickMessageBoxOK');
+    
     this.setState(prevState => ({
       show: !prevState.show
     }));
@@ -80,14 +80,14 @@ class Reminder extends React.Component {
     if (this.state.reminderData === null || this.state.consecutiveAData == null) { return null; }
     let aDays = this.state.consecutiveAData;
     let messageBox = (
-      <div id="msg-box" class="w3-modal" style={{ display: this.state.show ? "block" : "none "}}>
-        <div class="w3-modal-content w3-animate-top">
-          <header class="w3-container w3-green"> 
+      <div id="msg-box" className="w3-modal" style={{ display: this.state.show ? "block" : "none "}}>
+        <div className="w3-modal-content w3-animate-top">
+          <header className="w3-container w3-green"> 
             <h4>提醒</h4>
           </header>
-          <div class="w3-container">
-            <p style={{ "font-size": "large" }}>{this.state.reminderData.message}</p>
-            <div style={{ "font-size": "large", "text-align": "center" }}>
+          <div className="w3-container">
+            <p style={{ fontSize: "large" }}>{this.state.reminderData.message}</p>
+            <div style={{ fontSize: "large", textAlign: "center" }}>
               <p>
                 全A({Math.max(...aDays.a_only)})：<span style={{ "font-size": "xx-large" }}>{aDays.a_only[0]}, </span>
                 {/* Without "..." (called a spread operator) you get an NaN since it considers the array as one parameter.
@@ -101,7 +101,7 @@ class Reminder extends React.Component {
               </p>
             </div>
             <p>
-              <button id="button-okay" onClick={this.handleClickMessageBoxOK} class="w3-right w3-button w3-green"
+              <button id="button-okay" onClick={this.handleClickMessageBoxOK} className="w3-right w3-button w3-green"
                       disabled={(this.state.timeout - this.state.second) > 0}>
                 确定({this.state.timeout - this.state.second})
               </button>

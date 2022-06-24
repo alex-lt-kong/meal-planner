@@ -46,6 +46,7 @@ app_address = ''
 app_dir = os.path.dirname(os.path.realpath(__file__))
 attachments_path = os.path.join(app_dir, 'resources/attachments')
 blacklist_path = os.path.join(app_dir, 'blacklist.json')
+debug_mode = False
 db_url, db_username, db_password, db_name = '', '', '', ''
 external_script_dir = ''
 loader = im.SourceFileLoader('emailer', f'{app_dir}/../emailer/emailer.py')
@@ -880,7 +881,11 @@ def index():
               'external_script_dir': external_script_dir}
 
     if 'page' not in request.args:
-        return render_template('index.html', **kwargs)
+        return render_template(
+            'index.html', 
+            mode='dev' if debug_mode else 'prod',
+            **kwargs
+        )
 
     page = request.args['page']
     if page == 'history-plans':
@@ -956,8 +961,9 @@ def main(debug):
 
     port = -1
     global allowed_ext, app_address, db_url, db_username, db_password, db_name
-    global external_script_dir, log_path
+    global debug_mode, external_script_dir, log_path
 
+    debug_mode = debug
     try:
         with open(settings_path, 'r') as json_file:
             json_str = json_file.read()

@@ -40,7 +40,7 @@ class IndexHeader extends React.Component {
   }
 }
 
-// A hacky way of getting UTC+8...
+// A hacky way to convert to local time...
 const today = new Date(new Date().getTime() + (8*60*60*1000));
 const yesterday = new Date(today);
 const tomorrow = new Date(today);
