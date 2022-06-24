@@ -18,6 +18,13 @@ class IndexHeader extends React.Component {
 
   onClickLogout(event) { 
     logUserActivity('[meal-planner/index] logout', '{{username}}');
+
+    ReactDOM.render(
+     
+      
+      document.getElementById('root')
+    );
+    
     window.location.replace('../meal_planner/logout/');
   }; 
 

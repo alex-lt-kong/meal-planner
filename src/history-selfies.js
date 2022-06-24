@@ -1,3 +1,4 @@
+import React from 'react';
 class SelfieItem extends React.Component {
   constructor(props) {
     super(props);

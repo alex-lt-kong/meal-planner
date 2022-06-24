@@ -1,4 +1,5 @@
 const axios = require('axios').default;
+import React from 'react';
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -146,6 +147,8 @@ class MealPlanItem extends React.Component {
     };
     this.handleContentChange = this.handleContentChange.bind(this);
     this.handleFeedbackChange = this.handleFeedbackChange.bind(this);
+    console.log(`MealPlanItem inited`);
+    console.log(this.state.data);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -187,31 +190,32 @@ class MealPlanItem extends React.Component {
       'B - 大便不成形', 'B - 饮食减量', 'B - 轻微腹痛或轻微不适',
       'C - 拉稀', 'C - 饮食较大减量', 'C - 腹痛或较严重不适', '待填'
     ];
-    if (optionsValueList.includes(this.state.data[this.state.itemName].feedback) == false) {
-      optionsValueList.push(this.state.data[this.state.itemName].feedback);
+    if (optionsValueList.includes(this.props.data[this.props.itemName].feedback) == false) {
+      optionsValueList.push(this.props.data[this.props.itemName].feedback);
     }
     let optionsList = [];
     for (let i = 0; i < optionsValueList.length; i ++) {
-      optionsList.push(<option className="w3-text-black" value={optionsValueList[i]}>{optionsValueList[i]}</option>);
+      optionsList.push(<option className="w3-text-black" key={i} value={optionsValueList[i]}>{optionsValueList[i]}</option>);
     }
     var feedbackColor = 'black'
-    if (this.state.data[this.state.itemName].feedback === optionsValueList[0]) {
+    if (this.props.data[this.props.itemName].feedback === optionsValueList[0]) {
       feedbackColor = 'green';
-    } else if (optionsValueList.slice(1,7).includes(this.state.data[this.state.itemName].feedback)) {
+    } else if (optionsValueList.slice(1,7).includes(this.props.data[this.props.itemName].feedback)) {
       feedbackColor = 'red';
     }
     const feedbackStyle = {
       color: feedbackColor,
       fontWeight: 'bold'
     };
-    return (<select className="w3-select" style={feedbackStyle} value={this.state.data[this.state.itemName].feedback}
+    return (<select className="w3-select" style={feedbackStyle} value={this.props.data[this.props.itemName].feedback}
         onChange={this.handleFeedbackChange} readOnly={this.props.sendData == null} >
         {optionsList}
     </select>);
   }
 
   render() {
-    const modType = this.state.data[this.state.itemName].modification_type;
+    console.log(`MealPlanItem render()'ing`);
+    const modType = this.props.data[this.props.itemName].modification_type;
     let modificationInfo = null;
     let prettyDiff;
     if (modType == 1) {
@@ -219,8 +223,8 @@ class MealPlanItem extends React.Component {
     } else if (modType == 2) {
       modificationInfo = <span style={{color: "red", "fontWeight": "bold"}}> - 危险!</span>;
 
-      let previousText = this.state.data[this.state.itemName].prev;
-      let currentText = this.state.data[this.state.itemName].content;
+      let previousText = this.props.data[this.props.itemName].prev;
+      let currentText = this.props.data[this.props.itemName].content;
       if (previousText.length >= 4) {
         if (isNaN(previousText.substring(0, 4)) == false) {
           previousText = previousText.substring(4);
@@ -240,18 +244,19 @@ class MealPlanItem extends React.Component {
           <span dangerouslySetInnerHTML={{__html: dmp.diff_prettyHtml(diff)}} />
         </span>);
     }
-
+    console.log(this.state.data[this.state.itemName].content);
+    console.log(this.props.data[this.state.itemName].content);
     return (
       <div>
         <div>
           <h5 className="w3-text-green p-mealplanitem-title">
-            <b>{this.state.data[this.state.itemName].title}</b>
+            <b>{this.props.data[this.props.itemName].title}</b>
             {modificationInfo}
           </h5>          
         </div>
         <div className="w3-cell-row">
           <div className="w3-cell" style={{ "fontSize": "14px"}}>
-            <textarea className="w3-input textarea-mealplanitem" value={this.state.data[this.state.itemName].content}
+            <textarea className="w3-input textarea-mealplanitem" value={this.props.data[this.props.itemName].content}
                       rows="1" readOnly={this.props.sendData == null}
                       onInput={this.handleContentChange}/>
           </div>

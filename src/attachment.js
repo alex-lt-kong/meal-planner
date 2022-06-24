@@ -1,3 +1,4 @@
+import React from 'react';
 const axios = require('axios').default;
 
 class AttachmentsManager extends React.Component {

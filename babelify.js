@@ -1,6 +1,6 @@
 var fs = require("fs");
 var browserify = require("browserify");
-const srcList = ['blacklist.js', 'notes.js', 'index.js', 'reminder.js', 'history.js', 'mealplans.js', 'attachment.js'];
+const srcList = ['history-plans.js', 'blacklist.js', 'notes.js', 'index.js', 'reminder.js', 'history.js', 'mealplans.js', 'attachment.js'];
 
 for (let i = 0; i < srcList.length; ++i) {
   console.log(`Babelifying ${srcList[i]}`);

@@ -1,24 +1,37 @@
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+const axios = require('axios').default;
+const textAreaAdjust = require('./common.js').textAreaAdjust;
+var MealPlanItem = require('./common.js').MealPlanItem;
+var MealPlanDailyRemark = require('./common.js').MealPlanDailyRemark;
+var MealPlanDailySelfie = require('./common.js').MealPlanDailySelfie;
+var MealPlanDailyAttachments = require('./attachment.js').MealPlanDailyAttachments;
+
 class PlanTable extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      date: props.date
-   //   data: props.data
+      date: props.date,
+      data: props.data
     };
   }
 
   render() {
-    if (this.props.data === null) { return null; }
-
+    if (this.props.data === null) {
+      console.log('Server returned NULL?');
+      return null; 
+    }
+    console.log(`PlanTable render()'ing`);
+    console.log(this.props.data);
     return (
       <div style={{ width: "98%", "maxWidth": "1000px", margin: "auto", "marginTop": "4em", "marginBottom": "4em" }}>
-          <MealPlanItem data={this.props.data} itemName="breakfast" sendData={this.getData} />
-          <MealPlanItem data={this.props.data} itemName="morning_extra_meal" sendData={this.getData} />
-          <MealPlanItem data={this.props.data} itemName="lunch" sendData={this.getData} />
-          <MealPlanItem data={this.props.data} itemName="afternoon_extra_meal" sendData={this.getData} />
-          <MealPlanItem data={this.props.data} itemName="dinner" sendData={this.getData} />
-          <MealPlanItem data={this.props.data} itemName="evening_extra_meal" sendData={this.getData} />
-          <MealPlanDailyRemark data={this.props.data} sendData={this.getData} />
+          <MealPlanItem data={this.props.data} itemName="breakfast" />
+          <MealPlanItem data={this.props.data} itemName="morning_extra_meal" />
+          <MealPlanItem data={this.props.data} itemName="lunch" />
+          <MealPlanItem data={this.props.data} itemName="afternoon_extra_meal" />
+          <MealPlanItem data={this.props.data} itemName="dinner" />
+          <MealPlanItem data={this.props.data} itemName="evening_extra_meal" />
+          <MealPlanDailyRemark data={this.props.data} />
           <MealPlanDailySelfie enableUpload={false} date={new Date(this.props.data.metadata.date)} />
           <MealPlanDailyAttachments enableEdit={false} enableUpload={false} date={new Date(this.props.data.metadata.date)} />
       </div>
@@ -26,7 +39,7 @@ class PlanTable extends React.Component {
   }
 }
 
-class FixedFooter extends React.Component {
+class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -58,6 +71,7 @@ class FixedFooter extends React.Component {
     }));
     this.fetchDataFromServer(yesterday);
     logUserActivity('[meal-planner/history-plans] ' + this.state.data.metadata.date, this.state.data.metadata.username);
+    console.log(`handlePreviousClick()'ed`);
   }
   
   handleNextClick(event) {
@@ -73,7 +87,7 @@ class FixedFooter extends React.Component {
   fetchDataFromServer(date) {
     // Seems that we canNOT use this.state.date here because the update of
     // state is not in real-time.
-    axios.get('https://monitor.sz.lan/meal-planner/get-meal-plan/?date=' + date.toISOString().slice(0, 10))
+    axios.get('./get-meal-plan/?date=' + date.toISOString().slice(0, 10))
       .then(response => {       
         this.setState({
           data: null
@@ -82,7 +96,6 @@ class FixedFooter extends React.Component {
         this.setState({
           data: response.data
         });
-        this.props.sendData(this.state.data);
         textAreaAdjust();
         logUserActivity('[meal-planner/history-plans] ' + response.data.metadata.date, response.data.metadata.username);
         // Note that you canNOT use this.state.data instead of response.data here.
@@ -94,58 +107,37 @@ class FixedFooter extends React.Component {
       });
   }
 
-  render() {
-    return (
-      <div className="fixed-footer">
-      <div className="w3-cell-row">
-        <div className="w3-container w3-cell w3-cell-top">
-          <p><a href="#" onClick={this.handlePreviousClick}>向前</a></p>
-        </div>
-        <div className="w3-container w3-cell w3-cell-middle">
-          <form className="w3-center" action="./">
-            <input type="date" 
-            value={this.state.date.toISOString().substr(0,10)} onChange={this.handleChange} />
-          </form>
-        </div>
-        <div className="w3-container w3-cell w3-cell-bottom">
-          <p><a href="#" onClick={this.handleNextClick}>向后</a></p>
-        </div>
-      </div>
-    </div>
-    );
-  }
-}
-
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      data: null,
-      date: props.date
-    };
-    this.getData = this.getData.bind(this);
-  }
-
-  getData(value){
-    this.setState({ data: null });
-    this.setState({ data: value });
-  }
-
-  render() {
+  render() {   
     return (
     <div>
       <div className="fixed-header">
         <h5>食谱历史记录</h5>
       </div>
       <PlanTable data={this.state.data} />
-      <FixedFooter date={this.state.date} sendData={this.getData} />
+      <div className="fixed-footer">
+        <div className="w3-cell-row">
+          <div className="w3-container w3-cell w3-cell-top">
+            <p><a href="#" onClick={this.handlePreviousClick}>向前</a></p>
+          </div>
+          <div className="w3-container w3-cell w3-cell-middle">
+            <form className="w3-center" action="./">
+              <input type="date" 
+              value={this.state.date.toISOString().substr(0,10)} onChange={this.handleChange} />
+            </form>
+          </div>
+          <div className="w3-container w3-cell w3-cell-bottom">
+            <p><a href="#" onClick={this.handleNextClick}>向后</a></p>
+          </div>
+        </div>
+      </div>
     </div>
     );
   }
 }
+const container = document.getElementById('root');
+const root = createRoot(container); // createRoot(container!) if you use TypeScript
 
-ReactDOM.render(
-  // A hacky way of getting UTC+8...
-  <App date={new Date(new Date().getTime() + (8*60*60*1000))} />,
-  document.getElementById('root')
+root.render(
+   // A hacky way of getting UTC+8...
+<App date={new Date(new Date().getTime() + (8*60*60*1000))} />,
 );
