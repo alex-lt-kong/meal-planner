@@ -160,13 +160,13 @@ class AttachmentsManager extends React.Component {
                                  style={{"textDecoration": "none", width: "100%"}} >{this.state.data.filenames[i]}</a>;
                                  /* href="javascript:;" a link that goes to nowhere */;
         if (this.state.enableEdit === true) {
-          removeButton = <img className="w3-right" value={this.state.data.filenames[i]} src="./static/delete.png"
+          removeButton = <img className="w3-right" value={this.state.data.filenames[i]} src="./static/img/delete.png"
                               style={{ "marginLeft": "1em", "marginBottom": "0.66em", "maxWidth": "1.25em" }}
                               onClick={this.handleClickFileRemove.bind(this, this.state.data.filenames[i])} />;
         }
         if (this.state.enableEdit === true) {
           if (this.state.renameModeFile != this.state.data.filenames[i]) {
-            renameButton = <img className="w3-right" value={this.state.data.filenames[i]} src="./static/rename.png" style={{ "maxWidth": "1.25em" }}
+            renameButton = <img className="w3-right" value={this.state.data.filenames[i]} src="./static/img/rename.png" style={{ "maxWidth": "1.25em" }}
                                 onClick={this.handleClickEnableRenameMode.bind(this, this.state.data.filenames[i])} />;
 
           } else {

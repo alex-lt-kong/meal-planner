@@ -68,7 +68,6 @@ class App extends React.Component {
     }));
     this.fetchDataFromServer(yesterday);
     logUserActivity('[meal-planner/history-plans] ' + this.state.data.metadata.date, this.state.data.metadata.username);
-    console.log(`handlePreviousClick()'ed`);
   }
   
   handleNextClick(event) {

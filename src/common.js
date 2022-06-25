@@ -1,5 +1,6 @@
 const axios = require('axios').default;
 import React from 'react';
+import DiffMatchPatch from 'diff-match-patch';
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -61,7 +62,7 @@ class MealPlanDailySelfie extends React.Component {
       alert('自拍照上传错误\n' + error);
       // You canNOT write error.response or whatever similar here.
       // The reason is that this catch() catches both network error and other errors,
-      // which may or may not have a response property.
+      // which mdiff_ay or may not have a response property.
     });
   }
    
@@ -233,7 +234,7 @@ class MealPlanItem extends React.Component {
         }
       }
       
-      var dmp = new diff_match_patch();
+      var dmp = new DiffMatchPatch();
       var diff = dmp.diff_main(previousText, currentText);
       prettyDiff = (
         <span style={{ "marginLeft": "0.5em", "fontSize": "12px"}}>
@@ -241,8 +242,6 @@ class MealPlanItem extends React.Component {
           <span dangerouslySetInnerHTML={{__html: dmp.diff_prettyHtml(diff)}} />
         </span>);
     }
-    console.log(this.state.data[this.state.itemName].content);
-    console.log(this.props.data[this.state.itemName].content);
     return (
       <div>
         <div>

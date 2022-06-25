@@ -7394,7 +7394,7 @@ var AttachmentsManager = /*#__PURE__*/function (_React$Component) {
             removeButton = /*#__PURE__*/_react["default"].createElement("img", {
               className: "w3-right",
               value: this.state.data.filenames[i],
-              src: "./static/delete.png",
+              src: "./static/img/delete.png",
               style: {
                 "marginLeft": "1em",
                 "marginBottom": "0.66em",
@@ -7409,7 +7409,7 @@ var AttachmentsManager = /*#__PURE__*/function (_React$Component) {
               renameButton = /*#__PURE__*/_react["default"].createElement("img", {
                 className: "w3-right",
                 value: this.state.data.filenames[i],
-                src: "./static/rename.png",
+                src: "./static/img/rename.png",
                 style: {
                   "maxWidth": "1.25em"
                 },
