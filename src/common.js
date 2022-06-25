@@ -69,38 +69,39 @@ class MealPlanDailySelfie extends React.Component {
   }
 
   render() {
-
-    var buttonUpload = null;
+    let buttonUpload = null;
     if (this.props.enableUpload === true) {
       buttonUpload = (
-      <div style={{ "marginBottom": "3em" }}>
-        <button className="w3-button w3-border w3-highway-green w3-right w3-marginBottom input-button"
-                onClick={this.handleUploadSelfieButtonClick} style={{ clear: "right"}}>
-                {/* without clear: right, a button will interfere other buttons, causing other buttons to be left to it */}
-          上传自拍
-        </button>
-        <input id="input-fileupload-selfie" onChange={this.onFileChange} type="file" style={{ display: "none" }} accept="image/png, image/gif, image/jpeg" />
-        {/* button and input is bound using jQuery... */}
-      </div>);
+        <div style={{marginBottom: '3em'}}>
+          <button className="w3-button w3-border w3-highway-green w3-right w3-marginBottom input-button"
+            onClick={this.handleUploadSelfieButtonClick} style={{clear: 'right'}}>
+            {/* without clear: right, a button will interfere other buttons, causing other buttons to be left to it */}
+            上传自拍
+          </button>
+          <input id="input-fileupload-selfie" onChange={this.onFileChange} type="file"
+            style={{display: 'none'}} accept="image/png, image/gif, image/jpeg" />
+          {/* button and input is bound using jQuery... */}
+        </div>
+      );
     }
 
-    return ( 
-      <div> 
+    return (
+      <div>
         <div>
           <p className="w3-text-green p-mealplanitem-title">
             <b>自拍</b>
-          </p>          
+          </p>
         </div>
-          <div>
+        <div>
           <img src={`./get-selfie/?date=${this.props.date.toISOString().slice(0, 10)}&${new Date().getTime()}`} alt=""
-               style={{ display: "block", "marginLeft": "auto", "marginRight": "auto", "maxWidth": "100%", width: "300px" }} />
+            style={{display: 'block', marginLeft: 'auto', marginRight: 'auto', maxWidth: '100%', width: '300px'}} />
           {/* If alt="" is added, the broken image icon won't show if src is not found. */}
-          </div>
-          {buttonUpload}
-          {/* image/jpeg includes jpg and jpeg extensions. */}
-      </div> 
+        </div>
+        {buttonUpload}
+        {/* image/jpeg includes jpg and jpeg extensions. */}
+      </div>
     );
-  } 
+  }
 }
 
 class MealPlanDailyRemark extends React.Component {
@@ -187,7 +188,7 @@ class MealPlanItem extends React.Component {
   }
 
   getFeedbackSelect() {
-    let optionsValueList = [
+    const optionsValueList = [
       'A - 大便成形，饮食正常量，无饱胀/腹痛/不适',
       'B - 大便不成形', 'B - 饮食减量', 'B - 轻微腹痛或轻微不适',
       'C - 拉稀', 'C - 饮食较大减量', 'C - 腹痛或较严重不适', '待填'
@@ -195,24 +196,28 @@ class MealPlanItem extends React.Component {
     if (optionsValueList.includes(this.props.data[this.props.itemName].feedback) == false) {
       optionsValueList.push(this.props.data[this.props.itemName].feedback);
     }
-    let optionsList = [];
+    const optionsList = [];
     for (let i = 0; i < optionsValueList.length; i ++) {
-      optionsList.push(<option className="w3-text-black" key={i} value={optionsValueList[i]}>{optionsValueList[i]}</option>);
+      optionsList.push(
+          <option className="w3-text-black" key={i} value={optionsValueList[i]}>{optionsValueList[i]}</option>
+      );
     }
-    var feedbackColor = 'black'
+    let feedbackColor = 'black';
     if (this.props.data[this.props.itemName].feedback === optionsValueList[0]) {
       feedbackColor = 'green';
-    } else if (optionsValueList.slice(1,7).includes(this.props.data[this.props.itemName].feedback)) {
+    } else if (optionsValueList.slice(4, 6).includes(this.props.data[this.props.itemName].feedback)) {
       feedbackColor = 'red';
     }
     const feedbackStyle = {
       color: feedbackColor,
       fontWeight: 'bold'
     };
-    return (<select className="w3-select" style={feedbackStyle} value={this.props.data[this.props.itemName].feedback}
+    return (
+      <select className="w3-select" style={feedbackStyle} value={this.props.data[this.props.itemName].feedback}
         onChange={this.handleFeedbackChange} readOnly={this.props.sendData == null} >
         {optionsList}
-    </select>);
+      </select>
+    );
   }
 
   render() {
