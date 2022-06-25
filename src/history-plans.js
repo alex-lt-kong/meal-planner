@@ -1,11 +1,11 @@
 import React from 'react';
-import { createRoot } from 'react-dom/client';
+import {createRoot} from 'react-dom/client';
 const axios = require('axios').default;
 const textAreaAdjust = require('./common.js').textAreaAdjust;
-var MealPlanItem = require('./common.js').MealPlanItem;
-var MealPlanDailyRemark = require('./common.js').MealPlanDailyRemark;
-var MealPlanDailySelfie = require('./common.js').MealPlanDailySelfie;
-var MealPlanDailyAttachments = require('./attachment.js').MealPlanDailyAttachments;
+const MealPlanItem = require('./common.js').MealPlanItem;
+const MealPlanDailyRemark = require('./common.js').MealPlanDailyRemark;
+const MealPlanDailySelfie = require('./common.js').MealPlanDailySelfie;
+const MealPlanDailyAttachments = require('./attachment.js').MealPlanDailyAttachments;
 
 class PlanTable extends React.Component {
   constructor(props) {
@@ -18,19 +18,20 @@ class PlanTable extends React.Component {
 
   render() {
     if (this.props.data === null) {
-      return null; 
+      return null;
     }
+    console.log(`PlanTable's date: ${this.props.data.metadata.date}`);
     return (
-      <div style={{ width: "98%", "maxWidth": "1000px", margin: "auto", "marginTop": "4em", "marginBottom": "4em" }}>
-          <MealPlanItem data={this.props.data} itemName="breakfast" />
-          <MealPlanItem data={this.props.data} itemName="morning_extra_meal" />
-          <MealPlanItem data={this.props.data} itemName="lunch" />
-          <MealPlanItem data={this.props.data} itemName="afternoon_extra_meal" />
-          <MealPlanItem data={this.props.data} itemName="dinner" />
-          <MealPlanItem data={this.props.data} itemName="evening_extra_meal" />
-          <MealPlanDailyRemark data={this.props.data} />
-          <MealPlanDailySelfie enableUpload={false} date={new Date(this.props.data.metadata.date)} />
-          <MealPlanDailyAttachments enableEdit={false} enableUpload={false} date={new Date(this.props.data.metadata.date)} />
+      <div style={{width: '98%', maxWidth: '1000px', margin: 'auto', marginTop: '4em', marginBottom: '4em'}}>
+        <MealPlanItem data={this.props.data} itemName="breakfast" />
+        <MealPlanItem data={this.props.data} itemName="morning_extra_meal" />
+        <MealPlanItem data={this.props.data} itemName="lunch" />
+        <MealPlanItem data={this.props.data} itemName="afternoon_extra_meal" />
+        <MealPlanItem data={this.props.data} itemName="dinner" />
+        <MealPlanItem data={this.props.data} itemName="evening_extra_meal" />
+        <MealPlanDailyRemark data={this.props.data} />
+        <MealPlanDailySelfie enableUpload={false} date={new Date(this.props.data.metadata.date)} />
+        <MealPlanDailyAttachments enableEdit={false} enableUpload={false} date={new Date(this.props.data.metadata.date)} />
       </div>
     );
   }

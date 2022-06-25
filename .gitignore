@@ -1,3 +1,6 @@
+# ===== Flask + JS =====
+static/js/*.js
+
 # ===== NodeJs =====
 # Logs
 logs
