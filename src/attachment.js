@@ -128,19 +128,13 @@ class AttachmentsManager extends React.Component {
 
 
   fetchDataFromServer() {
-    axios.get('./get-attachments-list/?date=' + this.props.date.toISOString().slice(0, 10))
+    axios.get(`./get-attachments-list/?date=${this.props.date.toISOString().slice(0, 10)}`)
       .then(response => {
-        // handle success
-        this.setState({
-          data: null
-          // make it empty before fill it in again to force a re-rendering.
-        });
-        this.setState({
-          data: response.data
-        });
+        this.setState({ data: null }); // make it empty before fill it in again to force a re-rendering.
+        this.setState({ data: response.data });
       })
       .catch(error => {
-        alert(this.props.date.toISOString().slice(0, 10) + '的附件列表加载失败！请关闭窗口后重试！\n' + error);
+        alert(`${this.props.date.toISOString().slice(0, 10)}附件列表加载失败！请关闭窗口后重试！\n失败的原因：${error}`);
       });
   }
   

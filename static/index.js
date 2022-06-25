@@ -40584,18 +40584,17 @@ var AttachmentsManager = /*#__PURE__*/function (_React$Component) {
     value: function fetchDataFromServer() {
       var _this5 = this;
 
-      axios.get('./get-attachments-list/?date=' + this.props.date.toISOString().slice(0, 10)).then(function (response) {
-        // handle success
+      axios.get("./get-attachments-list/?date=".concat(this.props.date.toISOString().slice(0, 10))).then(function (response) {
         _this5.setState({
-          data: null // make it empty before fill it in again to force a re-rendering.
+          data: null
+        }); // make it empty before fill it in again to force a re-rendering.
 
-        });
 
         _this5.setState({
           data: response.data
         });
       })["catch"](function (error) {
-        alert(_this5.props.date.toISOString().slice(0, 10) + '的附件列表加载失败！请关闭窗口后重试！\n' + error);
+        alert("".concat(_this5.props.date.toISOString().slice(0, 10), "\u9644\u4EF6\u5217\u8868\u52A0\u8F7D\u5931\u8D25\uFF01\u8BF7\u5173\u95ED\u7A97\u53E3\u540E\u91CD\u8BD5\uFF01\n\u5931\u8D25\u7684\u539F\u56E0\uFF1A").concat(error));
       });
     }
   }, {
@@ -41493,35 +41492,11 @@ exports.History = History;
 },{"axios":1,"react":44}],53:[function(require,module,exports){
 "use strict";
 
-function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
-
 var _react = _interopRequireDefault(require("react"));
 
 var _client = require("react-dom/client");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
-var axios = require('axios')["default"];
 
 var Reminder = require('./reminder.js').Reminder;
 
@@ -41531,69 +41506,7 @@ var MealPlan = require('./mealplans.js').MealPlan;
 
 var Notes = require('./notes').Notes;
 
-var Blacklist = require('./blacklist.js').Blacklist;
-
-var IndexHeader = /*#__PURE__*/function (_React$Component) {
-  _inherits(IndexHeader, _React$Component);
-
-  var _super = _createSuper(IndexHeader);
-
-  function IndexHeader(props) {
-    var _this;
-
-    _classCallCheck(this, IndexHeader);
-
-    _this = _super.call(this, props);
-    _this.state = {
-      username: null
-    };
-    _this.onClickLogout = _this.onClickLogout.bind(_assertThisInitialized(_this));
-    return _this;
-  }
-
-  _createClass(IndexHeader, [{
-    key: "onClickLogout",
-    value: function onClickLogout(event) {
-      logUserActivity('[meal-planner/index] logout', '{{username}}');
-      ReactDOM.render(document.getElementById('root'));
-      window.location.replace('../meal_planner/logout/');
-    }
-  }, {
-    key: "fetchDataFromServer",
-    value: function fetchDataFromServer() {
-      var _this2 = this;
-
-      axios.get(window.location.href + 'get-username/').then(function (response) {
-        _this2.setState({
-          username: response.data.username
-        });
-      })["catch"](function (error) {});
-    }
-  }, {
-    key: "componentDidMount",
-    value: function componentDidMount() {
-      this.fetchDataFromServer();
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return /*#__PURE__*/_react["default"].createElement("div", {
-        className: "w3-container w3-green"
-      }, /*#__PURE__*/_react["default"].createElement("h3", null, "\u6BCF\u65E5\u98DF\u8C31", /*#__PURE__*/_react["default"].createElement("span", {
-        className: "w3-right",
-        style: {
-          "marginBottom": "1rem",
-          "fontSize": "0.65em"
-        }
-      }, "[", this.state.username, "],", /*#__PURE__*/_react["default"].createElement("a", {
-        href: "#",
-        onClick: this.onClickLogout
-      }, "\u9000\u51FA"))));
-    }
-  }]);
-
-  return IndexHeader;
-}(_react["default"].Component); // A hacky way of getting UTC+8...
+var Blacklist = require('./blacklist.js').Blacklist; // A hacky way of getting UTC+8...
 
 
 var today = new Date(new Date().getTime() + 8 * 60 * 60 * 1000);
@@ -41607,11 +41520,11 @@ var root = (0, _client.createRoot)(container); // createRoot(container!) if you 
 root.render( /*#__PURE__*/_react["default"].createElement("div", {
   className: "w3-container w3-responsive",
   style: {
-    "maxWidth": "50em",
-    padding: "0.75rem",
-    display: "block",
-    "marginLeft": "auto",
-    "marginRight": "auto"
+    maxWidth: '50em',
+    padding: '0.75rem',
+    display: 'block',
+    marginLeft: 'auto',
+    marginRight: 'auto'
   }
 }, /*#__PURE__*/_react["default"].createElement(History, {
   appAddress: window.location.href
@@ -41643,7 +41556,7 @@ root.render( /*#__PURE__*/_react["default"].createElement("div", {
   appAddress: window.location.href
 })));
 
-},{"./blacklist.js":50,"./history.js":52,"./mealplans.js":54,"./notes":55,"./reminder.js":56,"axios":1,"react":44,"react-dom/client":40}],54:[function(require,module,exports){
+},{"./blacklist.js":50,"./history.js":52,"./mealplans.js":54,"./notes":55,"./reminder.js":56,"react":44,"react-dom/client":40}],54:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }

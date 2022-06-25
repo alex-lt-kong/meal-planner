@@ -9565,18 +9565,17 @@ var AttachmentsManager = /*#__PURE__*/function (_React$Component) {
     value: function fetchDataFromServer() {
       var _this5 = this;
 
-      axios.get('./get-attachments-list/?date=' + this.props.date.toISOString().slice(0, 10)).then(function (response) {
-        // handle success
+      axios.get("./get-attachments-list/?date=".concat(this.props.date.toISOString().slice(0, 10))).then(function (response) {
         _this5.setState({
-          data: null // make it empty before fill it in again to force a re-rendering.
+          data: null
+        }); // make it empty before fill it in again to force a re-rendering.
 
-        });
 
         _this5.setState({
           data: response.data
         });
       })["catch"](function (error) {
-        alert(_this5.props.date.toISOString().slice(0, 10) + '的附件列表加载失败！请关闭窗口后重试！\n' + error);
+        alert("".concat(_this5.props.date.toISOString().slice(0, 10), "\u9644\u4EF6\u5217\u8868\u52A0\u8F7D\u5931\u8D25\uFF01\u8BF7\u5173\u95ED\u7A97\u53E3\u540E\u91CD\u8BD5\uFF01\n\u5931\u8D25\u7684\u539F\u56E0\uFF1A").concat(error));
       });
     }
   }, {
