@@ -1,9 +1,11 @@
 const axios = require('axios').default;
+const $ = require('jquery');
 import React from 'react';
 import DiffMatchPatch from 'diff-match-patch';
 
+
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function textAreaAdjust() {
@@ -11,11 +13,11 @@ async function textAreaAdjust() {
   // this function can adjust the height of textarea successfully.
   await sleep(1);
   $('textarea').each(
-    function(){  
-      $(this)[0].style.height = "inherit";
-      $(this)[0].style.height = (2 + $(this)[0].scrollHeight)+"px";
-      // 1+ seems not enough in some cases, try 2+
-    }
+      function() {
+        $(this)[0].style.height = "inherit";
+        $(this)[0].style.height = (2 + $(this)[0].scrollHeight)+"px";
+        // 1+ seems not enough in some cases, try 2+
+      }
   );
 }
 
@@ -29,7 +31,7 @@ class MealPlanDailySelfie extends React.Component {
       enableUpload: props.enableUpload
     };
     this.onFileChange = this.onFileChange.bind(this);
-    this.handleUploadSelfieButtonClick = this.handleUploadSelfieButtonClick.bind(this);  
+    this.handleUploadSelfieButtonClick = this.handleUploadSelfieButtonClick.bind(this);
   }
 
   handleUploadSelfieButtonClick(event) {
@@ -38,35 +40,35 @@ class MealPlanDailySelfie extends React.Component {
     // It is jQuery...but ...it works!
   }
 
-  onFileChange(event) { 
-    this.setState({ 
+  onFileChange(event) {
+    this.setState({
       selectedFile: event.target.files[0]
-    }); 
-    this.onFileUpload(event.target.files[0]);
-  }; 
-   
-  onFileUpload(selected_file) {
-    const payload = new FormData(); 
-    payload.append('selected_file', selected_file); 
-    console.log(selected_file); 
-    axios.post("./upload-selfie/", payload)
-    .then(response => {
-    // an alert is not needed since the user will see the change of the thumbnail.
-    console.log('eal-planner] Upload selfi');
-    logUserActivity('[meal-planner] Upload selfie', this.state.data.metadata.username);
-    this.forceUpdate();
-    // This forceUpdate() is needed so that the new image will be shown
-    })
-    .catch(error => {
-      console.log(error);
-      alert('自拍照上传错误\n' + error);
-      // You canNOT write error.response or whatever similar here.
-      // The reason is that this catch() catches both network error and other errors,
-      // which mdiff_ay or may not have a response property.
     });
+    this.onFileUpload(event.target.files[0]);
+  };
+
+  onFileUpload(selected_file) {
+    const payload = new FormData();
+    payload.append('selected_file', selected_file);
+    console.log(selected_file);
+    axios.post("./upload-selfie/", payload)
+        .then((response) => {
+          // an alert is not needed since the user will see the change of the thumbnail.
+          console.log('eal-planner] Upload selfi');
+          logUserActivity('[meal-planner] Upload selfie', this.state.data.metadata.username);
+          this.forceUpdate();
+          // This forceUpdate() is needed so that the new image will be shown
+        })
+        .catch((error) => {
+          console.log(error);
+          alert('自拍照上传错误\n' + error);
+          // You canNOT write error.response or whatever similar here.
+          // The reason is that this catch() catches both network error and other errors,
+          // which mdiff_ay or may not have a response property.
+        });
   }
-   
-  render() { 
+
+  render() {
 
     var buttonUpload = null;
     if (this.props.enableUpload === true) {
@@ -131,7 +133,8 @@ class MealPlanDailyRemark extends React.Component {
         <div><p className="w3-text-green p-mealplanitem-title"><b>备注</b>{modificationInfo}</p></div>
         <div className="w3-cell-row">
           <div className="w3-cell">
-            <textarea className="w3-input textarea-dailyremark" value={this.props.data.remark.content} rows="3" onChange={this.handleChange} readOnly={this.props.sendData == null} />
+            <textarea className="w3-input textarea-dailyremark" value={this.props.data.remark.content}
+              rows="3" onChange={this.handleChange} readOnly={this.props.sendData == null} />
           </div>
         </div>
       </div>
@@ -233,11 +236,11 @@ class MealPlanItem extends React.Component {
           currentText = currentText.substring(4);
         }
       }
-      
+
       var dmp = new DiffMatchPatch();
       var diff = dmp.diff_main(previousText, currentText);
       prettyDiff = (
-        <span style={{ "marginLeft": "0.5em", "fontSize": "12px"}}>
+        <span style={{marginLeft: '0.5em', fontSize: '12px'}}>
           <b>对照：</b>
           <span dangerouslySetInnerHTML={{__html: dmp.diff_prettyHtml(diff)}} />
         </span>);
@@ -248,10 +251,10 @@ class MealPlanItem extends React.Component {
           <h5 className="w3-text-green p-mealplanitem-title">
             <b>{this.props.data[this.props.itemName].title}</b>
             {modificationInfo}
-          </h5>          
+          </h5>
         </div>
         <div className="w3-cell-row">
-          <div className="w3-cell" style={{ "fontSize": "14px"}}>
+          <div className="w3-cell" style={{fontSize: '14px'}}>
             <textarea className="w3-input textarea-mealplanitem" value={this.props.data[this.props.itemName].content}
                       rows="1" readOnly={this.props.sendData == null}
                       onInput={this.handleContentChange}/>

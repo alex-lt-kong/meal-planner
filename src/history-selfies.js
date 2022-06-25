@@ -64,16 +64,16 @@ class App extends React.Component {
     }
 
     return (
-    <div>
-      <div className="fixed-header">
-        <h5>自拍历史记录</h5>
+      <div>
+        <div className="fixed-header">
+          <h5>自拍历史记录</h5>
+        </div>
+        <div className="w3-container w3-responsive"
+          style={{maxWidth: '50em', padding: '0.75rem', display: 'block', marginLeft: 'auto',
+            marginRight: 'auto', marginTop: '3em', marginBottom: '3em'}}>
+          {images}
+        </div>
       </div>
-      <div className="w3-container w3-responsive" 
-           style={{ "maxWidth": "50em", padding: "0.75rem", display: "block", "marginLeft": "auto",
-                    "marginRight": "auto", "marginTop": "3em", "marginBottom": "3em"}}>
-        {images}
-      </div>
-    </div>
     );
   }
 }

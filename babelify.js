@@ -1,8 +1,8 @@
 const fs = require('fs');
 const browserify = require('browserify');
 const srcList = [
-  'history-notes.js', 'history-selfies.js', 'history-plans.js', 'blacklist.js',
-  'notes.js', 'index.js', 'reminder.js', 'history.js', 'mealplans.js', 'attachment.js'
+  'history-attachments.js', 'history-notes.js', 'history-selfies.js', 'history-plans.js',
+  'blacklist.js', 'notes.js', 'index.js', 'reminder.js', 'history.js', 'mealplans.js', 'attachment.js'
 ];
 
 for (let i = 0; i < srcList.length; ++i) {

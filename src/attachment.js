@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+const $ = require('jquery');
 const axios = require('axios').default;
 
 class AttachmentsManager extends React.Component {

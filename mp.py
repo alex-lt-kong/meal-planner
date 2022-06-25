@@ -364,6 +364,33 @@ def get_blacklist():
     return flask.jsonify(blacklist)
 
 
+@app.route('/get-all-attachments/', methods=['GET'])
+def get_all_attachments():
+
+    if app_name in session and 'username' in session[app_name]:
+        username = session[app_name]['username']
+    else:
+        return Response('未登录', 401)
+    attachments = {
+        'data': []
+    }
+    try:
+
+        for root, dirs, files in os.walk(attachments_path):
+            for filename in files:
+                attachments['data'].append({
+                    'date': root[len(attachments_path) + 1:],
+                    'filename': filename
+                })
+    except Exception:
+        logging.exception('')
+        return Response('读取附件列表错误', 500)
+
+    attachments['metadata'] = {}
+    attachments['metadata']['username'] = username
+    return flask.jsonify(attachments)
+
+
 @app.route('/get-username/', methods=['GET'])
 def get_username():
 
@@ -823,16 +850,18 @@ def index():
     else:
         return redirect(f'{app_address}/login/')
 
-    kwargs = {'username': username, 'app_address': app_address,
-              'external_script_dir': external_script_dir}
+    kwargs = {
+        'username': username,
+        'app_address': app_address,
+        'mode': 'dev' if debug_mode else 'prod',
+        'external_script_dir': external_script_dir
+    }
 
     if 'page' not in request.args:
         return render_template(
-            'index.html', 
-            mode='dev' if debug_mode else 'prod',
+            'index.html',
             **kwargs
         )
-
     page = request.args['page']
     if page == 'history-plans':
         return render_template('history-plans.html', **kwargs)
@@ -840,6 +869,8 @@ def index():
         return render_template('history-selfies.html', **kwargs)
     if page == 'history-notes':
         return render_template('history-notes.html', **kwargs)
+    if page == 'history-attachments':
+        return render_template('history-attachments.html', **kwargs)
     return render_template('index.html', **kwargs)
 
 
