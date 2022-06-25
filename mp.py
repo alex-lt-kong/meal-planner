@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from flask import Flask, render_template, Response, request, redirect, session
 from flask_cors import CORS
 from PIL import Image
