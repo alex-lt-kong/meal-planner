@@ -6,6 +6,7 @@ const MealPlanItem = require('./common.js').MealPlanItem;
 const MealPlanDailyRemark = require('./common.js').MealPlanDailyRemark;
 const MealPlanDailySelfie = require('./common.js').MealPlanDailySelfie;
 const MealPlanDailyAttachments = require('./attachment.js').MealPlanDailyAttachments;
+import PropTypes from 'prop-types';
 
 class PlanTable extends React.Component {
   constructor(props) {
@@ -31,11 +32,16 @@ class PlanTable extends React.Component {
         <MealPlanItem data={this.props.data} itemName="evening_extra_meal" />
         <MealPlanDailyRemark data={this.props.data} />
         <MealPlanDailySelfie enableUpload={false} date={new Date(this.props.data.metadata.date)} />
-        <MealPlanDailyAttachments enableEdit={false} enableUpload={false} date={new Date(this.props.data.metadata.date)} />
+        <MealPlanDailyAttachments enableEdit={false} enableUpload={false}
+          date={new Date(this.props.data.metadata.date)} />
       </div>
     );
   }
 }
+
+PlanTable.propTypes = {
+  date: PropTypes.instanceOf(Date)
+};
 
 class App extends React.Component {
   constructor(props) {
@@ -70,9 +76,9 @@ class App extends React.Component {
     this.fetchDataFromServer(yesterday);
     logUserActivity('[meal-planner/history-plans] ' + this.state.data.metadata.date, this.state.data.metadata.username);
   }
-  
+
   handleNextClick(event) {
-    let tomorrow = new Date(this.state.date);
+    const tomorrow = new Date(this.state.date);
     tomorrow.setDate(tomorrow.getDate() + 1);
     this.setState(prevState => ({
       date: tomorrow
@@ -84,7 +90,7 @@ class App extends React.Component {
   fetchDataFromServer(date) {
     // Seems that we canNOT use this.state.date here because the update of
     // state is not in real-time.
-    axios.get('./get-meal-plan/?date=' + date.toISOString().slice(0, 10))
+    axios.get(`./get-meal-plan/?date=${date.toISOString().slice(0, 10)}`)
       .then(response => {       
         this.setState({
           data: null
@@ -131,6 +137,11 @@ class App extends React.Component {
     );
   }
 }
+
+App.propTypes = {
+  date: PropTypes.instanceOf(Date)
+};
+
 const container = document.getElementById('root');
 const root = createRoot(container); // createRoot(container!) if you use TypeScript
 

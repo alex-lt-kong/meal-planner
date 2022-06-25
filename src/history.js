@@ -2,7 +2,6 @@ import React from 'react';
 const axios = require('axios').default;
 
 class History extends React.Component {
-
     constructor(props) {
       super(props);
       this.state = {

@@ -1,111 +1,150 @@
 import React from 'react';
 const axios = require('axios').default;
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip
+} from 'chart.js';
+import {Line} from 'react-chartjs-2';
+import 'chartjs-adapter-luxon';
 
 class Reminder extends React.Component {
   constructor(props) {
-    super(props); 
+    super(props);
     this.state = {
-      consecutiveAData: null,
+      dailyACount: null,
       reminderData: null,
-      show: false,
-      second: 0,
-      timeout: 5
+      show: false
     };
     this.handleClickMessageBoxOK = this.handleClickMessageBoxOK.bind(this);
-    
   }
 
   componentDidMount() {
-    this.fetchDataFromServer();
+    this.fetchDataFromServer(121);
   }
 
-
-  tick() {
-    this.setState(prevState => ({
-      second: prevState.second + 1
-    }));
-    if (this.state.second >= 5) {
-      clearInterval(this.timerID);
-    }
-  }
-  
-
-  fetchDataFromServer() {
-    axios.get('https://monitor.sz.lan/meal-planner/get-reminder-message/')
-      .then(response => {
-        this.setState({
-          reminderData: null
-          // make it empty before fill it in again to force a re-rendering.
+  fetchDataFromServer(days) {
+    axios.get(`./get-daily-a-count/?days=${days}`)
+        .then((response) => {
+          this.setState({dailyACount: response.data});
+        })
+        .catch((error) => {
+          alert(`加载每日A数失败！\n原因：${error}`);
         });
-        this.setState({
-          reminderData: response.data,
-          show: response.data.message.length > 0
-        });
-        if (response.data.message.length > 0) {     
+    axios.get('./get-reminder-message/')
+        .then((response) => {
           this.setState({
-            second: 0
-          });  
-          this.timerID = setInterval(
-            () => this.tick(),
-            1000
-          );
-        }
-      })
-      .catch(error => {
-        alert('加载每日提醒失败！\n' + error);
-      });
-
-    axios.get('https://monitor.sz.lan/meal-planner/get-consecutive-a-days/')
-      .then(response => {
-        this.setState({
-          consecutiveAData: null
-          // make it empty before fill it in again to force a re-rendering.
+            reminderData: response.data,
+            show: response.data.message.length > 0
+          });
+        })
+        .catch((error) => {
+          alert(`加载每日提醒失败！\n原因：${error}`);
         });
-        this.setState({
-          consecutiveAData: response.data
-        });
-        console.log(this.state.consecutiveAData);
-      })
-      .catch(error => {
-        alert('加载全A天数失败！\n' + error);
-      });
   }
 
   handleClickMessageBoxOK(event) {
-    this.setState(prevState => ({
-      show: !prevState.show
-    }));
+    this.setState((prevState) => ({show: !prevState.show}));
   }
 
   render() {
-    
-    if (this.state.reminderData === null || this.state.consecutiveAData == null) { return null; }
-    let aDays = this.state.consecutiveAData;
-    let messageBox = (
-      <div id="msg-box" className="w3-modal" style={{ display: this.state.show ? "block" : "none "}}>
+    if (this.state.reminderData === null || this.state.dailyACount == null) {
+      return null;
+    }
+
+    ChartJS.register(
+        CategoryScale,
+        LinearScale,
+        PointElement,
+        LineElement,
+        Tooltip
+    );
+    const options = {
+      responsive: true,
+      scales: {
+        xAxis: {
+          grid: {display: false},
+          type: 'time',
+          time: {
+            parser: 'yyyy-MM-dd',
+            displayFormats: {
+              'day': 'yyyy-MM-dd',
+              'month': 'yyyy-MM'
+            },
+            tooltipFormat: 'yyyy-MM-dd'
+          },
+          ticks: {
+            autoSkip: true,
+            maxRotation: 0,
+            minRotation: 0,
+            maxTicksLimit: 4
+          },
+          display: true
+        },
+        yAxis: {
+          grid: {display: true},
+          ticks: {beginAtZero: false}
+        }
+      },
+      plugins: {
+        legend: {display: false}
+      }
+    };
+    const data = {
+      labels: this.state.dailyACount.date,
+      datasets: [
+        {
+          label: '原始数据',
+          data: this.state.dailyACount.value,
+          borderColor: 'rgb(53, 168, 40, 0.75)',
+          backgroundColor: 'rgba(53, 168, 40, 0.25)',
+          borderWidth: 0.8,
+          tension: 0.1,
+          pointRadius: 0
+        },
+        {
+          label: '移动平均',
+          data: this.state.dailyACount.value_ma,
+          borderColor: 'rgb(53, 168, 40)',
+          backgroundColor: 'rgba(53, 168, 40, 0.75)',
+          borderWidth: 4.5,
+          tension: 0.5,
+          pointRadius: 0.25
+        }
+      ]
+    };
+
+    const messageBox = (
+      <div id="msg-box" className="w3-modal" style={{display: this.state.show ? 'block' : 'none'}}>
         <div className="w3-modal-content w3-animate-top">
-          <header className="w3-container w3-green"> 
+          <header className="w3-container w3-green">
             <h4>提醒</h4>
           </header>
           <div className="w3-container">
-            <p style={{ "fontSize": "large" }}>{this.state.reminderData.message}</p>
-            <div style={{ "fontSize": "large", "textAlign": "center" }}>
-              <p>
-                全A({Math.max(...aDays.a_only)})：<span style={{ "fontSize": "xx-large" }}>{aDays.a_only[0]}, </span>
-                {/* Without "..." (called a spread operator) you get an NaN since it considers the array as one parameter.
-                    By adding ..., max() considers it to be an array. */}
-                {aDays.a_only.slice(1, 6).map((day) => <span>{day}, </span>)}
-                {/* slice(1, 7) turns out to be too long on smaller screens. */}
-              </p>
-              <p>
-                含A-({Math.max(...aDays.a_minus_included)})：<span style={{ "fontSize": "xx-large" }}>{aDays.a_minus_included[0]}, </span>
-                {aDays.a_minus_included.slice(1, 6).map((day) => <span>{day}, </span> )}
-              </p>
+            <p style={{fontSize: 'large'}}>{this.state.reminderData.message}</p>
+            <div style={{fontSize: 'large', textAlign: 'center'}}>
+              <Line options={options} data={data} />
+            </div>
+            <div style={{textAlign: 'center'}}>
+              <input id="days-radio-button-0" className="w3-radio" type="radio"
+                name="days-radio-button" onClick={() => this.fetchDataFromServer(30)} />
+              <label htmlFor="days-radio-button-0" style={{marginRight: '1em'}}>1月</label>
+              <input id="days-radio-button-1" className="w3-radio" type="radio" defaultChecked={true}
+                name="days-radio-button" onClick={() => this.fetchDataFromServer(121)} />
+              <label htmlFor="days-radio-button-1" style={{marginRight: '1em'}}>4月</label>
+              <input id="days-radio-button-2" className="w3-radio" type="radio"
+                name="days-radio-button" onClick={() => this.fetchDataFromServer(365)} />
+              <label htmlFor="days-radio-button-2" style={{marginRight: '1em'}}>1年</label>
+              <input id="days-radio-button-3" className="w3-radio" type="radio"
+                name="days-radio-button" onClick={() => this.fetchDataFromServer(730)} />
+              <label htmlFor="days-radio-button-3" style={{marginRight: '1em'}}>2年</label>
             </div>
             <p>
-              <button id="button-okay" onClick={this.handleClickMessageBoxOK} className="w3-right w3-button w3-green"
-                      disabled={(this.state.timeout - this.state.second) > 0}>
-                确定({this.state.timeout - this.state.second})
+              <button id="button-okay" onClick={this.handleClickMessageBoxOK} className="w3-right w3-button w3-green">
+                确定
               </button>
             </p>
           </div>
@@ -113,12 +152,12 @@ class Reminder extends React.Component {
       </div>
     );
 
-    return ( 
-      <div> 
+    return (
+      <div>
         {messageBox}
-      </div> 
+      </div>
     );
-  } 
+  }
 }
 
-export { Reminder };
+export {Reminder};

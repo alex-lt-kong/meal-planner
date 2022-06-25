@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 const axios = require('axios').default;
 
 class AttachmentsManager extends React.Component {
@@ -140,7 +141,6 @@ class AttachmentsManager extends React.Component {
   }
 
   fetchDataFromServer() {
-    console.log(`fetchDataFromServer()'ing`);
     axios.get(`./get-attachments-list/?date=${this.props.date.toISOString().slice(0, 10)}`)
         .then((response) => {
           this.setState({data: null}); // make it empty before fill it in again to force a re-rendering.
@@ -155,7 +155,6 @@ class AttachmentsManager extends React.Component {
     if (this.state.data === null) {
       return null;
     }
-    console.log(`AttachmentsManager.render()'ing, date=${this.props.date.toISOString().slice(0, 10)}`);
     let filenames = new Array(0);
     let i = 0;
     if (this.state.data.filenames === null) {
@@ -251,11 +250,9 @@ class MealPlanDailyAttachments extends React.Component {
       enableUpload: props.enableUpload,
       enableEdit: props.enableEdit
     };
-    console.log(`MealPlanDailyAttachments initialized`);
   }
 
   render() {
-    console.log(`MealPlanDailyAttachments's date: ${this.props.date}`);
     return (
       <div>
         <div>

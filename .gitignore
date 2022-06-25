@@ -136,6 +136,7 @@ dist
 
 # 
 settings.json
+!./.vscode/settings.json
 users.json
 resources/selfies
 resources/attachments

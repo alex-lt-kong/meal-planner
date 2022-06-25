@@ -1,10 +1,7 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 from flask import Flask, render_template, Response, request, redirect, session
 from flask_cors import CORS
 from PIL import Image
-from sqlalchemy.sql import select, and_, or_
+from sqlalchemy.sql import select
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData, Table
 from sqlalchemy import func
@@ -17,7 +14,9 @@ import hashlib
 import importlib.machinery as im
 import json
 import logging
+import numpy as np
 import os
+import pymysql
 import random
 import re
 import signal
@@ -372,61 +371,6 @@ def get_username():
         return Response('未登录', 401)
 
     return flask.jsonify({'username': username})
-
-
-def calculate_consecutive_a_days(include_aminus=False):
-
-    conds = ['A', '没吃']
-    if include_aminus:
-        conds.append('A-')
-
-    conn_str = (f'mysql+pymysql://{db_username}:{db_password}@'
-                f'{db_url}/{db_name}')
-    engine = create_engine(conn_str)
-
-    # Reflection - may have performance issues if done each time.
-    # But let's make everything work before optimizing it!
-    metadata = MetaData(bind=engine)
-    mp = Table('meal_plan', metadata, autoload_with=engine)
-
-    s = (select([mp.c.date]).where(
-        or_(
-          and_(mp.c.breakfast_feedback != c for c in conds),
-          and_(mp.c.morning_extra_meal_feedback != c for c in conds),
-          and_(mp.c.lunch_feedback != c for c in conds),
-          and_(mp.c.afternoon_extra_meal_feedback != c for c in conds),
-          and_(mp.c.dinner_feedback != c for c in conds),
-          and_(mp.c.evening_extra_meal_feedback != c for c in conds)
-        ),
-        mp.c.date < dt.date.today()
-      ).order_by(mp.c.date.desc())
-    )
-    # The above statement select all the dates where consecutive A are
-    # broken BEFORE today. (not selecting today is a key)
-    # You can just call where(cond1, cond2). It will be implicitly
-    # translated to cond1 AND cond2. Note that you canNOT remove
-    # the and_()'s inside or_()
-    with engine.begin() as conn:
-        result = conn.execute(s).fetchall()
-
-    if len(result) == 0:
-        return None
-
-    deltas = []
-
-    first_period = (dt.date.today() - result[0]['date']).days - 1
-    # first_period will definitely be >= 0
-    # first_period == 0: yesterday has sub-A ratings
-    # first_period > 0: yesterday does not have sub-A ratings, so we add
-    # today as a broken day.
-    # if first_period > 0:
-    deltas.append(first_period)
-    for i in range(len(result) - 1):
-        deltas.append((result[i]['date'] - result[i+1]['date']).days - 1)
-        logging.debug(
-            f'Include A- [{include_aminus}], from {result[i]["date"]} to '
-            f'{result[i+1]["date"]}: {deltas[i]} days')
-    return deltas
 
 
 @app.route('/logout/')
@@ -923,27 +867,65 @@ def get_reminder_message():
     return flask.jsonify(data)
 
 
-@app.route('/get-consecutive-a-days/', methods=['GET', 'POST'])
-def get_consecutive_a_days():
+@app.route('/get-daily-a-count/', methods=['GET', 'POST'])
+def get_daily_a_count():
 
     if app_name in session and 'username' in session[app_name]:
         username = session[app_name]['username']
     else:
         return Response('未登录', 401)
 
+    def moving_average(a, n=3):
+        ret = np.cumsum(a, dtype=float)
+        ret[n:] = ret[n:] - ret[:-n]
+        return (ret[n - 1:] / n).tolist()
     try:
-        deltas_a = calculate_consecutive_a_days(False)
-        deltas_a_minus = calculate_consecutive_a_days(True)
+        days = int(request.args['days'])
+    except Exception:
+        days = 121
+    if days < 14 or days > 65535:
+        days = 121
+
+    data = {
+        'date': [],
+        'value': []
+    }
+    try:
+        conn = pymysql.connect(host=db_url, user=db_username, password=db_password, database=db_name)
+
+        with conn.cursor() as cursor:
+            sql = '''
+    SELECT
+        date,
+        @breakfast_is_a := (CASE WHEN (breakfast_feedback = 'A' OR breakfast_feedback LIKE 'A %') THEN 1 ELSE 0 END) as breakfast_feedback,
+        @morning_extra_meal_is_a := (CASE WHEN (morning_extra_meal_feedback = 'A' OR morning_extra_meal_feedback LIKE 'A %') THEN 1 ELSE 0 END) AS morning_extra_meal_feedback,
+        @lunch_is_a := (CASE WHEN (lunch_feedback = 'A' OR lunch_feedback LIKE 'A %') THEN 1 ELSE 0 END) AS lunch_feedback,
+        @afternoon_extra_meal_is_a := (CASE WHEN (afternoon_extra_meal_feedback = 'A' OR afternoon_extra_meal_feedback LIKE 'A %')THEN 1 else 0 END) AS afternoon_extra_meal_feedback,
+        @dinner_is_a := (CASE WHEN (dinner_feedback = 'A' OR dinner_feedback LIKE 'A %') then 1 ELSE 0 END) AS dinner_feedback,
+        @evening_extra_meal_is_a := (CASE WHEN (evening_extra_meal_feedback = 'A' OR evening_extra_meal_feedback LIKE 'A %') THEN 1 ELSE 0 END) AS evening_extra_meal_feedback,
+        @breakfast_is_a + @morning_extra_meal_is_a + @lunch_is_a + @afternoon_extra_meal_is_a + @dinner_is_a + @evening_extra_meal_is_a AS a_count
+    FROM `meal_plan`
+    ORDER BY `meal_plan`.`date`  DESC LIMIT 1, 
+            ''' + str(days)
+            # It is guaranteed that days is an integer, so no risk of SQL injection
+            cursor.execute(sql)
+            result = cursor.fetchall()
+            for item in result:
+                data['date'].append(item[0].isoformat())
+                data['value'].append(item[7])
     except Exception:
         logging.exception('')
         return Response('数据库读取错误', 500)
+    finally:
+        conn.close()
 
-    data = {}
     data['metadata'] = {}
     data['metadata']['username'] = username
-    data['a_only'] = deltas_a
-    data['a_minus_included'] = deltas_a_minus
-
+    data['value_ma'] = moving_average(data['value'], 14)
+    data['value_ma'].extend([None, None, None, None, None, None, None, None, None, None, None, None, None])
+    data['date'].reverse()
+    data['value'].reverse()
+    data['value_ma'].reverse()
     return flask.jsonify(data)
 
 

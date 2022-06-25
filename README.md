@@ -1,6 +1,6 @@
-# meal-planner
+# Meal Planner
 
-A web-based meal planner app for family use.
+A web-based meal planner app.
 
 * Backend: Python(Flask) + MySQL/MariaBD
 * Frontend: React.js and some legacy jQuery/pure Javascript
