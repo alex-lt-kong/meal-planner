@@ -12,18 +12,16 @@ class MealPlan extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      appAddress: props.appAddress,
-      convenientDateName: props.convenientDateName,
       data: null, /* Will be initialized in componentDidMount() */
       date: props.date,
       id: props.id,
       show: props.show,
-      userName: null      
+      userName: null
     };
 
     this.handleClickUpdate = this.handleClickUpdate.bind(this);
     this.handleAccordionClick = this.handleAccordionClick.bind(this);
-    this.handleCopyTodayClick = this.handleCopyTodayClick.bind(this);  
+    this.handleCopyTodayClick = this.handleCopyTodayClick.bind(this);
     this.getData = this.getData.bind(this);
   }
 
@@ -33,8 +31,8 @@ class MealPlan extends React.Component {
   }
 
   fetchDataFromServer() {
-    axios.get(this.state.appAddress + '/get-meal-plan/?date=' + this.state.date.toISOString().slice(0, 10))
-      .then(response => {
+    axios.get('./get-meal-plan/?date=' + this.state.date.toISOString().slice(0, 10))
+      .then((response) => {
         // handle success
         this.setState({
           data: null
@@ -53,7 +51,7 @@ class MealPlan extends React.Component {
   handleCopyTodayClick(event) {
     let today = new Date(this.state.date);
     today.setDate(today.getDate() - 1);
-    axios.get(this.state.appAddress + 'get-meal-plan/?date=' + today.toISOString().slice(0, 10))
+    axios.get('./get-meal-plan/?date=' + today.toISOString().slice(0, 10))
       .then(response => {
         // handle success
         this.setState({
@@ -93,7 +91,7 @@ class MealPlan extends React.Component {
     payload.append('data', JSON.stringify(this.state.data));
     axios({
       method: "post",
-      url: this.state.appAddress + "update-meal-plan/",
+      url: "./update-meal-plan/",
       data: payload,
     })
     .then(response => {
@@ -122,19 +120,12 @@ class MealPlan extends React.Component {
     // So that if data is still not filled, an empty GUI will not be rendered.
     let buttonCopyToday;
     if (parseInt(this.state.id) === 2) {
-      // Originally, I use convenientDateName === "明天" to achieve the same
-      // However, it turns out that string comparison in Javascript is really strange...
       buttonCopyToday = <button className="w3-button w3-border w3-highway-green w3-right w3-marginBottom input-button"
                                 onClick={this.handleCopyTodayClick}>沿用今日</button>;
     }
 
     return (
-      <div className="accordion" >
-        <button onClick={this.handleAccordionClick} className="w3-button w3-block w3-left-align w3-green">
-          {this.state.convenientDateName}食谱({this.state.date.toISOString().slice(0, 10)})
-          <span className="w3-right">{this.state.show ? "▴" : "▾"}</span>
-        </button>
-        <div className={`w3-container w3-card-4 ${this.state.show ? "w3-show" : "w3-hide"}`}>
+      <div>        
           {/* The current implementation is that we are going to pass the entire json to each 
             MealPlanItem so that it would be easier to handle while MealPlanItem sends data back */}
           <MealPlanItem data={this.state.data} itemName="breakfast" sendData={this.getData} />
@@ -155,7 +146,6 @@ class MealPlan extends React.Component {
           <MealPlanDailySelfie data={this.state.data} enableUpload={parseInt(this.state.id) === 1} date={this.state.date} />
           <MealPlanDailyAttachments enableEdit={parseInt(this.state.id) === 1} enableUpload={parseInt(this.state.id) === 1} date={this.state.date} />
           {/* Selfie and attachments uploads are only enabled for "today"! */}
-        </div>
       </div>
     );
   }
