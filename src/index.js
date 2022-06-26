@@ -9,60 +9,88 @@ const Blacklist = require('./blacklist.js').Blacklist;
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
+import Card from 'react-bootstrap/Card';
 
 
-// A hacky way of getting UTC+8...
-const today = new Date(new Date().getTime() + (8*60*60*1000));
-const yesterday = new Date(today);
-const tomorrow = new Date(today);
-yesterday.setDate(yesterday.getDate() - 1);
-tomorrow.setDate(tomorrow.getDate() + 1);
+class Index extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      currDate: new Date(new Date().getTime())
+    };
+    this.handleDateChange = this.handleDateChange.bind(this);
+    this.handleDatePickerChange = this.handleDatePickerChange.bind(this);
+  }
+
+  handleDatePickerChange(event) {
+    try {
+      this.setState({
+        currDate: new Date(event.target.value)
+      });
+    } catch {
+      this.setState({
+        currDate: new Date()
+      });
+    }
+  }
+
+  handleDateChange(delta) {
+    this.setState((prevState) => {
+      const newDate = new Date(prevState.currDate);
+      newDate.setDate(newDate.getDate() + delta);
+      return {
+        currDate: newDate
+      };
+    });
+  }
+
+  render() {
+    return (
+      <div>
+        <Navbar bg="primary" expand="lg" variant="dark">
+          <Container>
+            <Navbar.Brand href="#home">每日食谱</Navbar.Brand>
+            <Navbar.Toggle aria-controls="basic-navbar-nav" />
+            <Navbar.Collapse id="basic-navbar-nav">
+              <Nav>
+                <Nav.Link href="./?page=history-selfies" target="_blank">自拍</Nav.Link>
+                <Nav.Link href="./?page=history-attachments" target="_blank">附件</Nav.Link>
+              </Nav>
+            </Navbar.Collapse>
+          </Container>
+        </Navbar>
+        <div style={{
+          maxWidth: '50em', padding: '0.75rem', display: 'block',
+          marginLeft: 'auto', marginRight: 'auto', marginBottom: '3em'
+        }}>
+          <Card border="primary">
+            <Card.Body>
+              <MealPlan date={this.state.currDate} />
+            </Card.Body>
+          </Card>
+        </div>
+        <Navbar bg="primary" expand="lg" variant="dark" fixed="bottom">
+          <Container>
+            <Nav className="me-auto">
+              <Nav.Link onClick={() => this.handleDateChange(-1)}>❰</Nav.Link>
+            </Nav>
+            <Nav className="mx-auto">
+              <form action="./">
+                <input type="date"
+                  value={this.state.currDate.toISOString().substr(0, 10)} onChange={this.handleDatePickerChange} />
+              </form>
+            </Nav>
+            <Nav className="ms-auto">
+              <Nav.Link onClick={() => this.handleDateChange(1)}>❱</Nav.Link>
+            </Nav>
+          </Container>
+        </Navbar>
+      </div>
+    );
+  }
+}
 
 const container = document.getElementById('root');
 const root = createRoot(container); // createRoot(container!) if you use TypeScript
 
-root.render(
-    <div>
-      <Navbar bg="primary" expand="lg" variant="dark">
-        <Container>
-          <Navbar.Brand href="#home">每日食谱</Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav>
-              <Nav.Link href="./?page=history-plans" target="_blank">食谱</Nav.Link>
-              <Nav.Link href="./?page=history-selfies" target="_blank">自拍</Nav.Link>
-              <Nav.Link href="./?page=history-attachments" target="_blank">附件</Nav.Link>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
-      <div style={{maxWidth: '50em', padding: '0.75rem', display: 'block', marginLeft: 'auto', marginRight: 'auto'}}>
-        <Accordion defaultActiveKey="1">
-          <Accordion.Item eventKey="0">
-            <Accordion.Header>
-              昨天的食谱({yesterday.toISOString().slice(0, 10)})
-            </Accordion.Header>
-            <Accordion.Body>
-              <MealPlan id="0" appAddress={window.location.href} show={false} convenientDateName="昨日" date={yesterday}/>
-            </Accordion.Body>
-          </Accordion.Item>
-          <Accordion.Item eventKey="1">
-            <Accordion.Header>
-              今天的食谱({today.toISOString().slice(0, 10)})
-            </Accordion.Header>
-            <Accordion.Body>
-              <MealPlan id="1" appAddress={window.location.href} show={true} convenientDateName="今日" date={today} />
-            </Accordion.Body>
-          </Accordion.Item>
-          <Accordion.Item eventKey="2">
-            <Accordion.Header>
-              明天的食谱({tomorrow.toISOString().slice(0, 10)})
-            </Accordion.Header>
-            <Accordion.Body>
-              <MealPlan id="2" appAddress={window.location.href} show={false} convenientDateName="明日" date={tomorrow} />
-            </Accordion.Body>
-          </Accordion.Item>
-        </Accordion>
-      </div>
-  </div>
-);
+root.render(<Index />);

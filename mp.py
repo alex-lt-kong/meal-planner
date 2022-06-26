@@ -863,8 +863,6 @@ def index():
             **kwargs
         )
     page = request.args['page']
-    if page == 'history-plans':
-        return render_template('history-plans.html', **kwargs)
     if page == 'history-selfies':
         return render_template('history-selfies.html', **kwargs)
     if page == 'history-notes':

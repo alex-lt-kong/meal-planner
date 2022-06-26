@@ -1,7 +1,7 @@
 const fs = require('fs');
 const browserify = require('browserify');
 const srcList = [
-  'history-attachments.js', 'history-notes.js', 'history-selfies.js', 'history-plans.js',
+  'history-attachments.js', 'history-notes.js', 'history-selfies.js',
   'blacklist.js', 'notes.js', 'index.js', 'reminder.js', 'mealplans.js', 'attachment.js'
 ];
 

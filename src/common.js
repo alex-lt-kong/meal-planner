@@ -1,25 +1,13 @@
 const axios = require('axios').default;
 const $ = require('jquery');
 import React from 'react';
+import Button from 'react-bootstrap/Button';
+import PropTypes from 'prop-types';
 import DiffMatchPatch from 'diff-match-patch';
-
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function textAreaAdjust() {
-  // As long as the function is decorated as async and there is a sleep() call,
-  // this function can adjust the height of textarea successfully.
-  await sleep(1);
-  $('textarea').each(
-      function() {
-        $(this)[0].style.height = "inherit";
-        $(this)[0].style.height = (2 + $(this)[0].scrollHeight)+"px";
-        // 1+ seems not enough in some cases, try 2+
-      }
-  );
-}
+import Form from 'react-bootstrap/Form';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import TextareaAutosize from 'react-textarea-autosize';
 
 class MealPlanDailySelfie extends React.Component {
   constructor(props) {
@@ -51,11 +39,9 @@ class MealPlanDailySelfie extends React.Component {
     const payload = new FormData();
     payload.append('selected_file', selected_file);
     console.log(selected_file);
-    axios.post("./upload-selfie/", payload)
+    axios.post('./upload-selfie/', payload)
         .then((response) => {
           // an alert is not needed since the user will see the change of the thumbnail.
-          console.log('eal-planner] Upload selfi');
-          logUserActivity('[meal-planner] Upload selfie', this.state.data.metadata.username);
           this.forceUpdate();
           // This forceUpdate() is needed so that the new image will be shown
         })
@@ -73,14 +59,11 @@ class MealPlanDailySelfie extends React.Component {
     if (this.props.enableUpload === true) {
       buttonUpload = (
         <div style={{marginBottom: '3em'}}>
-          <button className="w3-button w3-border w3-highway-green w3-right w3-marginBottom input-button"
-            onClick={this.handleUploadSelfieButtonClick} style={{clear: 'right'}}>
-            {/* without clear: right, a button will interfere other buttons, causing other buttons to be left to it */}
-            上传自拍
-          </button>
+          <Button className="pull-right" variant="primary" onClick={this.handleUploadSelfieButtonClick}>上传自拍</Button>
           <input id="input-fileupload-selfie" onChange={this.onFileChange} type="file"
             style={{display: 'none'}} accept="image/png, image/gif, image/jpeg" />
           {/* button and input is bound using jQuery... */}
+          {/* image/jpeg includes jpg and jpeg extensions. */}
         </div>
       );
     }
@@ -98,11 +81,16 @@ class MealPlanDailySelfie extends React.Component {
           {/* If alt="" is added, the broken image icon won't show if src is not found. */}
         </div>
         {buttonUpload}
-        {/* image/jpeg includes jpg and jpeg extensions. */}
       </div>
     );
   }
 }
+
+MealPlanDailySelfie.propTypes = {
+  date: PropTypes.instanceOf(Date),
+  data: PropTypes.object,
+  enableUpload: PropTypes.bool
+};
 
 class MealPlanDailyRemark extends React.Component {
   constructor(props) {
@@ -110,15 +98,21 @@ class MealPlanDailyRemark extends React.Component {
     this.state = {
       data: props.data
     };
-    this.handleChange = this.handleChange.bind(this);
+    this.handleRemarkChange = this.handleRemarkChange.bind(this);
   }
 
-  handleChange(event) {
-    var currentData = this.state.data;
-    currentData.remark.content = event.target.value;
-    /* The issue is, React.js' setState() cannot handle nested properties so here we
-       create a new instance and send back the instance as a whole. */
+  componentDidUpdate(prevProps) {
+    if (prevProps.data !== this.props.data) {
+      this.setState({data: this.props.data});
+    }
+  }
+
+  handleRemarkChange(event) {
     if (this.props.sendData != null) {
+      const currentData = this.state.data;
+      currentData.remark.content = event.target.value;
+      /* The issue is, React's  setState() cannot handle nested properties so here we
+        create a new instance and send back the instance as a whole. */
       this.props.sendData(currentData);
     }
   }
@@ -126,7 +120,7 @@ class MealPlanDailyRemark extends React.Component {
   render() {
     let modificationInfo;
     if (this.props.data.remark.modification_type == 0) {
-      modificationInfo = <span style={{ color: 'red', fontWeight: 'bold' }}> - 与昨日完全相同！</span>;
+      modificationInfo = <span style={{color: 'red', fontWeight: 'bold'}}> - 与昨日完全相同！</span>;
     }
 
     return (
@@ -134,8 +128,8 @@ class MealPlanDailyRemark extends React.Component {
         <div><p className="w3-text-green p-mealplanitem-title"><b>备注</b>{modificationInfo}</p></div>
         <div className="w3-cell-row">
           <div className="w3-cell">
-            <textarea className="w3-input textarea-dailyremark" value={this.props.data.remark.content}
-              rows="3" onChange={this.handleChange} readOnly={this.props.sendData == null} />
+            <TextareaAutosize value={this.props.data.remark.content} onChange={this.handleRemarkChange}
+              style={{width: '99%', outline: '0', borderWidth: '0 0 1px'}}/>
           </div>
         </div>
       </div>
@@ -143,43 +137,40 @@ class MealPlanDailyRemark extends React.Component {
   }
 }
 
+MealPlanDailyRemark.propTypes = {
+  data: PropTypes.object,
+  sendData: PropTypes.func
+};
+
 class MealPlanItem extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      data: props.data,
-      itemName: props.itemName
+      data: props.data
     };
     this.handleContentChange = this.handleContentChange.bind(this);
     this.handleFeedbackChange = this.handleFeedbackChange.bind(this);
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    // Need this function for children components to update state
-    // after state being changed in parent components.
-   // this.setState({
-    //  data: nextProps.data,
-     // itemName: nextProps.itemName 
-    //});
-    return true;
+  componentDidUpdate(prevProps) {
+    if (prevProps.data !== this.props.data) {
+      this.setState({data: this.props.data});
+    }
   }
 
   handleContentChange(event) {
-    event.target.style.height = 'inherit';
-    event.target.style.height = `${event.target.scrollHeight}px`; 
-
-    var currentData = this.state.data;
-    currentData[this.state.itemName].content = event.target.value;
-    /* The issue is, React.js' setState() cannot handle nested properties so here we
-       create a new instance and send back the instance as a whole. */
     if (this.props.sendData != null) {
+      const currentData = this.state.data;
+      currentData[this.props.itemName].content = event.target.value;
+      /* The issue is, React's setState() cannot handle nested properties so here we
+       create a new instance and send back the instance as a whole. */
       this.props.sendData(currentData);
     }
   }
 
   handleFeedbackChange(event) {
-    var currentData = this.state.data;
-    currentData[this.state.itemName].feedback = event.target.value;
+    const currentData = this.state.data;
+    currentData[this.props.itemName].feedback = event.target.value;
     /* The issue is, React.js' setState() cannot handle nested properties so here we
        create a new instance and send back the instance as a whole. */
     if (this.props.sendData != null) {
@@ -199,13 +190,13 @@ class MealPlanItem extends React.Component {
     const optionsList = [];
     for (let i = 0; i < optionsValueList.length; i ++) {
       optionsList.push(
-          <option className="w3-text-black" key={i} value={optionsValueList[i]}>{optionsValueList[i]}</option>
+          <option key={i} value={optionsValueList[i]}>{optionsValueList[i]}</option>
       );
     }
     let feedbackColor = 'black';
     if (this.props.data[this.props.itemName].feedback === optionsValueList[0]) {
       feedbackColor = 'green';
-    } else if (optionsValueList.slice(4, 6).includes(this.props.data[this.props.itemName].feedback)) {
+    } else if (optionsValueList.slice(4, 7).includes(this.props.data[this.props.itemName].feedback)) {
       feedbackColor = 'red';
     }
     const feedbackStyle = {
@@ -213,10 +204,10 @@ class MealPlanItem extends React.Component {
       fontWeight: 'bold'
     };
     return (
-      <select className="w3-select" style={feedbackStyle} value={this.props.data[this.props.itemName].feedback}
-        onChange={this.handleFeedbackChange} readOnly={this.props.sendData == null} >
+      <Form.Select style={feedbackStyle} value={this.props.data[this.props.itemName].feedback}
+        onChange={this.handleFeedbackChange}>
         {optionsList}
-      </select>
+      </Form.Select>
     );
   }
 
@@ -227,7 +218,7 @@ class MealPlanItem extends React.Component {
     if (modType == 1) {
       modificationInfo = <span> - 安全</span>;
     } else if (modType == 2) {
-      modificationInfo = <span style={{color: "red", "fontWeight": "bold"}}> - 危险!</span>;
+      modificationInfo = <span style={{color: 'red', fontWeight: 'bold'}}> - 危险!</span>;
 
       let previousText = this.props.data[this.props.itemName].prev;
       let currentText = this.props.data[this.props.itemName].content;
@@ -242,8 +233,8 @@ class MealPlanItem extends React.Component {
         }
       }
 
-      var dmp = new DiffMatchPatch();
-      var diff = dmp.diff_main(previousText, currentText);
+      const dmp = new DiffMatchPatch();
+      const diff = dmp.diff_main(previousText, currentText);
       prettyDiff = (
         <span style={{marginLeft: '0.5em', fontSize: '12px'}}>
           <b>对照：</b>
@@ -251,23 +242,21 @@ class MealPlanItem extends React.Component {
         </span>);
     }
     return (
-      <div>
+      <div style={{marginBottom: '1.5em'}}>
         <div>
-          <h5 className="w3-text-green p-mealplanitem-title">
-            <b>{this.props.data[this.props.itemName].title}</b>
-            {modificationInfo}
-          </h5>
+          <Row style={{marginBottom: '0.7em'}}>
+            <Col>
+              <h5 className="w3-text-green p-mealplanitem-title">
+                <b>{this.props.data[this.props.itemName].title}</b>
+                {modificationInfo}
+              </h5>
+            </Col>
+            <Col>{this.getFeedbackSelect()}</Col>
+          </Row>
         </div>
-        <div className="w3-cell-row">
-          <div className="w3-cell" style={{fontSize: '14px'}}>
-            <textarea className="w3-input textarea-mealplanitem" value={this.props.data[this.props.itemName].content}
-                      rows="1" readOnly={this.props.sendData == null}
-                      onInput={this.handleContentChange}/>
-          </div>
-          <div className="w3-cell" style={{ 'maxWidth': '3em' }}>
-          {/* maxWidth canNOT be too small since some users will enlarge the UI to 125% */}
-          {this.getFeedbackSelect()}
-          </div>          
+        <div>
+          <TextareaAutosize value={this.props.data[this.props.itemName].content} onChange={this.handleContentChange}
+            style={{width: '99%', outline: '0', borderWidth: '0 0 1px'}}/>
         </div>
         {prettyDiff}
       </div>
@@ -275,4 +264,10 @@ class MealPlanItem extends React.Component {
   }
 }
 
-export { textAreaAdjust, MealPlanItem, MealPlanDailyRemark, MealPlanDailySelfie };
+MealPlanItem.propTypes = {
+  data: PropTypes.object,
+  itemName: PropTypes.string,
+  sendData: PropTypes.func
+};
+
+export {MealPlanItem, MealPlanDailyRemark, MealPlanDailySelfie};

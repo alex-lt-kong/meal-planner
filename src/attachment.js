@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import Button from 'react-bootstrap/Button';
 const $ = require('jquery');
 const axios = require('axios').default;
 
@@ -170,12 +171,12 @@ class AttachmentsManager extends React.Component {
           style={{textDecoration: 'none', width: '100%'}} >{this.state.data.filenames[i]}
         </a>;
         /* href="javascript:;" a link that goes to nowhere */;
-        if (this.state.enableEdit === true) {
+        if (this.props.enableEdit === true) {
           removeButton = <img className="w3-right" value={this.state.data.filenames[i]} src="./static/img/delete.png"
             style={{marginLeft: '1em', marginBottom: '0.66em', maxWidth: '1.25em'}}
             onClick={this.handleClickFileRemove.bind(this, this.state.data.filenames[i])} />;
         }
-        if (this.state.enableEdit === true) {
+        if (this.props.enableEdit === true) {
           if (this.state.renameModeFile != this.state.data.filenames[i]) {
             renameButton = <img className="w3-right" value={this.state.data.filenames[i]}
               src="./static/img/rename.png" style={{maxWidth: '1.25em'}}
@@ -212,16 +213,13 @@ class AttachmentsManager extends React.Component {
     }
 
     let uploadButton = null;
-    if (this.state.enableUpload === true) {
+    if (this.props.enableUpload === true) {
       uploadButton = <div>
         <input id="input-fileupload-attachment" onChange={this.onFileChange} type="file" style={{display: 'none'}}>
         </input>
-        <button id="button-addfile-attachment"
-          className="w3-button w3-border w3-highway-green w3-right w3-marginBottom input-button"
-          style={{clear: 'right'}} onClick={this.handleUploadAttachmentButtonClick}>
-          {/* without clear: right, a button will interfere other buttons, causing other buttons to be left to it */}
+        <Button className="pull-right" variant="primary" onClick={this.handleUploadAttachmentButtonClick}>
           上传附件
-        </button>
+        </Button>
         {/* button and input is bound using jQuery... */}
       </div>;
     }
