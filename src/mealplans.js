@@ -105,6 +105,10 @@ class MealPlan extends React.Component {
     if (this.state.data === null) {
       return null;
     }
+    const isYesterday = (
+      (new Date(new Date().getTime() - (24 * 60 * 60 * 1000))).toISOString().slice(0, 10) ===
+      this.state.date.toISOString().slice(0, 10)
+    );
     const isToday = (new Date()).toISOString().slice(0, 10) === this.state.date.toISOString().slice(0, 10);
     const isTomorrow = (
       (new Date(new Date().getTime() + (24 * 60 * 60 * 1000))).toISOString().slice(0, 10) ===
@@ -122,9 +126,9 @@ class MealPlan extends React.Component {
         <MealPlanItem data={this.state.data} itemName="dinner" sendData={this.getData} />
         <MealPlanItem data={this.state.data} itemName="evening_extra_meal" sendData={this.getData} />
         <MealPlanDailyRemark data={this.state.data} sendData={this.getData} />
-        <div style={{marginBottom: '3em', marginTop: '1.5em'}}>
+        <div style={{paddingBottom: '3em', paddingTop: '1.5em'}}>
           {
-            (isToday || isTomorrow) ?
+            (isYesterday || isToday || isTomorrow) ?
             <Button className="pull-right" style={{marginLeft: '1em'}} variant="primary"
               onClick={this.handleClickUpdate}>
               提交
@@ -143,11 +147,9 @@ class MealPlan extends React.Component {
   }
 }
 
-
 MealPlan.propTypes = {
   data: PropTypes.object,
   date: PropTypes.instanceOf(Date)
 };
-
 
 export {MealPlan};

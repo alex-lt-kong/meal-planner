@@ -58,7 +58,7 @@ class MealPlanDailySelfie extends React.Component {
     let buttonUpload = null;
     if (this.props.enableUpload === true) {
       buttonUpload = (
-        <div style={{marginBottom: '3em'}}>
+        <div style={{paddingBottom: '3em', paddingTop: '1em'}}>
           <Button className="pull-right" variant="primary" onClick={this.handleUploadSelfieButtonClick}>上传自拍</Button>
           <input id="input-fileupload-selfie" onChange={this.onFileChange} type="file"
             style={{display: 'none'}} accept="image/png, image/gif, image/jpeg" />
@@ -70,11 +70,7 @@ class MealPlanDailySelfie extends React.Component {
 
     return (
       <div>
-        <div>
-          <p className="w3-text-green p-mealplanitem-title">
-            <b>自拍</b>
-          </p>
-        </div>
+        <h6 className="text-primary"><b>自拍</b></h6>
         <div>
           <img src={`./get-selfie/?date=${this.props.date.toISOString().slice(0, 10)}&${new Date().getTime()}`} alt=""
             style={{display: 'block', marginLeft: 'auto', marginRight: 'auto', maxWidth: '100%', width: '300px'}} />
@@ -118,14 +114,14 @@ class MealPlanDailyRemark extends React.Component {
   }
 
   render() {
-    let modificationInfo;
+    let remarkChangeInfo;
     if (this.props.data.remark.modification_type == 0) {
-      modificationInfo = <span style={{color: 'red', fontWeight: 'bold'}}> - 与昨日完全相同！</span>;
+      remarkChangeInfo = <span className='text-danger'><b> - 与昨日完全相同！</b></span>;
     }
 
     return (
       <div>
-        <div><p className="w3-text-green p-mealplanitem-title"><b>备注</b>{modificationInfo}</p></div>
+        <h6 className="text-primary"><b>备注{remarkChangeInfo}</b></h6>
         <div className="w3-cell-row">
           <div className="w3-cell">
             <TextareaAutosize value={this.props.data.remark.content} onChange={this.handleRemarkChange}
@@ -195,9 +191,9 @@ class MealPlanItem extends React.Component {
     }
     let feedbackColor = 'black';
     if (this.props.data[this.props.itemName].feedback === optionsValueList[0]) {
-      feedbackColor = 'green';
+      feedbackColor = 'var(--bs-success)';
     } else if (optionsValueList.slice(4, 7).includes(this.props.data[this.props.itemName].feedback)) {
-      feedbackColor = 'red';
+      feedbackColor = 'var(--bs-danger)';
     }
     const feedbackStyle = {
       color: feedbackColor,
@@ -213,12 +209,12 @@ class MealPlanItem extends React.Component {
 
   render() {
     const modType = this.props.data[this.props.itemName].modification_type;
-    let modificationInfo = null;
+    let planChangeInfo = null;
     let prettyDiff;
     if (modType == 1) {
-      modificationInfo = <span> - 安全</span>;
+      planChangeInfo = <span className="text-muted"> - 安全</span>;
     } else if (modType == 2) {
-      modificationInfo = <span style={{color: 'red', fontWeight: 'bold'}}> - 危险!</span>;
+      planChangeInfo = <span className="text-danger"> - !!危险!!</span>;
 
       let previousText = this.props.data[this.props.itemName].prev;
       let currentText = this.props.data[this.props.itemName].content;
@@ -245,13 +241,13 @@ class MealPlanItem extends React.Component {
       <div style={{marginBottom: '1.5em'}}>
         <div>
           <Row style={{marginBottom: '0.7em'}}>
-            <Col>
-              <h5 className="w3-text-green p-mealplanitem-title">
-                <b>{this.props.data[this.props.itemName].title}</b>
-                {modificationInfo}
-              </h5>
+            <Col className="my-auto">
+              <h6 className="my-auto text-primary">
+                {/* seems we do need my-auto for both to make text vertically aligned. */}
+                <b>{this.props.data[this.props.itemName].title}{planChangeInfo}</b>
+              </h6>
             </Col>
-            <Col>{this.getFeedbackSelect()}</Col>
+            <Col xs={7}>{this.getFeedbackSelect()}</Col>
           </Row>
         </div>
         <div>

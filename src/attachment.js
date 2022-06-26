@@ -255,9 +255,7 @@ class MealPlanDailyAttachments extends React.Component {
     return (
       <div>
         <div>
-          <p className="w3-text-green p-mealplanitem-title">
-            <b>附件</b>
-          </p>
+          <h6 className="text-primary"><b>附件</b></h6>
         </div>
         <AttachmentsManager enableUpload={this.props.enableUpload}
           enableEdit={this.props.enableEdit} date={this.props.date} />

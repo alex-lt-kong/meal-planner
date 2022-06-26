@@ -1,7 +1,6 @@
 
 import React from 'react';
 import {createRoot} from 'react-dom/client';
-import Accordion from 'react-bootstrap/Accordion';
 const Reminder = require('./reminder.js').Reminder;
 const MealPlan = require('./mealplans.js').MealPlan;
 const Notes = require('./notes').Notes;
@@ -23,13 +22,14 @@ class Index extends React.Component {
   }
 
   handleDatePickerChange(event) {
-    try {
-      this.setState({
-        currDate: new Date(event.target.value)
-      });
-    } catch {
+    const newDate = new Date(event.target.value);
+    if (newDate == 'Invalid Date') {
       this.setState({
         currDate: new Date()
+      });
+    } else {
+      this.setState({
+        currDate: newDate
       });
     }
   }
@@ -49,7 +49,7 @@ class Index extends React.Component {
       <div>
         <Navbar bg="primary" expand="lg" variant="dark">
           <Container>
-            <Navbar.Brand href="#home">每日食谱</Navbar.Brand>
+            <Navbar.Brand href="#home"><b>每日食谱</b></Navbar.Brand>
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
             <Navbar.Collapse id="basic-navbar-nav">
               <Nav>
@@ -69,10 +69,11 @@ class Index extends React.Component {
             </Card.Body>
           </Card>
         </div>
+        <Reminder />
         <Navbar bg="primary" expand="lg" variant="dark" fixed="bottom">
           <Container>
             <Nav className="me-auto">
-              <Nav.Link onClick={() => this.handleDateChange(-1)}>❰</Nav.Link>
+              <Nav.Link onClick={() => this.handleDateChange(-1)}>&nbsp;&nbsp;❰&nbsp;&nbsp;</Nav.Link>
             </Nav>
             <Nav className="mx-auto">
               <form action="./">
@@ -81,7 +82,7 @@ class Index extends React.Component {
               </form>
             </Nav>
             <Nav className="ms-auto">
-              <Nav.Link onClick={() => this.handleDateChange(1)}>❱</Nav.Link>
+              <Nav.Link onClick={() => this.handleDateChange(1)}>&nbsp;&nbsp;❱&nbsp;&nbsp;</Nav.Link>
             </Nav>
           </Container>
         </Navbar>

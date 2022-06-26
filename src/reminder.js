@@ -1,5 +1,10 @@
-import React from 'react';
 const axios = require('axios').default;
+import React from 'react';
+import Modal from 'react-bootstrap/Modal';
+import Button from 'react-bootstrap/Button';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -17,7 +22,7 @@ class Reminder extends React.Component {
     this.state = {
       dailyACount: null,
       reminderData: null,
-      show: false
+      show: true
     };
     this.handleClickMessageBoxOK = this.handleClickMessageBoxOK.bind(this);
   }
@@ -45,9 +50,8 @@ class Reminder extends React.Component {
           alert(`加载每日提醒失败！\n原因：${error}`);
         });
   }
-
   handleClickMessageBoxOK(event) {
-    this.setState((prevState) => ({show: !prevState.show}));
+    this.setState({show: false});
   }
 
   render() {
@@ -116,46 +120,44 @@ class Reminder extends React.Component {
         }
       ]
     };
-
-    const messageBox = (
-      <div id="msg-box" className="w3-modal" style={{display: this.state.show ? 'block' : 'none'}}>
-        <div className="w3-modal-content w3-animate-top">
-          <header className="w3-container w3-green">
-            <h4>提醒</h4>
-          </header>
-          <div className="w3-container">
-            <p style={{fontSize: 'large'}}>{this.state.reminderData.message}</p>
-            <div style={{fontSize: 'large', textAlign: 'center'}}>
-              <Line options={options} data={data} />
-            </div>
-            <div style={{textAlign: 'center'}}>
-              <input id="days-radio-button-0" className="w3-radio" type="radio"
-                name="days-radio-button" onClick={() => this.fetchDataFromServer(30)} />
-              <label htmlFor="days-radio-button-0" style={{marginRight: '1em'}}>1月</label>
-              <input id="days-radio-button-1" className="w3-radio" type="radio" defaultChecked={true}
-                name="days-radio-button" onClick={() => this.fetchDataFromServer(121)} />
-              <label htmlFor="days-radio-button-1" style={{marginRight: '1em'}}>4月</label>
-              <input id="days-radio-button-2" className="w3-radio" type="radio"
-                name="days-radio-button" onClick={() => this.fetchDataFromServer(365)} />
-              <label htmlFor="days-radio-button-2" style={{marginRight: '1em'}}>1年</label>
-              <input id="days-radio-button-3" className="w3-radio" type="radio"
-                name="days-radio-button" onClick={() => this.fetchDataFromServer(730)} />
-              <label htmlFor="days-radio-button-3" style={{marginRight: '1em'}}>2年</label>
-            </div>
-            <p>
-              <button id="button-okay" onClick={this.handleClickMessageBoxOK} className="w3-right w3-button w3-green">
-                确定
-              </button>
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-
     return (
-      <div>
-        {messageBox}
-      </div>
+      <Modal show={this.state.show} size="lg" aria-labelledby="contained-modal-title-vcenter" centered>
+        <Modal.Header closeButton>
+          <Modal.Title id="contained-modal-title-vcenter">
+            统计
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Line options={options} data={data} />
+          <div style={{textAlign: 'center', paddingTop: '1em'}}>
+            <input id="days-radio-button-0" type="radio"
+              name="days-radio-button" onClick={() => this.fetchDataFromServer(30)} />
+            <label htmlFor="days-radio-button-0" style={{marginRight: '1em'}}>1月</label>
+            <input id="days-radio-button-1" type="radio" defaultChecked={true}
+              name="days-radio-button" onClick={() => this.fetchDataFromServer(60)} />
+            <label htmlFor="days-radio-button-1" style={{marginRight: '1em'}}>2月</label>
+            <input id="days-radio-button-1" type="radio"
+              name="days-radio-button" onClick={() => this.fetchDataFromServer(121)} />
+            <label htmlFor="days-radio-button-1" style={{marginRight: '1em'}}>4月</label>
+            <input id="days-radio-button-2" type="radio"
+              name="days-radio-button" onClick={() => this.fetchDataFromServer(365)} />
+            <label htmlFor="days-radio-button-2" style={{marginRight: '1em'}}>1年</label>
+            <input id="days-radio-button-3" type="radio"
+              name="days-radio-button" onClick={() => this.fetchDataFromServer(730)} />
+            <label htmlFor="days-radio-button-3" style={{marginRight: '1em'}}>2年</label>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Row style={{width: '100%'}}>
+            <Col xs={8} className="my-auto">
+              {this.state.reminderData.message}
+            </Col>
+            <Col xs={4} className="my-auto">
+              <Button className="pull-right my-auto" onClick={this.handleClickMessageBoxOK}>确认</Button>
+            </Col>
+          </Row>
+        </Modal.Footer>
+      </Modal>
     );
   }
 }
