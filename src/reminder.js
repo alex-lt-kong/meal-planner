@@ -28,7 +28,7 @@ class Reminder extends React.Component {
   }
 
   componentDidMount() {
-    this.fetchDataFromServer(121);
+    this.fetchDataFromServer(60);
   }
 
   fetchDataFromServer(days) {

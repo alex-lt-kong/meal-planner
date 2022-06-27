@@ -12,7 +12,7 @@ class TopNavBar extends React.Component {
 
   render() {
     return (
-      <Navbar bg="primary" expand="md" variant="dark">
+      <Navbar bg="primary" expand="sm" variant="dark">
         <Container>
           <Navbar.Brand href="./"><b>每日食谱</b></Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
