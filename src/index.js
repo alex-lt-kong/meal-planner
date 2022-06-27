@@ -3,7 +3,7 @@ import React from 'react';
 import {createRoot} from 'react-dom/client';
 const Reminder = require('./reminder.js').Reminder;
 const MealPlan = require('./mealplans.js').MealPlan;
-const Notes = require('./notes').Notes;
+const Notes = require('./notes.js').Notes;
 const Blacklist = require('./blacklist.js').Blacklist;
 import {TopNavBar} from './navbar';
 import Container from 'react-bootstrap/Container';

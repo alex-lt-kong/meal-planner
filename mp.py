@@ -863,8 +863,8 @@ def index():
     page = request.args['page']
     if page == 'history-selfies':
         return render_template('history-selfies.html', **kwargs)
-    if page == 'history-notes':
-        return render_template('history-notes.html', **kwargs)
+    if page == 'notes':
+        return render_template('notes.html', **kwargs)
     if page == 'history-attachments':
         return render_template('history-attachments.html', **kwargs)
     return render_template('index.html', **kwargs)

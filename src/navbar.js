@@ -14,11 +14,11 @@ class TopNavBar extends React.Component {
     return (
       <Navbar bg="primary" expand="md" variant="dark">
         <Container>
-          <Navbar.Brand href="#home"><b>每日食谱</b></Navbar.Brand>
+          <Navbar.Brand href="./"><b>每日食谱</b></Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav>
-              <Nav.Link href="./?page=index" target="_blank">食谱</Nav.Link>
+              <Nav.Link href="./?page=notes" target="_blank">笔记</Nav.Link>
             </Nav>
             <NavDropdown title={<span className="text-light my-auto">翻看&nbsp;▾</span>}>
               <NavDropdown.Item href="./?page=history-selfies" target="_blank">自拍</NavDropdown.Item>

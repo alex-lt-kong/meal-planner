@@ -1,6 +1,6 @@
 import React from 'react';
-const axios = require('axios').default;
-const textAreaAdjust = require('./common.js').textAreaAdjust;
+import axios from 'axios';
+import {createRoot} from 'react-dom/client';
 
 class Notes extends React.Component {
 
@@ -89,7 +89,7 @@ class Notes extends React.Component {
     if (this.state.data === null) { return null; }
     // So that if data is still not filled, an empty GUI will not be rendered.
     return (
-      <div className="accordion" >
+      <>
         <button onClick={this.handleAccordionClick} className="w3-button w3-block w3-left-align w3-green">
           健康笔记<span className="w3-right">{this.state.show ? "▴" : "▾"}</span>
         </button>
@@ -102,9 +102,12 @@ class Notes extends React.Component {
             <button onClick={this.handleClickHistory} className="w3-button w3-border w3-highway-green w3-right w3-marginBottom input-button">翻看历史笔记</button>   
           </div>
         </div>
-      </div>
+      </>
     );
   }
 }
 
-export { Notes };
+const container = document.getElementById('root');
+const root = createRoot(container); // createRoot(container!) if you use TypeScript
+
+root.render(<Notes />);
