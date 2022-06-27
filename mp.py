@@ -38,7 +38,7 @@ CORS(app)
 #  This necessary for javascript to access a telemetry link without opening it:
 #  https://stackoverflow.com/questions/22181384/javascript-no-access-control-allow-origin-header-is-present-on-the-requested
 
-allowed_ext = None
+allowed_ext = []
 app_name = 'meal-planner'
 # app_address: the app's address on the Internet
 app_address = ''
@@ -179,16 +179,10 @@ def get_attachment():
         logging.exception('')
         return Response('参数date的语法不正确', 400)
 
-    attachments_path_today = os.path.join(attachments_path, date_string)
-    if os.path.isdir(attachments_path_today) is False:
-        return Response(f'文件[{filename}]不存在', 400)
-    file_path = os.path.join(attachments_path_today, filename)
-    if os.path.isfile(file_path) is False:
-        return Response(f'文件[{filename}]不存在', 400)
-
-    return flask.send_from_directory(directory=attachments_path_today,
-                                     filename=filename,  as_attachment=False,
-                                     attachment_filename=filename)
+    return flask.send_from_directory(
+        directory=attachments_path, path=os.path.join(date_string, filename),
+        as_attachment=False, download_name=filename
+    )
 
 
 def sanitize_filename(filename):
@@ -256,12 +250,14 @@ def upload_selfie():
 
     selected_file = request.files['selected_file']
 
-    if selected_file.filename.rsplit('.', 1)[1].lower() not in allowed_ext:
+    if str(selected_file.filename).rsplit('.', 1)[1].lower() not in allowed_ext:
         return Response(f'仅允许上传后缀为{allowed_ext}的文件', 400)
 
     date_string = dt.datetime.now().strftime('%Y-%m-%d')
+    # Strictly speaking, it is possible that client and browser are in two timezone, causing mismatch.
+    # But this is unlikely to be a concern given the purpose of the program.
 
-    oldext = os.path.splitext(selected_file.filename)[1]
+    oldext = os.path.splitext(str(selected_file.filename))[1]
     for ext in allowed_ext:
         image_path = os.path.join(selfies_path, f'{date_string}.{ext}')
         if os.path.isfile(image_path):
@@ -302,9 +298,10 @@ def get_selfie():
     for ext in allowed_ext:
         image_path = os.path.join(selfies_path, f'{date_string}.{ext}')
         if os.path.isfile(image_path):
-            return flask.send_from_directory(directory=selfies_path,
-                                             filename=f'{date_string}.{ext}',
-                                             as_attachment=False)
+            return flask.send_from_directory(
+                directory=selfies_path, path=f'{date_string}.{ext}',
+                as_attachment=False, download_name=f'{date_string}.{ext}'
+            )
 
     return Response('未找到该日期的自拍图', 404)
 

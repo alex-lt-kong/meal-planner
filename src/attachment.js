@@ -1,8 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Button from 'react-bootstrap/Button';
+import moment from 'moment';
+import axios from 'axios';
 const $ = require('jquery');
-const axios = require('axios').default;
 
 class AttachmentsManager extends React.Component {
   constructor(props) {
@@ -67,10 +68,6 @@ class AttachmentsManager extends React.Component {
     axios.post('./upload-attachment/', payload, config)
         .then((response) => {
           // an alert is not needed since the user will see the change of the files list.
-          logUserActivity(
-              `[meal-planner] Upload attachment [${selectedFile.name}] to [${this.state.data.metadata.date}]`,
-              this.state.data.metadata.username
-          );
           this.fetchDataFromServer();
         })
         .catch((error) => {
@@ -84,23 +81,15 @@ class AttachmentsManager extends React.Component {
 
   handleClickFileName(value) {
     value = encodeURIComponent(value);
-    window.open(`./get-attachment/?date=${this.props.date.toISOString().slice(0, 10)}&filename=${value}`);
-    logUserActivity(
-        `[meal-planner] Download attachment [${value}] from [${this.props.date.toISOString().slice(0, 10)}]`,
-        this.state.data.metadata.username
-    );
+    window.open(`./get-attachment/?date=${moment(this.props.date).format('YYYY-MM-DD')}&filename=${value}`);
   }
 
   handleClickFileRemove(value) {
     value = encodeURIComponent(value);
-    axios.get('./remove-attachment/?date=' + this.props.date.toISOString().slice(0, 10) + '&filename=' + value)
+    axios.get('./remove-attachment/?date=' + moment(this.props.date).format('YYYY-MM-DD') + '&filename=' + value)
         .then((response) => {
         // an alert is not needed since the user will see the change of the files list.
           this.fetchDataFromServer();
-          logUserActivity(
-              `[meal-planner] Remove attachment [${value}] from [${this.state.data.metadata.date}]`,
-              this.state.data.metadata.username
-          );
         })
         .catch((error) => {
           alert(`文件[${value}]删除成功失败！\n原因：${error}`);
@@ -110,15 +99,11 @@ class AttachmentsManager extends React.Component {
   handleClickSubmitNewFilename(value) {
     value = encodeURIComponent(value);
     axios.get(
-        `./rename-attachment/?date=${this.props.date.toISOString().slice(0, 10)}&` +
+        `./rename-attachment/?date=${moment(this.props.date).format('YYYY-MM-DD')}&` +
         `filename_old=${encodeURIComponent(this.state.renameModeFile)}&` +
         `filename_new=${encodeURIComponent(this.state.newFileName)}`
     )
         .then((response) => {
-          logUserActivity('[meal-planner] Rename attachment from [' + this.state.renameModeFile + '](' +
-          this.props.date.toISOString().slice(0, 10) + ') to [' + this.state.newFileName + ']',
-          this.state.data.metadata.username);
-          // Need to logUserActivity() before setState()!
           this.setState({renameModeFile: null});
           this.fetchDataFromServer();
         })
@@ -143,13 +128,13 @@ class AttachmentsManager extends React.Component {
   }
 
   fetchDataFromServer() {
-    axios.get(`./get-attachments-list/?date=${this.props.date.toISOString().slice(0, 10)}`)
+    axios.get(`./get-attachments-list/?date=${moment(this.props.date).format('YYYY-MM-DD')}`)
         .then((response) => {
           this.setState({data: null}); // make it empty before fill it in again to force a re-rendering.
           this.setState({data: response.data});
         })
         .catch((error) => {
-          alert(`${this.props.date.toISOString().slice(0, 10)}附件列表加载失败！请关闭窗口后重试！\n原因：${error}`);
+          alert(`${moment(this.props.date).format('YYYY-MM-DD')}附件列表加载失败！请关闭窗口后重试！\n原因：${error}`);
         });
   }
 

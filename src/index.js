@@ -5,6 +5,7 @@ const Reminder = require('./reminder.js').Reminder;
 const MealPlan = require('./mealplans.js').MealPlan;
 const Notes = require('./notes').Notes;
 const Blacklist = require('./blacklist.js').Blacklist;
+import {TopNavBar} from './navbar';
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
@@ -45,20 +46,10 @@ class Index extends React.Component {
   }
 
   render() {
+    console.log((new Date()).toISOString());
     return (
       <div>
-        <Navbar bg="primary" expand="lg" variant="dark">
-          <Container>
-            <Navbar.Brand href="#home"><b>每日食谱</b></Navbar.Brand>
-            <Navbar.Toggle aria-controls="basic-navbar-nav" />
-            <Navbar.Collapse id="basic-navbar-nav">
-              <Nav>
-                <Nav.Link href="./?page=history-selfies" target="_blank">自拍</Nav.Link>
-                <Nav.Link href="./?page=history-attachments" target="_blank">附件</Nav.Link>
-              </Nav>
-            </Navbar.Collapse>
-          </Container>
-        </Navbar>
+        <TopNavBar />
         <div style={{
           maxWidth: '50em', padding: '0.75rem', display: 'block',
           marginLeft: 'auto', marginRight: 'auto', marginBottom: '3em'

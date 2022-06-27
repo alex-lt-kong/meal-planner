@@ -138,8 +138,8 @@ dist
 settings.json
 !./.vscode/settings.json
 users.json
-resources/selfies
-resources/attachments
+resources/selfies/*
+resources/attachments/*
 blacklist.json
 test.py
 

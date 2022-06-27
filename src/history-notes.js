@@ -14,46 +14,37 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    this.fetchDataFromServer();    
+    this.fetchDataFromServer();
   }
 
   handlePreviousClick(event) {
     this.setState(prevState => ({
       index: prevState.index >= 1 ? prevState.index - 1 : (prevState.data.length - 1)
     }));
-    logUserActivity('[meal-planner/history-notes] ' + this.state.data[this.state.index].metadata.date,
-                    this.state.data[this.state.index].metadata.username);
-    textAreaAdjust();
   }
-  
+
   handleNextClick(event) {
     this.setState(prevState => ({
       index: (prevState.index < (prevState.data.length - 1)) ? (prevState.index + 1) : 0
     }));
-    logUserActivity('[meal-planner/history-notes] ' + this.state.data[this.state.index].metadata.date,
-                    this.state.data[this.state.index].metadata.username);
-    textAreaAdjust();
   }
-  
+
   fetchDataFromServer() {
     axios.get('./get-history-notes/')
-      .then(response => {       
-        this.setState({
-          data: null,
-          index: null
-          // make it empty before fill it in again to force a re-rendering.
+        .then((response) => {
+          this.setState({
+            data: null,
+            index: null
+            // make it empty before fill it in again to force a re-rendering.
+          });
+          this.setState({
+            data: response.data,
+            index: response.data.length - 1
+          });
+        })
+        .catch(error => {
+          alert('历史笔记加载失败！请关闭窗口后重试！\n' + error);
         });
-        this.setState({
-          data: response.data,
-          index: response.data.length - 1
-        });
-        logUserActivity('[meal-planner/history-notes] ' + this.state.data[this.state.index].metadata.date,
-                        this.state.data[this.state.index].metadata.username);
-        textAreaAdjust();
-      })
-      .catch(error => {
-        alert('历史笔记加载失败！请关闭窗口后重试！\n' + error);
-      });
   }
 
   render() {

@@ -57,17 +57,16 @@ class Blacklist extends React.Component {
       url: "./update-blacklist/",
       data: payload,
     })
-    .then(response => {
-      alert('黑名单更新成功！');
-      logUserActivity('[meal-planner] Submit new blacklist', this.state.data.metadata.username);
-    })
-    .catch(error => {
-      console.log(error);
-      alert('黑名单更新错误！\n' + error);
-      // You canNOT write error.response or whatever similar here.
-      // The reason is that this catch() catches both network error and other errors,
-      // which may or may not have a response property.
-    });
+        .then(response => {
+          alert('黑名单更新成功！');
+        })
+        .catch(error => {
+          console.log(error);
+          alert('黑名单更新错误！\n' + error);
+          // You canNOT write error.response or whatever similar here.
+          // The reason is that this catch() catches both network error and other errors,
+          // which may or may not have a response property.
+        });
   }
 
   handleAccordionClick(event) {

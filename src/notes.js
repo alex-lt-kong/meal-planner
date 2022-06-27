@@ -55,7 +55,6 @@ class Notes extends React.Component {
   }
 
   handleClickHistory(event) {
-    logUserActivity('[meal-planner] Open history-notes', this.state.data.metadata.username);
     window.open(this.state.appAddress + '?page=history-notes');
   }
 
@@ -63,23 +62,22 @@ class Notes extends React.Component {
     const payload = new FormData();
     payload.append('data', JSON.stringify(this.state.data));
     axios({
-      method: "post",
-      url: this.state.appAddress + "update-notes/",
-      data: payload,
+      method: 'post',
+      url: this.state.appAddress + 'update-notes/',
+      data: payload
     })
-    .then(response => {
-      alert('健康笔记更新成功！');
-      logUserActivity('[meal-planner] Submit new notes', this.state.data.metadata.username);
-      this.fetchDataFromServer();
-      // Must make this call to ensure UI is refreshed.
-    })
-    .catch(error => {
-      console.log(error);
-      alert('健康笔记更新错误：\n' + error);
-      // You canNOT write error.response or whatever similar here.
-      // The reason is that this catch() catches both network errors and other errors,
-      // which may or may not have a response property.
-    });
+        .then((response) => {
+          alert('健康笔记更新成功！');
+          this.fetchDataFromServer();
+          // Must make this call to ensure UI is refreshed.
+        })
+        .catch((error) => {
+          console.log(error);
+          alert('健康笔记更新错误：\n' + error);
+          // You canNOT write error.response or whatever similar here.
+          // The reason is that this catch() catches both network errors and other errors,
+          // which may or may not have a response property.
+        });
   }
 
   componentDidMount() {

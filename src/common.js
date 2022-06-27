@@ -1,5 +1,6 @@
-const axios = require('axios').default;
 const $ = require('jquery');
+import axios from 'axios';
+import moment from 'moment';
 import React from 'react';
 import Button from 'react-bootstrap/Button';
 import PropTypes from 'prop-types';
@@ -72,7 +73,7 @@ class MealPlanDailySelfie extends React.Component {
       <div>
         <h6 className="text-primary"><b>自拍</b></h6>
         <div>
-          <img src={`./get-selfie/?date=${this.props.date.toISOString().slice(0, 10)}&${new Date().getTime()}`} alt=""
+          <img src={`./get-selfie/?date=${moment(this.props.date).format('YYYY-MM-DD')}&${new Date().getTime()}`} alt=""
             style={{display: 'block', marginLeft: 'auto', marginRight: 'auto', maxWidth: '100%', width: '300px'}} />
           {/* If alt="" is added, the broken image icon won't show if src is not found. */}
         </div>
