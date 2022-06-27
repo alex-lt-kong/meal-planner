@@ -35,7 +35,10 @@ class MealPlan extends React.Component {
           });
         })
         .catch((error) => {
-          alert(this.state.date.toISOString().slice(0, 10) + '的食谱项目加载失败！\n原因：' + error);
+          alert(
+            `${this.state.date.toISOString().slice(0, 10)}的食谱项目加载失败！原因：\n` +
+            (error.response !== undefined) ? JSON.stringify(error.response): error
+          );
         });
   }
 

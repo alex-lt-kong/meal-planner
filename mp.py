@@ -28,9 +28,8 @@ import threading
 
 app = Flask(__name__)
 app.secret_key = b''
-app.config['MAX_CONTENT_LENGTH'] = 1
 app.config.update(
-    SESSION_COOKIE_SECURE=True,
+    MAX_CONTENT_LENGTH=1,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
 )
@@ -494,14 +493,16 @@ def update_meal_plan():
 
     if 'date' not in request.form or 'data' not in request.form:
         return Response('未指定参数date或data', 400)
-    date = request.form['date']
+    date_str = request.form['date']
     data = request.form['data']
 
     try:
-        date_string = dt.datetime.strptime(date, '%Y-%m-%d')
+        date = dt.datetime.strptime(date_str, '%Y-%m-%d')
     except Exception:
         logging.exception('')
-        return Response(f'date的值[{date}]不正确', 400)
+        return Response(f'date的值[{date_str}]不正确', 400)
+    if abs((dt.datetime.now() - date).days) > 2:
+        return Response(f'date的值[{date}]超过允许的范围', 400)
     try:
         json_data = json.loads(data)
     except Exception:
@@ -511,12 +512,12 @@ def update_meal_plan():
     logging.debug(f'raw string submitted by client: [{json_data}]')
 
     try:
-        write_meal_plan_to_db(json_data, date_string)
+        write_meal_plan_to_db(json_data, date)
     except Exception:
         logging.exception('')
         return Response('写入数据库失败', 500)
 
-    return Response(f'更新{date_string}食谱成功！', 200)
+    return Response(f'更新{date}食谱成功！', 200)
 
 
 def insert_modification_type(meal_plan):
@@ -921,6 +922,7 @@ def get_daily_a_count():
         'date': [],
         'value': []
     }
+    conn = None
     try:
         conn = pymysql.connect(host=db_url, user=db_username, password=db_password, database=db_name)
 
@@ -948,7 +950,8 @@ def get_daily_a_count():
         logging.exception('')
         return Response('数据库读取错误', 500)
     finally:
-        conn.close()
+        if conn is not None:
+            conn.close()
 
     data['metadata'] = {}
     data['metadata']['username'] = username
@@ -983,9 +986,11 @@ def main(debug):
             data = json.loads(json_str)
         app.secret_key = data['flask']['secret_key']
         app.config['MAX_CONTENT_LENGTH'] = data['flask']['max_upload_size']
+        app.config['SESSION_COOKIE_SECURE'] = data['flask']['https_only']
         allowed_ext = data['app']['allowed_ext']
         app_address = data['app']['address']
         port = data['flask']['port']
+        host = data['flask']['host']
         db_url = data['database']['url']
         db_username = data['database']['username']
         db_password = data['database']['password']
@@ -1021,7 +1026,7 @@ def main(debug):
                                         'delay': 0 if debug else 300})
     th_email.start()
 
-    serve(app, host="127.0.0.1", port=port)
+    serve(app, host=host, port=port)
 
 
 if __name__ == '__main__':

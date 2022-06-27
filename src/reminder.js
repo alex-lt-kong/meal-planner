@@ -37,7 +37,7 @@ class Reminder extends React.Component {
           this.setState({dailyACount: response.data});
         })
         .catch((error) => {
-          alert(`加载每日A数失败！\n原因：${error}`);
+          alert(`加载每日A数失败！原因：\n${(error.response !== undefined) ? JSON.stringify(error.response): error}`);
         });
     axios.get('./get-reminder-message/')
         .then((response) => {
@@ -47,7 +47,7 @@ class Reminder extends React.Component {
           });
         })
         .catch((error) => {
-          alert(`加载每日提醒失败！\n原因：${error}`);
+          alert(`加载每日提醒失败！原因：\n${(error.response !== undefined) ? JSON.stringify(error.response): error}`);
         });
   }
   handleClickMessageBoxOK(event) {
