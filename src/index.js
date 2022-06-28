@@ -1,7 +1,6 @@
-
+import moment from 'moment';
 import React from 'react';
 import {createRoot} from 'react-dom/client';
-//const Reminder = require('./reminder.js').Reminder;
 import {Reminder} from './reminder';
 const MealPlan = require('./mealplans.js').MealPlan;
 const Blacklist = require('./blacklist.js').Blacklist;
@@ -69,7 +68,7 @@ class Index extends React.Component {
             <Nav className="mx-auto">
               <form action="./">
                 <input type="date"
-                  value={this.state.currDate.toISOString().substr(0, 10)} onChange={this.handleDatePickerChange} />
+                  value={moment(this.state.currDate).format('YYYY-MM-DD')} onChange={this.handleDatePickerChange} />
               </form>
             </Nav>
             <Nav className="ms-auto">

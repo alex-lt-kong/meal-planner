@@ -22,7 +22,6 @@ source ./.venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
+### Frontend
+
 * Node.js
-
-
-Note: While it is built with security in mind, deploying behind a firewall is still recommended.
