@@ -1,22 +1,18 @@
 <!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="shortcut icon" href="./static/img/favicon.png">
-<link rel="stylesheet" href="./static/css/history.css">
-<link rel="stylesheet" href="./static/css/w3.css">
-<link rel="stylesheet" href="./static/css/w3-colors-2017.css">
-<link rel="stylesheet" href="./static/css/w3-colors-highway.css">
 <link rel="stylesheet" href="./static/css/font-awesome.min.css">
 <link rel="stylesheet" href="./static/css/libs/datatables/1.12.1/jquery.dataTables.{{mode}}.css">
+<link rel="stylesheet" href="./static/css/libs/minty/bootstrap.css">
 <html>
 
 <head>
-  <title>每日食谱-历史附件[{{username}}]</title>
+  <title>附件-每日食谱[{{username}}]</title>
 </head>
 <body>
   <div>
-    <div class="fixed-header">
-      <h5>附件历史记录</h5>
-    </div>
+    <div id="root-navbar"></div>
+    <script src="./static/js/history-attachments.js"></script>
     <div style="margin-top:3.5em">
       <table id="table_id" class="display">
         <thead>

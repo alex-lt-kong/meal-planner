@@ -1,5 +1,8 @@
 const $ = require('jquery');
 const dt = require('datatables.net')();
+import React from 'react';
+import {createRoot} from 'react-dom/client';
+import {TopNavBar} from './navbar';
 
 $('#table_id').DataTable( {
   ajax: {
@@ -22,3 +25,9 @@ $('#table_id').DataTable( {
     }
   }]
 });
+
+
+const container = document.getElementById('root-navbar');
+const root = createRoot(container); // createRoot(container!) if you use TypeScript
+
+root.render(<TopNavBar />);

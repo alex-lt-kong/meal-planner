@@ -58,8 +58,8 @@ stop_signal = False
 users_path = os.path.join(app_dir, 'users.json')
 
 
-@app.route('/get-attachments-list/', methods=['GET'])
-def get_attachment_list():
+@app.route('/get-attachments-list-by-date/', methods=['GET'])
+def get_attachment_list_by_date():
 
     if app_name in session and 'username' in session[app_name]:
         username = session[app_name]['username']
@@ -374,6 +374,8 @@ def get_all_attachments():
 
         for root, dirs, files in os.walk(attachments_path):
             for filename in files:
+                if filename == '.gitignore':
+                    continue
                 attachments['data'].append({
                     'date': root[len(attachments_path) + 1:],
                     'filename': filename

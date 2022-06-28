@@ -3,7 +3,7 @@
 A web-based meal planner app.
 
 * Backend: Python(Flask) + MySQL/MariaBD
-* Frontend: React.js and some legacy jQuery/pure Javascript
+* Frontend: React.js and some legacy jQuery
 * Theme: based on https://bootswatch.com/minty/ but with some tweaking
 
 ## Environment

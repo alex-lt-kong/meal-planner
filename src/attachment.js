@@ -128,7 +128,7 @@ class AttachmentsManager extends React.Component {
   }
 
   fetchDataFromServer() {
-    axios.get(`./get-attachments-list/?date=${moment(this.props.date).format('YYYY-MM-DD')}`)
+    axios.get(`./get-attachments-list-by-date/?date=${moment(this.props.date).format('YYYY-MM-DD')}`)
         .then((response) => {
           this.setState({data: null}); // make it empty before fill it in again to force a re-rendering.
           this.setState({data: response.data});
