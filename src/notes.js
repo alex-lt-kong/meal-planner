@@ -1,105 +1,80 @@
 import React from 'react';
-import axios from 'axios';
 import {createRoot} from 'react-dom/client';
+const axios = require('axios').default;
+import {TopNavBar, BottomNavBar} from './navbar';
+import TextareaAutosize from 'react-textarea-autosize';
 
-class Notes extends React.Component {
-
+class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      appAddress: props.appAddress,
-      show: props.show,
-      data: null /* Will be initialized in componentDidMount() */
+      data: null,
+      index: null
     };
-    this.handleClickUpdate = this.handleClickUpdate.bind(this);
-    this.handleClickHistory = this.handleClickHistory.bind(this);
-    this.handleAccordionClick = this.handleAccordionClick.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-  }
-
-  handleChange(event) {
-    var currentData = this.state.data;
-    currentData.content = event.target.value;
-    this.setState({
-      data: null
-    });
-    this.setState({
-      data: currentData
-    });
-  }
-
-  fetchDataFromServer() {
-    axios.get(this.state.appAddress + 'get-notes/')
-      .then(response => {
-        this.setState({
-          data: null
-          // make it empty before fill it in again to force a re-rendering.
-        });
-        this.setState({
-          data: response.data
-        });
-        textAreaAdjust();
-      })
-      .catch(error => {
-        alert('健康笔记加载失败！请关闭窗口后重试！\n' + error);
-      });
-  }
-
-  handleAccordionClick(event) {
-    this.setState(prevState => ({
-      show: !prevState.show
-    }));
-    textAreaAdjust();
-    // textAreaAdjust() has to be called twice. 
-    // This call adjusts the height of textareas after accordion expansion.
-  }
-
-  handleClickHistory(event) {
-    window.open(this.state.appAddress + '?page=history-notes');
-  }
-
-  handleClickUpdate(event) {
-    const payload = new FormData();
-    payload.append('data', JSON.stringify(this.state.data));
-    axios({
-      method: 'post',
-      url: this.state.appAddress + 'update-notes/',
-      data: payload
-    })
-        .then((response) => {
-          alert('健康笔记更新成功！');
-          this.fetchDataFromServer();
-          // Must make this call to ensure UI is refreshed.
-        })
-        .catch((error) => {
-          console.log(error);
-          alert('健康笔记更新错误：\n' + error);
-          // You canNOT write error.response or whatever similar here.
-          // The reason is that this catch() catches both network errors and other errors,
-          // which may or may not have a response property.
-        });
+    this.handlePreviousClick = this.handlePreviousClick.bind(this);
+    this.handleNextClick = this.handleNextClick.bind(this);
   }
 
   componentDidMount() {
     this.fetchDataFromServer();
   }
 
+  handlePreviousClick(event) {
+    this.setState(prevState => ({
+      index: prevState.index >= 1 ? prevState.index - 1 : (prevState.data.length - 1)
+    }));
+  }
+
+  handleNextClick(event) {
+    this.setState(prevState => ({
+      index: (prevState.index < (prevState.data.length - 1)) ? (prevState.index + 1) : 0
+    }));
+  }
+
+  fetchDataFromServer() {
+    axios.get('./get-history-notes/')
+        .then((response) => {
+          this.setState({
+            data: null,
+            index: null
+            // make it empty before fill it in again to force a re-rendering.
+          });
+          this.setState({
+            data: response.data,
+            index: response.data.length - 1
+          });
+        })
+        .catch(error => {
+          alert('历史笔记加载失败！请关闭窗口后重试！\n' + error);
+        });
+  }
+
   render() {
-    
-    if (this.state.data === null) { return null; }
-    // So that if data is still not filled, an empty GUI will not be rendered.
+    if (this.state.data === null) {
+      return null;
+    }
+
     return (
       <>
-        <button onClick={this.handleAccordionClick} className="w3-button w3-block w3-left-align w3-green">
-          健康笔记<span className="w3-right">{this.state.show ? "▴" : "▾"}</span>
-        </button>
-        <div className={`w3-container w3-card-4 ${this.state.show ? "w3-show" : "w3-hide"}`}>
-          <textarea className="w3-input textarea-dailyremark" value={this.state.data.content} rows="3" onChange={this.handleChange}/>
-          <div>
-            <div style={{ "marginBottom": "-0.5em" }}>(最后更新：{new Date(this.state.data.date).toISOString().slice(0, 10)})</div>
-            {/* set the marginBottom to -0.5em so that the following two buttons can use exactly same settings. */}
-            <button onClick={this.handleClickUpdate} className="w3-button w3-border w3-highway-green w3-right w3-marginBottom input-button">更新</button>   
-            <button onClick={this.handleClickHistory} className="w3-button w3-border w3-highway-green w3-right w3-marginBottom input-button">翻看历史笔记</button>   
+        <TopNavBar />
+        <div className="w3-container w3-responsive" 
+          style={{ "maxWidth": "50em", padding: "0.75rem", display: "block", "marginLeft": "auto",
+                    "marginRight": "auto", "marginTop": "3em", "marginBottom": "3em"}}>
+          {/*<textarea className="w3-input" style={{ width: "100%", border: "none"}}
+                    readOnly={true} value={this.state.data[this.state.index].content} />*/}
+          <TextareaAutosize defaultValue={this.state.data[this.state.index].content}/>
+        </div>
+        <div className="fixed-footer">
+          <div className="w3-cell-row">
+            <div className="w3-container w3-cell w3-cell-top">
+              <p><a href="#" onClick={this.handlePreviousClick}>向前</a></p>
+            </div>
+            <div className="w3-container w3-cell w3-cell-middle w3-center">
+              <b>{this.state.data[this.state.index].metadata.date}</b>
+            </div>
+            <div className="w3-container w3-cell w3-cell-bottom">
+              <p><a href="#" onClick={this.handleNextClick}>向后</a></p>
+            </div>
           </div>
         </div>
       </>
@@ -107,7 +82,8 @@ class Notes extends React.Component {
   }
 }
 
+
 const container = document.getElementById('root');
 const root = createRoot(container); // createRoot(container!) if you use TypeScript
 
-root.render(<Notes />);
+root.render(<App />);

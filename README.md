@@ -8,20 +8,27 @@ A web-based meal planner app.
 
 ## Environment
 
-### Backend
+### Base system
 
-* System
 ```
-apt install mariadb-server
+apt install mariadb-server phpmyadmin
 ```
 
-* Python
+* Tested versions:
+    * Python: `3.9`
+    * Node.js: `14.19`,
+    * npm: `6.14`,
+
+### Python environment
+
 ```
 python3 -m venv ./.venv/
 source ./.venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
-### Frontend
+### Node.js environment
 
-* Node.js
+```
+npm install
+```
