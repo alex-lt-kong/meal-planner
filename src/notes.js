@@ -4,6 +4,7 @@ import {createRoot} from 'react-dom/client';
 import Button from 'react-bootstrap/Button';
 import {TopNavBar} from './navbar';
 import TextareaAutosize from 'react-textarea-autosize';
+import DiffMatchPatch from 'diff-match-patch';
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
@@ -88,6 +89,19 @@ class App extends React.Component {
     if (this.state.data === null) {
       return null;
     }
+    let prettyDiff = null;
+    if (this.state.currNoteIndex >= 1 && this.state.data.length > 1) {
+      const dmp = new DiffMatchPatch();
+      const diff = dmp.diff_main(
+          this.state.data[this.state.currNoteIndex - 1].content, this.state.data[this.state.currNoteIndex].content
+      );
+      prettyDiff = (
+        <span style={{marginLeft: '0.5em', fontSize: '12px'}}>
+          <b>对照：</b>
+          <span dangerouslySetInnerHTML={{__html: dmp.diff_prettyHtml(diff)}} />
+        </span>);
+    }
+
     return (
       <>
         <TopNavBar />
@@ -108,6 +122,7 @@ class App extends React.Component {
                 <></>
               }
             </div>
+            {prettyDiff}
           </div>
         </div>
         <Navbar bg="primary" expand="lg" variant="dark" fixed="bottom">
