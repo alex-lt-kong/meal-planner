@@ -1,7 +1,8 @@
+import axios from 'axios';
 import React from 'react';
 import {createRoot} from 'react-dom/client';
 import {TopNavBar} from './navbar';
-import axios from 'axios';
+import PropTypes from 'prop-types';
 
 class SelfieItem extends React.Component {
   constructor(props) {
@@ -46,6 +47,11 @@ class SelfieItem extends React.Component {
   }
 }
 
+SelfieItem.propTypes = {
+  date: PropTypes.instanceOf(Date)
+};
+
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -56,7 +62,7 @@ class App extends React.Component {
     // A hacky way of getting UTC+8...
     const today = new Date(new Date().getTime() + (8*60*60*1000));
     const daysCount = 730;
-    let images = new Array(daysCount);
+    const images = new Array(daysCount);
     let i = 0;
     for (i = 0; i < daysCount; i++) {
       images[i] = <SelfieItem date={today.toISOString().slice(0, 10)} />;

@@ -120,7 +120,7 @@ class MealPlan extends React.Component {
 
     return (
       <div>
-        {/* The current implementation is that we are going to pass the entire json to each 
+        {/* The current implementation is that we are going to pass the entire json to each
           MealPlanItem so that it would be easier to handle while MealPlanItem sends data back */}
         <MealPlanItem data={this.state.data} itemName="breakfast" sendData={this.getData} />
         <MealPlanItem data={this.state.data} itemName="morning_extra_meal" sendData={this.getData} />
