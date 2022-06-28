@@ -1,6 +1,6 @@
 import React from 'react';
 const axios = require('axios').default;
-const textAreaAdjust = require('./common.js').textAreaAdjust;
+
 
 class Blacklist extends React.Component {
 

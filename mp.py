@@ -710,92 +710,33 @@ def get_history_notes():
     if app_name in session and 'username' in session[app_name]:
         username = session[app_name]['username']
     else:
-        return redirect(f'{app_address}/login/')
-
-    conn_str = (f'mysql+pymysql://{db_username}:{db_password}@'
-                f'{db_url}/{db_name}')
-    engine = create_engine(conn_str)
-
-    # Reflection - may have performance issues if done each time.
-    # But let's make everything work before optimizing it!
-    metadata = MetaData(bind=engine)
-    notes = Table('notes', metadata, autoload_with=engine)
-
-    s = select([notes.c.date, notes.c.content]).order_by(notes.c.date.asc())
-    with engine.begin() as conn:
-        result = conn.execute(s).fetchall()
-        # If you fetchall(), the result is a list
-        # If you just execute(), the result is a ResultProxy object
-        # which has to be iterated to get a list.
+        return Response('未登录', 401)
+    
+    conn = None
+    try:
+        conn = pymysql.connect(host=db_url, user=db_username, password=db_password, database=db_name)
+        with conn.cursor() as cursor:
+            sql = 'SELECT `date`, `content` FROM notes ORDER BY `date` ASC'
+            cursor.execute(sql)
+            result = cursor.fetchall()
+    except Exception:
+        logging.exception('')
+        return Response('数据库读写异常', 500)
+    finally:
+        if conn is not None:
+            conn.close()
 
     dicts = []
-    # There is one more difficulty in making this iteration into list
-    # comprehension...I need to pass two parameters, i.e., row and username
-    # to the function. But username per se is a string, which can not be
-    # iterated without extra treatment...
     for row in result:
         d = {}
         d['metadata'] = {}
-        d['metadata']['date'] = dt.datetime.strftime(row['date'], '%Y-%m-%d')
+        d['metadata']['date'] = dt.datetime.strftime(row[0], '%Y-%m-%d')
         d['metadata']['username'] = username
-        d['content'] = row['content']
+        d['content'] = row[1]
 
-        dicts.append(d)
+        dicts.append(d)    
 
     return flask.jsonify(dicts)
-
-
-def convert_notes_to_json():
-
-    conn_str = (f'mysql+pymysql://{db_username}:{db_password}@'
-                f'{db_url}/{db_name}')
-    engine = create_engine(conn_str)
-
-    # Reflection - may have performance issues if done each time.
-    # But let's make everything work before optimizing it!
-    metadata = MetaData(bind=engine)
-    notes = Table('notes', metadata, autoload_with=engine)
-
-    notes_json = {}
-    try:
-        s = select(func.max(notes.c.date))
-        with engine.begin() as conn:
-            max_date = conn.execute(s).scalar()
-
-        s = (select([notes.c.date, notes.c.content])
-             .where(notes.c.date == max_date))
-        with engine.begin() as conn:
-            result = conn.execute(s).one()
-    except sqlalchemy.exc.NoResultFound:
-        # This exception is acceptable if the database is empty.
-        # Other exceptions will be caught at a higher level
-        notes_json['date'], notes_json['content'] = '', ''
-    else:
-        notes_json['date'] = result['date']
-        notes_json['content'] = result['content']
-
-    return notes_json
-
-
-@app.route('/get-notes/', methods=['GET'])
-def get_notes():
-
-    if app_name in session and 'username' in session[app_name]:
-        username = session[app_name]['username']
-    else:
-        return Response('未登录', 401)
-
-    try:
-        notes_json = convert_notes_to_json()
-    except Exception:
-        logging.exception('')
-        return Response('数据读取错误', 500)
-    else:
-        notes_json['metadata'] = {}
-        notes_json['metadata']['date'] = notes_json['date']
-        notes_json['metadata']['username'] = username
-
-    return flask.jsonify(notes_json)
 
 
 @app.route('/update-notes/', methods=['POST'])
@@ -811,32 +752,25 @@ def update_notes():
     data = request.form['data']
     try:
         json_data = json.loads(data)
+        assert 'content' in json_data
     except Exception:
         logging.exception('')
-        return Response('data的值无法解析成JSON字符串', 400)
+        return Response('data的值无法解析成预期的JSON对象', 400)
 
-    conn_str = (f'mysql+pymysql://{db_username}:{db_password}@'
-                f'{db_url}/{db_name}')
-    engine = create_engine(conn_str)
-
-    # Reflection - may have performance issues if done each time.
-    # But let's make everything work before optimizing it!
-    metadata = MetaData(bind=engine)
-    notes = Table('notes', metadata, autoload_with=engine)
-
+    conn = None
     try:
-        with engine.begin() as conn:
-            # begin() starts a transaction
-            # without conn.begin() it is still a transaction
+        conn = pymysql.connect(host=db_url, user=db_username, password=db_password, database=db_name)
+        with conn.cursor() as cursor:
             today = dt.date.today()
-            d = notes.delete(notes.c.date == today)
-            conn.execute(d)
-            i = notes.insert().values(date=today,
-                                      content=json_data['content'])
-            conn.execute(i)
+            cursor.execute('DELETE FROM `notes` WHERE `date` = %s', (today ,))
+            cursor.execute('INSERT INTO `notes` (`date`, `content`) VALUES (%s, %s)', (today, json_data['content']))
+            conn.commit()
     except Exception:
         logging.exception('')
-        return Response('笔记更新失败', 500)
+        return Response('数据库读写异常', 500)
+    finally:
+        if conn is not None:
+            conn.close()
 
     return Response('笔记更新成功', 200)
 

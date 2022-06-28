@@ -2,7 +2,6 @@ import axios from 'axios';
 import React from 'react';
 import Button from 'react-bootstrap/Button';
 import PropTypes from 'prop-types';
-// const axios = require('axios').default;
 import DiffMatchPatch from 'diff-match-patch';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
@@ -123,12 +122,8 @@ class MealPlanDailyRemark extends React.Component {
     return (
       <div>
         <h6 className="text-primary"><b>备注{remarkChangeInfo}</b></h6>
-        <div className="w3-cell-row">
-          <div className="w3-cell">
-            <TextareaAutosize value={this.props.data.remark.content} onChange={this.handleRemarkChange}
-              style={{width: '99%', outline: '0', borderWidth: '0 0 1px'}}/>
-          </div>
-        </div>
+        <TextareaAutosize value={this.props.data.remark.content} onChange={this.handleRemarkChange}
+          style={{width: '99%', outline: '0', borderWidth: '0 0 1px'}}/>
       </div>
     );
   }

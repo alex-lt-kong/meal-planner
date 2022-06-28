@@ -1,51 +1,86 @@
+import axios from 'axios';
 import React from 'react';
 import {createRoot} from 'react-dom/client';
-const axios = require('axios').default;
-import {TopNavBar, BottomNavBar} from './navbar';
+import Button from 'react-bootstrap/Button';
+import {TopNavBar} from './navbar';
 import TextareaAutosize from 'react-textarea-autosize';
+import Container from 'react-bootstrap/Container';
+import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       data: null,
-      index: null
+      currNoteIndex: null
     };
-    this.handlePreviousClick = this.handlePreviousClick.bind(this);
-    this.handleNextClick = this.handleNextClick.bind(this);
+    this.onIndexChanged = this.onIndexChanged.bind(this);
+    this.handleNotesChange = this.handleNotesChange.bind(this);
+    this.handleClickUpdate = this.handleClickUpdate.bind(this);
   }
 
   componentDidMount() {
     this.fetchDataFromServer();
   }
 
-  handlePreviousClick(event) {
-    this.setState(prevState => ({
-      index: prevState.index >= 1 ? prevState.index - 1 : (prevState.data.length - 1)
-    }));
-  }
-
-  handleNextClick(event) {
-    this.setState(prevState => ({
-      index: (prevState.index < (prevState.data.length - 1)) ? (prevState.index + 1) : 0
-    }));
+  onIndexChanged(delta) {
+    this.setState((prevState) => {
+      let newNoteIndex = prevState.currNoteIndex + delta;
+      if (newNoteIndex < 0) {
+        newNoteIndex = prevState.data.length - 1;
+      } else if (newNoteIndex >= prevState.data.length) {
+        newNoteIndex = 0;
+      }
+      return ({
+        currNoteIndex: newNoteIndex
+      });
+    });
   }
 
   fetchDataFromServer() {
     axios.get('./get-history-notes/')
         .then((response) => {
           this.setState({
-            data: null,
-            index: null
-            // make it empty before fill it in again to force a re-rendering.
-          });
-          this.setState({
             data: response.data,
-            index: response.data.length - 1
+            currNoteIndex: response.data.length - 1
           });
+          console.log(response.data);
         })
-        .catch(error => {
-          alert('历史笔记加载失败！请关闭窗口后重试！\n' + error);
+        .catch((error) => {
+          alert(`笔记加载失败！原因：\n` + (error.response !== undefined) ? JSON.stringify(error.response): error);
+        });
+  }
+
+  handleNotesChange(event) {
+    if (this.state.currNoteIndex !== this.state.data.length - 1) {
+      return;
+    }
+    const tempData = this.state.data;
+    tempData[this.state.currNoteIndex].content = event.target.value;
+    this.setState({
+      data: tempData
+    });
+  }
+
+  handleClickUpdate(event) {
+    if (this.state.data.length === 0) {
+      alert('根本没有任何笔记数据');
+      return;
+    }
+    const payload = new FormData();
+    payload.append('data', JSON.stringify(this.state.data[this.state.data.length - 1]));
+    axios({
+      method: 'post',
+      url: './update-notes/',
+      data: payload
+    })
+        .then(() => {
+          alert('健康笔记更新成功！');
+          this.fetchDataFromServer();
+        })
+        .catch((error) => {
+          alert(`健康笔记更新错误!原因\n` + (error.response !== undefined) ? JSON.stringify(error.response): error);
         });
   }
 
@@ -53,30 +88,38 @@ class App extends React.Component {
     if (this.state.data === null) {
       return null;
     }
-
     return (
       <>
         <TopNavBar />
-        <div className="w3-container w3-responsive" 
-          style={{ "maxWidth": "50em", padding: "0.75rem", display: "block", "marginLeft": "auto",
-                    "marginRight": "auto", "marginTop": "3em", "marginBottom": "3em"}}>
-          {/*<textarea className="w3-input" style={{ width: "100%", border: "none"}}
-                    readOnly={true} value={this.state.data[this.state.index].content} />*/}
-          <TextareaAutosize defaultValue={this.state.data[this.state.index].content}/>
-        </div>
-        <div className="fixed-footer">
-          <div className="w3-cell-row">
-            <div className="w3-container w3-cell w3-cell-top">
-              <p><a href="#" onClick={this.handlePreviousClick}>向前</a></p>
-            </div>
-            <div className="w3-container w3-cell w3-cell-middle w3-center">
-              <b>{this.state.data[this.state.index].metadata.date}</b>
-            </div>
-            <div className="w3-container w3-cell w3-cell-bottom">
-              <p><a href="#" onClick={this.handleNextClick}>向后</a></p>
+        <div style={{
+          maxWidth: '50em', padding: '0.75rem', display: 'block',
+          marginLeft: 'auto', marginRight: 'auto', marginBottom: '3em'
+        }}>
+          <div>
+            <TextareaAutosize value={this.state.data[this.state.currNoteIndex].content}
+              onChange={this.handleNotesChange} style={{width: '100%', outline: '0', borderWidth: '0 0 1px'}}/>
+            <div style={{marginBottom: '-0.5em'}}>
+              (第{this.state.currNoteIndex + 1}/{this.state.data.length}版笔记，
+              更新日期：{this.state.data[this.state.currNoteIndex].metadata.date})
+              {
+                this.state.currNoteIndex === this.state.data.length - 1 ?
+                <Button className="pull-right" style={{marginLeft: '1em'}} variant="primary"
+                  onClick={this.handleClickUpdate}>提交</Button> :
+                <></>
+              }
             </div>
           </div>
         </div>
+        <Navbar bg="primary" expand="lg" variant="dark" fixed="bottom">
+          <Container>
+            <Nav className="me-auto">
+              <Nav.Link onClick={() => this.onIndexChanged(-1)}>&nbsp;&nbsp;❰&nbsp;&nbsp;</Nav.Link>
+            </Nav>
+            <Nav className="ms-auto">
+              <Nav.Link onClick={() => this.onIndexChanged(1)}>&nbsp;&nbsp;❱&nbsp;&nbsp;</Nav.Link>
+            </Nav>
+          </Container>
+        </Navbar>
       </>
     );
   }
