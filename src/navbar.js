@@ -38,30 +38,33 @@ class BottomNavBar extends React.Component {
     this.state = {
       currDate: new Date()
     };
+    this.handleDateChange = this.handleDateChange.bind(this);
+    this.handleDatePickerChange = this.handleDatePickerChange.bind(this);
   }
 
   handleDatePickerChange(event) {
-    const newDate = new Date(event.target.value);
+    let newDate = new Date(event.target.value);
     if (newDate == 'Invalid Date') {
       newDate = new Date();
     }
-    this.setState({
-      currDate: newDate
-    }, () => {
-      if (this.props.onDateChanged !== null) {
-        this.props.onDateChanged(newDate);
+    this.setState((prevState, props) => {
+      if (props.onDateChanged !== null) {
+        props.onDateChanged(newDate);
       } else {
         console.warn(`onDateChanged not set, no external components are notified on the date change`);
       }
+      return {
+        currDate: newDate
+      };
     });
   }
 
   handleDateChange(delta) {
-    this.setState((prevState) => {
+    this.setState((prevState, props) => {
       const newDate = new Date(prevState.currDate);
       newDate.setDate(newDate.getDate() + delta);
-      if (this.props.onDateChanged !== null) {
-        this.props.onDateChanged(newDate);
+      if (props.onDateChanged !== null) {
+        props.onDateChanged(newDate);
       } else {
         console.warn(`onDateChanged not set, no external components are notified on the date change`);
       }

@@ -17,14 +17,12 @@ class Index extends React.Component {
   }
 
   onDateChangeReceived(newDate) {
-    console.log(`newDate received ${newDate}`);
     this.setState({
       currDate: newDate
     });
   }
 
   render() {
-    console.log((new Date()).toISOString());
     return (
       <div>
         <TopNavBar />

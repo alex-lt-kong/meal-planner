@@ -283,7 +283,7 @@ class MealPlan extends React.Component {
   }
 
   fetchDataFromServer() {
-    axios.get('./get-meal-plan/?date=' + this.state.date.toISOString().slice(0, 10))
+    axios.get('./get-meal-plan/?date=' + moment(this.props.date).format('YYYY-MM-DD'))
         .then((response) => {
           this.setState({
             data: response.data
@@ -291,7 +291,7 @@ class MealPlan extends React.Component {
         })
         .catch((error) => {
           alert(
-            `${this.state.date.toISOString().slice(0, 10)}的食谱项目加载失败！原因：\n` +
+            `${moment(this.props.date).format('YYYY-MM-DD')}的食谱项目加载失败！原因：\n` +
             (error.response !== undefined) ? JSON.stringify(error.response): error
           );
         });
@@ -300,7 +300,7 @@ class MealPlan extends React.Component {
   handleCopyTodayClick(event) {
     const today = new Date(this.state.date);
     today.setDate(today.getDate() - 1);
-    axios.get('./get-meal-plan/?date=' + today.toISOString().slice(0, 10))
+    axios.get('./get-meal-plan/?date=' + moment(this.props.date).format('YYYY-MM-DD'))
         .then((response) => {
           this.setState({
             data: null
@@ -325,7 +325,7 @@ class MealPlan extends React.Component {
 
   handleClickUpdate(event) {
     const payload = new FormData();
-    payload.append('date', this.state.date.toISOString().slice(0, 10));
+    payload.append('date', moment(this.props.date).format('YYYY-MM-DD'));
     payload.append('data', JSON.stringify(this.state.data));
     axios({
       method: 'post',
@@ -333,11 +333,11 @@ class MealPlan extends React.Component {
       data: payload
     })
         .then(() => {
-          alert(`${this.state.date.toISOString().slice(0, 10)}的食谱更新成功！`);
+          alert(`${moment(this.props.date).format('YYYY-MM-DD')}的食谱更新成功！`);
           this.fetchDataFromServer();
         })
         .catch((error) => {
-          alert(`${this.state.date.toISOString().slice(0, 10)}的食谱更新错误！\n原因：${error}`);
+          alert(`${moment(this.props.date).format('YYYY-MM-DD')}的食谱更新错误！\n原因：${error}`);
           // You canNOT write error.response or whatever similar here.
           // The reason is that this catch() catches both network error and other errors,
           // which may or may not have a response property.
@@ -363,14 +363,13 @@ class MealPlan extends React.Component {
     if (this.state.data === null) {
       return null;
     }
+    const isDBY = moment().subtract(2, 'days').format('YYYY-MM-DD') === moment(this.props.date).format('YYYY-MM-DD');
     const isYesterday = (
-      (new Date(new Date().getTime() - (24 * 60 * 60 * 1000))).toISOString().slice(0, 10) ===
-      this.state.date.toISOString().slice(0, 10)
+      moment().subtract(1, 'days').format('YYYY-MM-DD') === moment(this.props.date).format('YYYY-MM-DD')
     );
-    const isToday = (new Date()).toISOString().slice(0, 10) === this.state.date.toISOString().slice(0, 10);
+    const isToday = moment().format('YYYY-MM-DD') === moment(this.props.date).format('YYYY-MM-DD');
     const isTomorrow = (
-      (new Date(new Date().getTime() + (24 * 60 * 60 * 1000))).toISOString().slice(0, 10) ===
-      this.state.date.toISOString().slice(0, 10)
+      moment().add(1, 'days').format('YYYY-MM-DD') === moment(this.props.date).format('YYYY-MM-DD')
     );
 
     return (
@@ -386,7 +385,7 @@ class MealPlan extends React.Component {
         <MealPlanDailyRemark data={this.state.data} sendData={this.getData} />
         <div style={{paddingBottom: '3em', paddingTop: '1.5em'}}>
           {
-            (isYesterday || isToday || isTomorrow) ?
+            (isDBY || isYesterday || isToday || isTomorrow) ?
             <Button className="pull-right" style={{marginLeft: '1em'}} variant="primary"
               onClick={this.handleClickUpdate}>
               提交
