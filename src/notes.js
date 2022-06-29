@@ -113,8 +113,7 @@ class App extends React.Component {
             <TextareaAutosize value={this.state.data[this.state.currNoteIndex].content}
               onChange={this.handleNotesChange} style={{width: '100%', outline: '0', borderWidth: '0 0 1px'}}/>
             <div style={{marginBottom: '-0.5em'}}>
-              (第{this.state.currNoteIndex + 1}/{this.state.data.length}版笔记，
-              更新日期：{this.state.data[this.state.currNoteIndex].metadata.date})
+              (更新日期：{this.state.data[this.state.currNoteIndex].metadata.date})
               {
                 this.state.currNoteIndex === this.state.data.length - 1 ?
                 <Button className="pull-right" style={{marginLeft: '1em'}} variant="primary"
@@ -130,6 +129,7 @@ class App extends React.Component {
             <Nav className="me-auto">
               <Nav.Link onClick={() => this.onIndexChanged(-1)}>&nbsp;&nbsp;❰&nbsp;&nbsp;</Nav.Link>
             </Nav>
+            <Nav className="mx-auto">第{this.state.currNoteIndex + 1}/{this.state.data.length}版笔记</Nav>
             <Nav className="ms-auto">
               <Nav.Link onClick={() => this.onIndexChanged(1)}>&nbsp;&nbsp;❱&nbsp;&nbsp;</Nav.Link>
             </Nav>

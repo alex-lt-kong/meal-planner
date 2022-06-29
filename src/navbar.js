@@ -1,3 +1,4 @@
+import axios from 'axios';
 import moment from 'moment';
 import React from 'react';
 import Container from 'react-bootstrap/Container';
@@ -9,6 +10,21 @@ import PropTypes from 'prop-types';
 class TopNavBar extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      loggedInUser: '无'
+    };
+    this.getLoggedInUser();
+  }
+
+  getLoggedInUser() {
+    axios.get('./get-logged-in-user/')
+        .then((response) => {
+          console.log(response.data);
+          this.setState({
+            loggedInUser: response.data.username
+          });
+        })
+        .catch((error) => {});
   }
 
   render() {
@@ -20,11 +36,16 @@ class TopNavBar extends React.Component {
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav>
               <Nav.Link href="./?page=notes" target="_blank">笔记</Nav.Link>
+              <NavDropdown title={<span className="text-light my-auto">翻看</span>}>
+                <NavDropdown.Item href="./?page=history-selfies" target="_blank">自拍</NavDropdown.Item>
+                <NavDropdown.Item href="./?page=history-attachments" target="_blank">附件</NavDropdown.Item>
+              </NavDropdown>
             </Nav>
-            <NavDropdown title={<span className="text-light my-auto">翻看&nbsp;▾</span>}>
-              <NavDropdown.Item href="./?page=history-selfies" target="_blank">自拍</NavDropdown.Item>
-              <NavDropdown.Item href="./?page=history-attachments" target="_blank">附件</NavDropdown.Item>
-            </NavDropdown>
+            <Navbar.Collapse className="justify-content-end">
+              <Navbar.Text>
+                在线用户: &nbsp;[{this.state.loggedInUser}],&nbsp;<a href="./logout">退出</a>
+              </Navbar.Text>
+            </Navbar.Collapse>
           </Navbar.Collapse>
         </Container>
       </Navbar>

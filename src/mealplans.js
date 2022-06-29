@@ -272,7 +272,7 @@ class MealPlan extends React.Component {
       userName: null
     };
     this.handleClickUpdate = this.handleClickUpdate.bind(this);
-    this.handleCopyTodayClick = this.handleCopyTodayClick.bind(this);
+    this.handleCopyPlanFromPrevDayClick = this.handleCopyPlanFromPrevDayClick.bind(this);
     this.getData = this.getData.bind(this);
   }
 
@@ -297,16 +297,9 @@ class MealPlan extends React.Component {
         });
   }
 
-  handleCopyTodayClick(event) {
-    const today = new Date(this.state.date);
-    today.setDate(today.getDate() - 1);
-    axios.get('./get-meal-plan/?date=' + moment(this.props.date).format('YYYY-MM-DD'))
+  handleCopyPlanFromPrevDayClick(event) {
+    axios.get('./get-meal-plan/?date=' + moment(this.props.date).subtract(1, 'days').format('YYYY-MM-DD'))
         .then((response) => {
-          this.setState({
-            data: null
-            // You have to make some drastic change. i.e., make the reference different, to
-            // let react.js know that it needs to pass the new state to children components!
-          });
           const data = response.data;
           data['breakfast']['feedback'] = '待填';
           data['morning_extra_meal']['feedback'] = '待填';
@@ -319,7 +312,7 @@ class MealPlan extends React.Component {
           });
         })
         .catch((error) => {
-          alert('沿用今日失败！请重试！\n' + error);
+          alert(`沿用上日失败！原因：\n${(error.response !== undefined) ? JSON.stringify(error.response): error}`);
         });
   }
 
@@ -337,7 +330,10 @@ class MealPlan extends React.Component {
           this.fetchDataFromServer();
         })
         .catch((error) => {
-          alert(`${moment(this.props.date).format('YYYY-MM-DD')}的食谱更新错误！\n原因：${error}`);
+          alert(
+            `${moment(this.props.date).format('YYYY-MM-DD')}的食谱更新错误！原因：\n` +
+             (error.response !== undefined) ? JSON.stringify(error.response): error
+          );
           // You canNOT write error.response or whatever similar here.
           // The reason is that this catch() catches both network error and other errors,
           // which may or may not have a response property.
@@ -392,8 +388,12 @@ class MealPlan extends React.Component {
             </Button> : null
           }
           {
-            isTomorrow ?
-            <Button className="pull-right" variant="primary" onClick={this.handleCopyTodayClick}>沿用今日</Button> : null
+            (isToday || isTomorrow) ?
+            (
+              <Button className="pull-right" variant="primary" onClick={this.handleCopyPlanFromPrevDayClick}>
+                沿用上日
+              </Button>
+            ) : null
           }
         </div>
         <MealPlanDailySelfie data={this.state.data} date={this.state.date} enableUpload={isToday} />

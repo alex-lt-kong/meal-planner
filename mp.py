@@ -674,6 +674,15 @@ def convert_meal_plan_to_json(date_string: str):
     return mp
 
 
+@app.route('/get-logged-in-user/', methods=['GET'])
+def get_logged_in_user():
+
+    if app_name in session and 'username' in session[app_name]:
+        return flask.jsonify({'username': session[app_name]['username']})
+    else:
+        return flask.jsonify({'username': '未登录'})
+
+
 @app.route('/get-meal-plan/', methods=['GET'])
 def get_meal_plan():
 
