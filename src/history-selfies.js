@@ -1,4 +1,5 @@
 import axios from 'axios';
+import moment from 'moment';
 import React from 'react';
 import {createRoot} from 'react-dom/client';
 import {TopNavBar} from './navbar';
@@ -18,8 +19,7 @@ class SelfieItem extends React.Component {
   }
 
   fetchDataFromServer() {
-    console.log('fetchDataFromServer');
-    axios.get('./get-selfie/?date=' + this.state.date)
+    axios.get(`./get-selfie/?date=${this.state.date}`)
         .then((response) => {
           this.setState({
             data: null
@@ -28,9 +28,7 @@ class SelfieItem extends React.Component {
             data: response.data
           });
         })
-        .catch((error) => {
-          console.log('ERROR!');
-        });
+        .catch((error) => {});
   }
 
   render() {
@@ -55,24 +53,22 @@ SelfieItem.propTypes = {
 class App extends React.Component {
   constructor(props) {
     super(props);
-    console.log(window.location.href);
   }
 
   render() {
-    // A hacky way of getting UTC+8...
-    const today = new Date(new Date().getTime() + (8*60*60*1000));
-    const daysCount = 730;
+    const today = moment();
+    const daysCount = 365 * 3;
     const images = new Array(daysCount);
     let i = 0;
-    for (i = 0; i < daysCount; i++) {
-      images[i] = <SelfieItem date={today.toISOString().slice(0, 10)} />;
-      today.setDate(today.getDate() - 1);
+    for (i = 0; i < daysCount; ++i) {
+      images[i] = <SelfieItem date={today.format('YYYY-MM-DD')} />;
+      today.subtract(1, 'days');
     }
 
     return (
       <div>
         <TopNavBar />
-        <div className="w3-container w3-responsive"
+        <div
           style={{maxWidth: '50em', padding: '0.75rem', display: 'block', marginLeft: 'auto',
             marginRight: 'auto', marginTop: '3em', marginBottom: '3em'}}>
           {images}

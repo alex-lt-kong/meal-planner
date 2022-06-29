@@ -46,7 +46,6 @@ class App extends React.Component {
             data: response.data,
             currNoteIndex: response.data.length - 1
           });
-          console.log(response.data);
         })
         .catch((error) => {
           alert(`笔记加载失败！原因：\n` + (error.response !== undefined) ? JSON.stringify(error.response): error);
@@ -81,7 +80,7 @@ class App extends React.Component {
           this.fetchDataFromServer();
         })
         .catch((error) => {
-          alert(`健康笔记更新错误!原因\n` + (error.response !== undefined) ? JSON.stringify(error.response): error);
+          alert(`健康笔记更新错误！原因：\n` + (error.response !== undefined) ? JSON.stringify(error.response): error);
         });
   }
 
@@ -96,7 +95,7 @@ class App extends React.Component {
           this.state.data[this.state.currNoteIndex - 1].content, this.state.data[this.state.currNoteIndex].content
       );
       prettyDiff = (
-        <span style={{marginLeft: '0.5em', fontSize: '12px'}}>
+        <span>
           <b>对照：</b>
           <span dangerouslySetInnerHTML={{__html: dmp.diff_prettyHtml(diff)}} />
         </span>);
@@ -112,7 +111,7 @@ class App extends React.Component {
           <div>
             <TextareaAutosize value={this.state.data[this.state.currNoteIndex].content}
               onChange={this.handleNotesChange} style={{width: '100%', outline: '0', borderWidth: '0 0 1px'}}/>
-            <div style={{marginBottom: '-0.5em'}}>
+            <div>
               (更新日期：{this.state.data[this.state.currNoteIndex].metadata.date})
               {
                 this.state.currNoteIndex === this.state.data.length - 1 ?
@@ -129,7 +128,7 @@ class App extends React.Component {
             <Nav className="me-auto">
               <Nav.Link onClick={() => this.onIndexChanged(-1)}>&nbsp;&nbsp;❰&nbsp;&nbsp;</Nav.Link>
             </Nav>
-            <Nav className="mx-auto">第{this.state.currNoteIndex + 1}/{this.state.data.length}版笔记</Nav>
+            <Nav className="mx-auto text-light"><b>第{this.state.currNoteIndex + 1}/{this.state.data.length}版笔记</b></Nav>
             <Nav className="ms-auto">
               <Nav.Link onClick={() => this.onIndexChanged(1)}>&nbsp;&nbsp;❱&nbsp;&nbsp;</Nav.Link>
             </Nav>

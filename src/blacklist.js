@@ -3,7 +3,6 @@ const axios = require('axios').default;
 
 
 class Blacklist extends React.Component {
-
   constructor(props) {
     super(props);
     this.state = {
@@ -15,7 +14,7 @@ class Blacklist extends React.Component {
     this.handleChangeBannedItems = this.handleChangeBannedItems.bind(this);
     this.handleChangeLimitedItems = this.handleChangeLimitedItems.bind(this);
   }
-  
+
   handleChangeBannedItems(event) {
     var currentData = this.state.data;
     currentData.banned_items = event.target.value;
@@ -23,7 +22,7 @@ class Blacklist extends React.Component {
       data: currentData
     });
   }
-  
+
   handleChangeLimitedItems(event) {
     var currentData = this.state.data;
     currentData.limited_items = event.target.value;

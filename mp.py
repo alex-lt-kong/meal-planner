@@ -426,22 +426,24 @@ def login():
         return redirect(f'{app_address}/')
 
     if request.method == 'POST':
+        if 'username' not in request.form or 'password' not in request.form:
+            return flask.jsonify({'authenticated': False})
         try:
             with open(users_path, 'r') as json_file:
                 json_str = json_file.read()
                 json_data = json.loads(json_str)
         except Exception as e:
-            return render_template('login.html', message=f'{e}')
+            return Response('内部错误：用户信息读取失败', 500)
         if request.form['username'] not in json_data['users']:
-            return render_template('login.html', message='用户名或密码错误')
+            return flask.jsonify({'authenticated': False})
         password = request.form['password'].encode('utf-8')
         if (hashlib.sha256(password).hexdigest()
                 != json_data['users'][request.form['username']]):
-            return render_template('login.html', message='用户名或密码错误')
+            return flask.jsonify({'authenticated': False})
         session[app_name] = {}
         session[app_name]['username'] = request.form['username']
 
-        return redirect(f'{app_address}/')
+        return flask.jsonify({'authenticated': True})
 
     return render_template('login.html', message='')
 

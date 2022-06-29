@@ -8,6 +8,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import TextareaAutosize from 'react-textarea-autosize';
 import moment from 'moment';
+const $ = require('jquery');
 const MealPlanDailyAttachments = require('./attachment.js').MealPlanDailyAttachments;
 
 class MealPlanDailySelfie extends React.Component {
@@ -46,7 +47,6 @@ class MealPlanDailySelfie extends React.Component {
           // This forceUpdate() is needed so that the new image will be shown
         })
         .catch((error) => {
-          console.log(error);
           alert('自拍照上传错误\n' + error);
           // You canNOT write error.response or whatever similar here.
           // The reason is that this catch() catches both network error and other errors,
