@@ -91,16 +91,35 @@ MealPlanDailySelfie.propTypes = {
 class MealPlanDailyRemark extends React.Component {
   constructor(props) {
     super(props);
+    const dmp = new DiffMatchPatch();
+    const diff = dmp.diff_main(this.props.data.remark.prev_content, this.props.data.remark.content);
+    console.log(dmp.diff_prettyHtml(diff));
     this.state = {
-      data: props.data
+      data: props.data,
+      diffModeEnabled: false,
+      prettyHtml: dmp.diff_prettyHtml(diff).replaceAll('&para', '')
     };
     this.handleRemarkChange = this.handleRemarkChange.bind(this);
+    this.onModeChangeSwitchClicked = this.onModeChangeSwitchClicked.bind(this);
   }
 
   componentDidUpdate(prevProps) {
     if (prevProps.data !== this.props.data) {
-      this.setState({data: this.props.data});
+      const dmp = new DiffMatchPatch();
+      const diff = dmp.diff_main(this.props.data.remark.prev_content, this.props.data.remark.content);
+      this.setState({
+        data: this.props.data,
+        prettyHtml: dmp.diff_prettyHtml(diff).replaceAll('&para', '')
+      });
     }
+  }
+
+
+  onModeChangeSwitchClicked(event) {
+    console.log(`cliecked! ${event.target.checked}`);
+    this.setState({
+      diffModeEnabled: event.target.checked
+    });
   }
 
   handleRemarkChange(event) {
@@ -118,12 +137,23 @@ class MealPlanDailyRemark extends React.Component {
     if (this.props.data.remark.modification_type == 0) {
       remarkChangeInfo = <span className='text-danger'><b> - 与昨日完全相同！</b></span>;
     }
-
     return (
       <div>
-        <h6 className="text-primary"><b>备注{remarkChangeInfo}</b></h6>
-        <TextareaAutosize value={this.props.data.remark.content} onChange={this.handleRemarkChange}
-          style={{width: '99%', outline: '0', borderWidth: '0 0 1px'}}/>
+        <Row>
+          <Col xs={8} className="my-auto">
+            <h6 className="text-primary my-auto"><b>备注{remarkChangeInfo}</b></h6>
+          </Col>
+          <Col xs={4} className="my-auto">
+            <Form.Check type="switch" className="float-end" id="custom-switch" label="对比模式"
+              onChange={this.onModeChangeSwitchClicked} />
+          </Col>
+        </Row>
+        {
+          this.state.diffModeEnabled ?
+          <span className="text-black" dangerouslySetInnerHTML={{__html: this.state.prettyHtml}} /> :
+          <TextareaAutosize value={this.props.data.remark.content} onChange={this.handleRemarkChange}
+            style={{width: '100%', outline: '0', borderWidth: '0 0 1px'}}/>
+        }
       </div>
     );
   }
@@ -212,7 +242,7 @@ class MealPlanItem extends React.Component {
     } else if (modType == 2) {
       planChangeInfo = <span className="text-danger"> - !!危险!!</span>;
 
-      let previousText = this.props.data[this.props.itemName].prev;
+      let previousText = this.props.data[this.props.itemName].prev_content;
       let currentText = this.props.data[this.props.itemName].content;
       if (previousText.length >= 4) {
         if (isNaN(previousText.substring(0, 4)) == false) {

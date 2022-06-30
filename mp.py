@@ -522,7 +522,7 @@ def update_meal_plan():
     return Response(f'更新{date}食谱成功！', 200)
 
 
-def insert_modification_type(meal_plan):
+def analyze_plan_change_inplace(meal_plan):
 
     # type == 0: no modification
     # type == 1: safe modification
@@ -542,8 +542,8 @@ def insert_modification_type(meal_plan):
             res_new[item] = re.split(re_str, meal_plan[item]['content'])[2:]
         else:
             res_new[item] = []
-        if len(meal_plan[item]['prev']) > 0:
-            res_old[item] = re.split(re_str, meal_plan[item]['prev'])[2:]
+        if len(meal_plan[item]['prev_content']) > 0:
+            res_old[item] = re.split(re_str, meal_plan[item]['prev_content'])[2:]
         else:
             res_old[item] = []
         # The 1st element from this flawed regex split is a space
@@ -567,7 +567,6 @@ def insert_modification_type(meal_plan):
                             f'{res_old[item][j]}, {res_new[item][j]}')
                         meal_plan[item]['modification_type'] = 2
                         break
-    return meal_plan
 
 
 def read_meal_plan_from_db(mp_date: dt.date):
@@ -586,29 +585,6 @@ def read_meal_plan_from_db(mp_date: dt.date):
     return result[0] if len(result) == 1 else None
 
 
-def insert_previous_plan(meal_plan):
-
-    try:
-        res = read_meal_plan_from_db(meal_plan['metadata']['yesterday'])
-        meal_plan['breakfast']['prev'] = res[2]
-        meal_plan['morning_extra_meal']['prev'] = res[4]
-        meal_plan['lunch']['prev'] = res[6]
-        meal_plan['afternoon_extra_meal']['prev'] = res[8]
-        meal_plan['dinner']['prev'] = res[10]
-        meal_plan['evening_extra_meal']['prev'] = res[12]
-        meal_plan['remark']['prev'] = res[13]
-    except sqlalchemy.exc.NoResultFound:
-        meal_plan['breakfast']['prev'] = ''
-        meal_plan['morning_extra_meal']['prev'] = ''
-        meal_plan['lunch']['prev'] = ''
-        meal_plan['afternoon_extra_meal']['prev'] = ''
-        meal_plan['dinner']['prev'] = ''
-        meal_plan['evening_extra_meal']['prev'] = ''
-        meal_plan['remark']['prev'] = ''
-
-    return meal_plan
-
-
 def load_meal_plan_as_json(mp_date: dt.date):
     # content and feedback should be set to '' instead of None
     # so that len() will always work.
@@ -622,35 +598,42 @@ def load_meal_plan_as_json(mp_date: dt.date):
         'breakfast': {
             'title': '早餐',
             'content': '',
-            'feedback': ''
+            'feedback': '',
+            'prev_content': ''
         },
         'morning_extra_meal': {
             'title': '上午加餐',
             'content': '',
-            'feedback': ''
+            'feedback': '',
+            'prev_content': ''
         },
         'lunch': {
             'title': '午餐',
             'content': '',
-            'feedback': ''
+            'feedback': '',
+            'prev_content': ''
         },
         'afternoon_extra_meal': {
             'title': '下午加餐',
             'content': '',
-            'feedback': ''
+            'feedback': '',
+            'prev_content': ''
         },
         'dinner': {
             'title': '晚餐',
             'content': '',
-            'feedback': ''
+            'feedback': '',
+            'prev_content': ''
         },
         'evening_extra_meal': {
             'title': '晚上加餐',
             'content': '',
-            'feedback': ''
+            'feedback': '',
+            'prev_content': ''
         },
         'remark': {
-            'content': ''
+            'content': '',
+            'prev_content': ''
         }
     }
 
@@ -669,9 +652,16 @@ def load_meal_plan_as_json(mp_date: dt.date):
         mp['evening_extra_meal']['content'] = res[12]
         mp['evening_extra_meal']['feedback'] = res[13]
         mp['remark']['content'] = res[14]
-
-    mp = insert_previous_plan(mp)
-    mp = insert_modification_type(mp)
+    res = read_meal_plan_from_db(mp['metadata']['yesterday'])
+    if res is not None:
+        mp['breakfast']['prev_content'] = res[2]
+        mp['morning_extra_meal']['prev_content'] = res[4]
+        mp['lunch']['prev_content'] = res[6]
+        mp['afternoon_extra_meal']['prev_content'] = res[8]
+        mp['dinner']['prev_content'] = res[10]
+        mp['evening_extra_meal']['prev_content'] = res[12]
+        mp['remark']['prev_content'] = res[14]
+    analyze_plan_change_inplace(mp)
 
     return mp
 
