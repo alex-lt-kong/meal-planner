@@ -93,7 +93,6 @@ class MealPlanDailyRemark extends React.Component {
     super(props);
     const dmp = new DiffMatchPatch();
     const diff = dmp.diff_main(this.props.data.remark.prev_content, this.props.data.remark.content);
-    console.log(dmp.diff_prettyHtml(diff));
     this.state = {
       data: props.data,
       diffModeEnabled: false,
@@ -116,7 +115,6 @@ class MealPlanDailyRemark extends React.Component {
 
 
   onModeChangeSwitchClicked(event) {
-    console.log(`cliecked! ${event.target.checked}`);
     this.setState({
       diffModeEnabled: event.target.checked
     });
@@ -135,15 +133,15 @@ class MealPlanDailyRemark extends React.Component {
   render() {
     let remarkChangeInfo;
     if (this.props.data.remark.modification_type == 0) {
-      remarkChangeInfo = <span className='text-danger'><b> - 与昨日完全相同！</b></span>;
+      remarkChangeInfo = <span className='text-danger'><b> - 与昨日相同！</b></span>;
     }
     return (
       <div>
-        <Row>
-          <Col xs={8} className="my-auto">
+        <Row style={{marginBottom: '0.7em'}}>
+          <Col xs={6} className="my-auto">
             <h6 className="text-primary my-auto"><b>备注{remarkChangeInfo}</b></h6>
           </Col>
-          <Col xs={4} className="my-auto">
+          <Col xs={6} className="my-auto">
             <Form.Check type="switch" className="float-end" id="custom-switch" label="对比模式"
               onChange={this.onModeChangeSwitchClicked} />
           </Col>
