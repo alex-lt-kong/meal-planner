@@ -3,11 +3,12 @@
 from flask import Flask, render_template, Response, request, redirect, session
 from flask_cors import CORS
 from PIL import Image
+from waitress import serve
+
 from sqlalchemy.sql import select
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData, Table
 from sqlalchemy import func
-from waitress import serve
 
 import click
 import datetime as dt
@@ -185,7 +186,7 @@ def get_attachment():
     )
 
 
-def sanitize_filename(filename):
+def sanitize_filename(filename: str) -> str:
     # This function may be not robust enough... but should be good enough
     # for this use case...
     # also, the security is enhanced by the use of send_from_directory()
@@ -210,8 +211,9 @@ def upload_attachment():
         return Response('没有收到附件', 400)
     if request.files['selected_file'] is None:
         return Response('没有收到附件', 400)
-
     selected_file = request.files['selected_file']
+    if selected_file.filename is None:
+        return Response('附件没有文件名', 400)
 
     filename_parts = selected_file.filename.rsplit('.', 1)
     if (len(filename_parts) > 1 and
@@ -247,10 +249,10 @@ def upload_selfie():
         return Response('没有收到自拍图', 400)
     if request.files['selected_file'] is None:
         return Response('没有收到自拍图', 400)
-
     selected_file = request.files['selected_file']
-
-    if str(selected_file.filename).rsplit('.', 1)[1].lower() not in allowed_ext:
+    if selected_file.filename is None:
+        return Response('自拍图没有文件名', 400)
+    if selected_file.filename.rsplit('.', 1)[1].lower() not in allowed_ext:
         return Response(f'仅允许上传后缀为{allowed_ext}的文件', 400)
 
     date_string = dt.datetime.now().strftime('%Y-%m-%d')
@@ -368,7 +370,8 @@ def get_all_attachments():
     else:
         return Response('未登录', 401)
     attachments = {
-        'data': []
+        'data': [],
+        'username': username
     }
     try:
 
@@ -384,8 +387,6 @@ def get_all_attachments():
         logging.exception('')
         return Response('读取附件列表错误', 500)
 
-    attachments['metadata'] = {}
-    attachments['metadata']['username'] = username
     return flask.jsonify(attachments)
 
 
@@ -569,39 +570,33 @@ def insert_modification_type(meal_plan):
     return meal_plan
 
 
-def read_meal_plan_from_db(date_string: str):
+def read_meal_plan_from_db(mp_date: dt.date):
 
-    conn_str = (f'mysql+pymysql://{db_username}:{db_password}@'
-                f'{db_url}/{db_name}')
-    engine = create_engine(conn_str)
+    conn = None
+    try:
+        conn = pymysql.connect(host=db_url, user=db_username, password=db_password, database=db_name)
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT * FROM meal_plan WHERE date = %s', (mp_date, ))
+            result = cursor.fetchall()
+            assert len(result) <= 1
+    finally:
+        if conn is not None:
+            conn.close()
 
-    # Reflection - may have performance issues if done each time.
-    # But let's make everything work before optimizing it!
-    metadata = MetaData(bind=engine)
-    mp = Table('meal_plan', metadata, autoload_with=engine)
-
-    s = select([mp]).where(mp.columns.date == date_string)
-    with engine.begin() as conn:
-        result = conn.execute(s).one()
-
-    return result
+    return result[0] if len(result) == 1 else None
 
 
 def insert_previous_plan(meal_plan):
 
-    today = dt.datetime.strptime(meal_plan['metadata']['date'], '%Y-%m-%d')
-    yesterday = today - dt.timedelta(days=1)
-
     try:
-        res = read_meal_plan_from_db(dt.datetime.strftime(yesterday,
-                                                          '%Y-%m-%d'))
-        meal_plan['breakfast']['prev'] = res['breakfast']
-        meal_plan['morning_extra_meal']['prev'] = res['morning_extra_meal']
-        meal_plan['lunch']['prev'] = res['lunch']
-        meal_plan['afternoon_extra_meal']['prev'] = res['afternoon_extra_meal']
-        meal_plan['dinner']['prev'] = res['dinner']
-        meal_plan['evening_extra_meal']['prev'] = res['evening_extra_meal']
-        meal_plan['remark']['prev'] = res['daily_remark']
+        res = read_meal_plan_from_db(meal_plan['metadata']['yesterday'])
+        meal_plan['breakfast']['prev'] = res[2]
+        meal_plan['morning_extra_meal']['prev'] = res[4]
+        meal_plan['lunch']['prev'] = res[6]
+        meal_plan['afternoon_extra_meal']['prev'] = res[8]
+        meal_plan['dinner']['prev'] = res[10]
+        meal_plan['evening_extra_meal']['prev'] = res[12]
+        meal_plan['remark']['prev'] = res[13]
     except sqlalchemy.exc.NoResultFound:
         meal_plan['breakfast']['prev'] = ''
         meal_plan['morning_extra_meal']['prev'] = ''
@@ -614,61 +609,66 @@ def insert_previous_plan(meal_plan):
     return meal_plan
 
 
-def convert_meal_plan_to_json(date_string: str):
-
+def load_meal_plan_as_json(mp_date: dt.date):
     # content and feedback should be set to '' instead of None
     # so that len() will always work.
-    mp = {}
-    mp['metadata'] = {}
-    mp['metadata']['date'] = date_string
-    mp['breakfast'] = {}
-    mp['breakfast']['title'] = '早餐'
-    mp['morning_extra_meal'] = {}
-    mp['morning_extra_meal']['title'] = '上午加餐'
-    mp['lunch'] = {}
-    mp['lunch']['title'] = '午餐'
-    mp['afternoon_extra_meal'] = {}
-    mp['afternoon_extra_meal']['title'] = '下午加餐'
-    mp['dinner'] = {}
-    mp['dinner']['title'] = '晚餐'
-    mp['evening_extra_meal'] = {}
-    mp['evening_extra_meal']['title'] = '晚上加餐'
-    mp['remark'] = {}
+    mp = {
+        'metadata': {
+            'date': dt.date.strftime(mp_date, '%Y-%m-%d'),
+            'today':  mp_date,
+            'yesterday': dt.date.strftime(mp_date - dt.timedelta(days=1), '%Y-%m-%d'),
+            
+        },
+        'breakfast': {
+            'title': '早餐',
+            'content': '',
+            'feedback': ''
+        },
+        'morning_extra_meal': {
+            'title': '上午加餐',
+            'content': '',
+            'feedback': ''
+        },
+        'lunch': {
+            'title': '午餐',
+            'content': '',
+            'feedback': ''
+        },
+        'afternoon_extra_meal': {
+            'title': '下午加餐',
+            'content': '',
+            'feedback': ''
+        },
+        'dinner': {
+            'title': '晚餐',
+            'content': '',
+            'feedback': ''
+        },
+        'evening_extra_meal': {
+            'title': '晚上加餐',
+            'content': '',
+            'feedback': ''
+        },
+        'remark': {
+            'content': ''
+        }
+    }
 
-    try:
-        res = read_meal_plan_from_db(date_string)
-
-        mp['breakfast']['content'] = res['breakfast']
-        mp['breakfast']['feedback'] = res['breakfast_feedback']
-        mp['morning_extra_meal']['content'] = res['morning_extra_meal']
-        mp['morning_extra_meal'][
-            'feedback'] = res['morning_extra_meal_feedback']
-        mp['lunch']['content'] = res['lunch']
-        mp['lunch']['feedback'] = res['lunch_feedback']
-        mp['afternoon_extra_meal'][
-            'content'] = res['afternoon_extra_meal']
-        mp['afternoon_extra_meal'][
-            'feedback'] = res['afternoon_extra_meal_feedback']
-        mp['dinner']['content'] = res['dinner']
-        mp['dinner']['feedback'] = res['dinner_feedback']
-        mp['evening_extra_meal']['content'] = res['evening_extra_meal']
-        mp['evening_extra_meal'][
-            'feedback'] = res['evening_extra_meal_feedback']
-        mp['remark']['content'] = res['daily_remark']
-    except sqlalchemy.exc.NoResultFound:
-        mp['breakfast']['content'] = ''
-        mp['breakfast']['feedback'] = ''
-        mp['morning_extra_meal']['content'] = ''
-        mp['morning_extra_meal']['feedback'] = ''
-        mp['lunch']['content'] = ''
-        mp['lunch']['feedback'] = ''
-        mp['afternoon_extra_meal']['content'] = ''
-        mp['afternoon_extra_meal']['feedback'] = ''
-        mp['dinner']['content'] = ''
-        mp['dinner']['feedback'] = ''
-        mp['evening_extra_meal']['content'] = ''
-        mp['evening_extra_meal']['feedback'] = ''
-        mp['remark']['content'] = ''
+    res = read_meal_plan_from_db(mp_date)
+    if res is not None:
+        mp['breakfast']['content'] = res[2]
+        mp['breakfast']['feedback'] = res[3]
+        mp['morning_extra_meal']['content'] = res[4]
+        mp['morning_extra_meal']['feedback'] = res[5]
+        mp['lunch']['content'] = res[6]
+        mp['lunch']['feedback'] = res[7]
+        mp['afternoon_extra_meal']['content'] = res[8]
+        mp['afternoon_extra_meal']['feedback'] = res[9]
+        mp['dinner']['content'] = res[10]
+        mp['dinner']['feedback'] = res[11]
+        mp['evening_extra_meal']['content'] = res[12]
+        mp['evening_extra_meal']['feedback'] = res[13]
+        mp['remark']['content'] = res[14]
 
     mp = insert_previous_plan(mp)
     mp = insert_modification_type(mp)
@@ -698,13 +698,13 @@ def get_meal_plan():
     else:
         return Response('未指定参数date', 400)
     try:
-        dt.datetime.strptime(date_string, '%Y-%m-%d')
+        mp_date = dt.datetime.strptime(date_string, '%Y-%m-%d')
     except Exception:
         logging.exception('')
         return Response('参数date的语法不正确', 400)
 
     try:
-        meal_plan = convert_meal_plan_to_json(date_string)
+        meal_plan = load_meal_plan_as_json(mp_date)
         meal_plan['metadata']['username'] = username
     except Exception:
         logging.exception('')
