@@ -19,7 +19,6 @@ class TopNavBar extends React.Component {
   getLoggedInUser() {
     axios.get('./get-logged-in-user/')
         .then((response) => {
-          console.log(response.data);
           this.setState({
             loggedInUser: response.data.username
           });

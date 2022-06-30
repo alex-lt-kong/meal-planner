@@ -9,6 +9,16 @@ $('#table_id').DataTable( {
     url: './get-all-attachments/',
     dataSrc: 'data'
   },
+  responsive: true,
+  oLanguage: {
+    sSearch: '搜索:',
+    sInfo: '共_TOTAL_项',
+    sInfoFiltered: '',
+    oPaginate: {
+      sNext: '下页',
+      sPrevious: '上页'
+    }
+  },
   lengthChange: false,
   order: [[0, 'desc']],
   columns: [
@@ -19,7 +29,7 @@ $('#table_id').DataTable( {
     targets: 1,
     render: (data, type, row, meta) => {
       return (
-        `<a href="./get-attachment/?date=${row['date']}&filename=${data}" ` +
+        `<a class="text-dark" href="./get-attachment/?date=${row['date']}&filename=${data}" ` +
         `target="_blank" style="text-decoration: none;">${data}</a>`
       );
     }

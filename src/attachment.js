@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import Button from 'react-bootstrap/Button';
 import moment from 'moment';
 import axios from 'axios';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 const $ = require('jquery');
 
 class AttachmentsManager extends React.Component {
@@ -157,17 +159,17 @@ class AttachmentsManager extends React.Component {
         </a>;
         /* href="javascript:;" a link that goes to nowhere */;
         if (this.props.enableEdit === true) {
-          removeButton = <img className="w3-right" value={this.state.data.filenames[i]} src="./static/img/delete.png"
+          removeButton = <img className="float-end" value={this.state.data.filenames[i]} src="./static/img/delete.png"
             style={{marginLeft: '1em', marginBottom: '0.66em', maxWidth: '1.25em'}}
             onClick={this.handleClickFileRemove.bind(this, this.state.data.filenames[i])} />;
         }
         if (this.props.enableEdit === true) {
           if (this.state.renameModeFile != this.state.data.filenames[i]) {
-            renameButton = <img className="w3-right" value={this.state.data.filenames[i]}
+            renameButton = <img className="float-end" value={this.state.data.filenames[i]}
               src="./static/img/rename.png" style={{maxWidth: '1.25em'}}
               onClick={this.handleClickEnableRenameMode.bind(this, this.state.data.filenames[i])} />;
           } else {
-            renameButton = <button className="w3-right"
+            renameButton = <button className="float-end"
               onClick={this.handleClickSubmitNewFilename.bind(this, this.state.newFileName)}>完成</button>;
             filenameDisplay = <input type="text" style={{width: '100%'}}
               value={this.state.newFileName} onChange={this.handleNewFilenameChange}></input>;
@@ -175,17 +177,17 @@ class AttachmentsManager extends React.Component {
         }
         filenames[i] = (
           <li key={i} style={{paddingLeft: '0.2em', paddingRight: '0.2em'}}>
-            <div className="w3-cell-row">
-              <div className="w3-container w3-cell" style={{maxWidth: '65vw', wordWrap: 'break-word'}}>
+            <Row>
+              <Col xs={8} className="my-auto">
                 <div value={this.state.data.filenames[i]} >
                   {filenameDisplay}
                 </div>
-              </div>
-              <div className="w3-container w3-cell">
+              </Col>
+              <Col xs={4} className="my-auto">
                 {removeButton}
                 {renameButton}
-              </div>
-            </div>
+              </Col>
+            </Row>
           </li>
         );
       }
@@ -194,7 +196,7 @@ class AttachmentsManager extends React.Component {
     let progressBar = null;
     if (this.state.uploadProgress === null) {
     } else {
-      progressBar = <span>（上传进度：{this.state.uploadProgress}%）</span>;
+      progressBar = <span>（上传进度：{this.state.uploadProgress}%)</span>;
     }
 
     let uploadButton = null;
@@ -210,7 +212,7 @@ class AttachmentsManager extends React.Component {
     }
     return (
       <div>
-        <ul className="w3-ul">
+        <ul>
           {filenames}
         </ul>
         {uploadButton}
