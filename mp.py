@@ -744,8 +744,15 @@ def get_history_notes():
         d['metadata']['date'] = dt.datetime.strftime(row[0], '%Y-%m-%d')
         d['metadata']['username'] = username
         d['content'] = row[1]
+        dicts.append(d)
 
-        dicts.append(d)    
+    if len(dicts) == 0:
+        d = {}
+        d['metadata'] = {}
+        d['metadata']['date'] = dt.date.today()
+        d['metadata']['username'] = username
+        d['content'] = ''
+        dicts.append(d)
 
     return flask.jsonify(dicts)
 

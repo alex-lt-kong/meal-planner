@@ -153,7 +153,7 @@ class Reminder extends React.Component {
               {this.state.reminderData.message}
             </Col>
             <Col xs={4} className="my-auto">
-              <Button className="pull-right my-auto" onClick={this.handleClickMessageBoxOK}>确认</Button>
+              <Button className="float-end my-auto" onClick={this.handleClickMessageBoxOK}>确认</Button>
             </Col>
           </Row>
         </Modal.Footer>

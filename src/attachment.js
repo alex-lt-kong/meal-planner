@@ -202,7 +202,7 @@ class AttachmentsManager extends React.Component {
       uploadButton = <div>
         <input id="input-fileupload-attachment" onChange={this.onFileChange} type="file" style={{display: 'none'}}>
         </input>
-        <Button className="pull-right" variant="primary" onClick={this.handleUploadAttachmentButtonClick}>
+        <Button className="float-end" variant="primary" onClick={this.handleUploadAttachmentButtonClick}>
           上传附件
         </Button>
         {/* button and input is bound using jQuery... */}

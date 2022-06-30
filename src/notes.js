@@ -42,6 +42,8 @@ class App extends React.Component {
   fetchDataFromServer() {
     axios.get('./get-history-notes/')
         .then((response) => {
+          // What if there arent any notes at the moment? The server will return an empty entry so that
+          // we dont need to handle that here.
           this.setState({
             data: response.data,
             currNoteIndex: response.data.length - 1
@@ -115,8 +117,7 @@ class App extends React.Component {
               (更新日期：{this.state.data[this.state.currNoteIndex].metadata.date})
               {
                 this.state.currNoteIndex === this.state.data.length - 1 ?
-                <Button className="pull-right" style={{marginLeft: '1em'}} variant="primary"
-                  onClick={this.handleClickUpdate}>提交</Button> :
+                <Button className="float-end" variant="primary" onClick={this.handleClickUpdate}>提交</Button> :
                 <></>
               }
             </div>

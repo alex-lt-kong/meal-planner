@@ -56,37 +56,41 @@ class App extends React.Component {
 
   render() {
     return (
-      <Card style={{maxWidth: '30em', justifyContent: 'center'}}>
-        <Card.Header className="text-white bg-primary">登录</Card.Header>
-        <Card.Body>
-          <Form>
-            <Form.Group className="mb-3" controlId="formBasicEmail">
-              <Form.Label>用户名</Form.Label>
-              <Form.Control type="email" placeholder="请输入用户名"
-                value={this.state.username} onChange={this.onUsernameValueChanged} />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formBasicPassword">
-              <Form.Label>密码</Form.Label>
-              <Form.Control type="password" placeholder="请输入密码" value={this.state.password}
-                onChange={this.onPasswordValueChanged} />
-            </Form.Group>
-            <Row>
-              <Col xs={8} className="my-auto">
-                {
-                  this.state.errMessage === null ?
-                  <></> :
-                  <span className="text-danger"><strong>{this.state.errMessage}</strong></span>
-                }
-              </Col>
-              <Col xs={4} className="my-auto">
-                <Button className="float-end" variant="primary" onClick={this.onSubmitButtonClicked}>
-                  登录
-                </Button>
-              </Col>
-            </Row>
-          </Form>
-        </Card.Body>
-      </Card>
+      <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh'}}>
+        {/* height:80vh is the magic--it controls how high the div is so and the content will be vertically
+        centered based on this height*/}
+        <Card style={{width: '30em'}} className="border-1 shadow-lg">
+          <Card.Header className="text-white bg-primary">登录</Card.Header>
+          <Card.Body>
+            <Form>
+              <Form.Group className="mb-3" controlId="formBasicEmail">
+                <Form.Label>用户名</Form.Label>
+                <Form.Control type="email" placeholder="请输入用户名"
+                  value={this.state.username} onChange={this.onUsernameValueChanged} />
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="formBasicPassword">
+                <Form.Label>密码</Form.Label>
+                <Form.Control type="password" placeholder="请输入密码" value={this.state.password}
+                  onChange={this.onPasswordValueChanged} />
+              </Form.Group>
+              <Row>
+                <Col xs={8} className="my-auto">
+                  {
+                    this.state.errMessage === null ?
+                    <></> :
+                    <span className="text-danger"><strong>{this.state.errMessage}</strong></span>
+                  }
+                </Col>
+                <Col xs={4} className="my-auto">
+                  <Button className="float-end" variant="primary" onClick={this.onSubmitButtonClicked}>
+                    登录
+                  </Button>
+                </Col>
+              </Row>
+            </Form>
+          </Card.Body>
+        </Card>
+      </div>
     );
   }
 }

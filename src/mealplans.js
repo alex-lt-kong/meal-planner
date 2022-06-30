@@ -59,7 +59,7 @@ class MealPlanDailySelfie extends React.Component {
     if (this.props.enableUpload === true) {
       buttonUpload = (
         <div style={{paddingBottom: '3em', paddingTop: '1em'}}>
-          <Button className="pull-right" variant="primary" onClick={this.handleUploadSelfieButtonClick}>上传自拍</Button>
+          <Button className="float-end" variant="primary" onClick={this.handleUploadSelfieButtonClick}>上传自拍</Button>
           <input id="input-fileupload-selfie" onChange={this.onFileChange} type="file"
             style={{display: 'none'}} accept="image/png, image/gif, image/jpeg" />
           {/* button and input is bound using jQuery... */}
@@ -382,7 +382,7 @@ class MealPlan extends React.Component {
         <div style={{paddingBottom: '3em', paddingTop: '1.5em'}}>
           {
             (isDBY || isYesterday || isToday || isTomorrow) ?
-            <Button className="pull-right" style={{marginLeft: '1em'}} variant="primary"
+            <Button className="float-end" style={{marginLeft: '1em'}} variant="primary"
               onClick={this.handleClickUpdate}>
               提交
             </Button> : null
@@ -390,7 +390,7 @@ class MealPlan extends React.Component {
           {
             (isToday || isTomorrow) ?
             (
-              <Button className="pull-right" variant="primary" onClick={this.handleCopyPlanFromPrevDayClick}>
+              <Button className="float-end" variant="primary" onClick={this.handleCopyPlanFromPrevDayClick}>
                 沿用上日
               </Button>
             ) : null
