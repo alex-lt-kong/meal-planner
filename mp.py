@@ -27,6 +27,7 @@ app.config.update(
     MAX_CONTENT_LENGTH=1,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
+    SEND_FILE_MAX_AGE_DEFAULT=36000
 )
 
 allowed_ext = []
