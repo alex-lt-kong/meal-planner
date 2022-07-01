@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
 from flask import Flask, render_template, Response, request, redirect, session
-from PIL import Image
-from waitress import serve
 from typing import Dict, Any
 
 import click
@@ -14,12 +12,14 @@ import json
 import logging
 import numpy as np
 import os
+import PIL
 import pymysql
 import random
 import re
 import signal
 import sys
 import threading
+import waitress
 
 app = Flask(__name__)
 app.secret_key = b''
@@ -259,7 +259,7 @@ def upload_selfie():
     filename = f'{date_string}{oldext}'
     selected_file.seek(0)
     try:
-        image = Image.open(selected_file).convert('RGB')
+        image = PIL.Image.open(selected_file).convert('RGB')
         image.thumbnail((1024, 1024))
         # (800, 800): the maximum width and maximum height of the thumbnail
         image.save(os.path.join(selfies_path, filename))
@@ -953,7 +953,7 @@ def main(debug):
                                         'delay': 0 if debug else 300})
     th_email.start()
 
-    serve(app, host=host, port=port)
+    waitress.serve(app, host=host, port=port)
 
 
 if __name__ == '__main__':
