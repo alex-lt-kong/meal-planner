@@ -42,7 +42,7 @@ class TopNavBar extends React.Component {
             </Nav>
             <Navbar.Collapse className="justify-content-end">
               <Navbar.Text>
-                在线用户: &nbsp;[{this.state.loggedInUser}],&nbsp;<a href="./logout">退出</a>
+                在线用户: &nbsp;[{this.state.loggedInUser}],&nbsp;<a href="./logout/">退出</a>
               </Navbar.Text>
             </Navbar.Collapse>
           </Navbar.Collapse>

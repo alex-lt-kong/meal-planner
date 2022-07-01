@@ -1,14 +1,9 @@
 #!/usr/bin/python3
 
 from flask import Flask, render_template, Response, request, redirect, session
-from flask_cors import CORS
 from PIL import Image
 from waitress import serve
-
-from sqlalchemy.sql import select
-from sqlalchemy import create_engine
-from sqlalchemy import MetaData, Table
-from sqlalchemy import func
+from typing import Dict, Any
 
 import click
 import datetime as dt
@@ -23,7 +18,6 @@ import pymysql
 import random
 import re
 import signal
-import sqlalchemy
 import sys
 import threading
 
@@ -34,10 +28,6 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
 )
-
-CORS(app)
-#  This necessary for javascript to access a telemetry link without opening it:
-#  https://stackoverflow.com/questions/22181384/javascript-no-access-control-allow-origin-header-is-present-on-the-requested
 
 allowed_ext = []
 app_name = 'meal-planner'
@@ -433,7 +423,8 @@ def login():
             with open(users_path, 'r') as json_file:
                 json_str = json_file.read()
                 json_data = json.loads(json_str)
-        except Exception as e:
+        except Exception:
+            logging.exception()
             return Response('内部错误：用户信息读取失败', 500)
         if request.form['username'] not in json_data['users']:
             return flask.jsonify({'authenticated': False})
@@ -449,40 +440,34 @@ def login():
     return render_template('login.html', message='')
 
 
-def write_meal_plan_to_db(json_data, date_string):
+def write_meal_plan_to_db(data: Dict[str, Any], mp_date: dt.date):
 
-    conn_str = (f'mysql+pymysql://{db_username}:{db_password}@'
-                f'{db_url}/{db_name}')
-    engine = create_engine(conn_str)
-
-    # Reflection - may have performance issues if done each time.
-    # But let's make everything work before optimizing it!
-    metadata = MetaData(bind=engine)
-    mp = Table('meal_plan', metadata, autoload_with=engine)
-
-    with engine.begin() as conn:
-        # begin() starts a transaction
-        d = mp.delete(mp.c.date == date_string)
-        conn.execute(d)
-        i = mp.insert().values(
-            date=date_string,
-            breakfast=json_data['breakfast']['content'],
-            breakfast_feedback=json_data['breakfast']['feedback'],
-            morning_extra_meal=json_data['morning_extra_meal']['content'],
-            morning_extra_meal_feedback=json_data[
-                'morning_extra_meal']['feedback'],
-            lunch=json_data['lunch']['content'],
-            lunch_feedback=json_data['lunch']['feedback'],
-            afternoon_extra_meal=json_data['afternoon_extra_meal']['content'],
-            afternoon_extra_meal_feedback=json_data[
-                'afternoon_extra_meal']['feedback'],
-            dinner=json_data['dinner']['content'],
-            dinner_feedback=json_data['dinner']['feedback'],
-            evening_extra_meal=json_data['evening_extra_meal']['content'],
-            evening_extra_meal_feedback=json_data[
-                'evening_extra_meal']['feedback'],
-            daily_remark=json_data['remark']['content'])
-        conn.execute(i)
+    conn = None
+    try:
+        conn = pymysql.connect(host=db_url, user=db_username, password=db_password, database=db_name)
+        with conn.cursor() as cursor:
+            cursor.execute('DELETE FROM meal_plan WHERE `date` = %s', (mp_date, ))
+            cursor.execute('''
+    INSERT INTO meal_plan (
+        date,
+        breakfast, breakfast_feedback, morning_extra_meal, morning_extra_meal_feedback, lunch, lunch_feedback,
+        afternoon_extra_meal, afternoon_extra_meal_feedback, dinner, dinner_feedback,
+        evening_extra_meal, evening_extra_meal_feedback, daily_remark
+    )
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+            ''', (
+                mp_date, data['breakfast']['content'], data['breakfast']['feedback'],
+                data['morning_extra_meal']['content'], data['morning_extra_meal']['feedback'],
+                data['lunch']['content'], data['lunch']['feedback'],
+                data['afternoon_extra_meal']['content'], data['afternoon_extra_meal']['feedback'],
+                data['dinner']['content'], data['dinner']['feedback'],
+                data['evening_extra_meal']['content'], data['evening_extra_meal']['feedback'],
+                data['remark']['content']
+            ))
+            conn.commit()
+    finally:
+        if conn is not None:
+            conn.close()
 
 
 @app.route('/update-meal-plan/', methods=['POST'])
@@ -516,7 +501,7 @@ def update_meal_plan():
     try:
         write_meal_plan_to_db(json_data, date)
     except Exception:
-        logging.exception('')
+        logging.exception()
         return Response('写入数据库失败', 500)
 
     return Response(f'更新{date}食谱成功！', 200)

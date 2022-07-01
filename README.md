@@ -32,3 +32,7 @@ pip3 install -r requirements.txt
 ```
 npm install
 ```
+
+## Deployment
+
+* Compile/Transpile : `node babelify.js [--dev|--prod]`
