@@ -8,17 +8,29 @@ import DiffMatchPatch from 'diff-match-patch';
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
+import ToggleButton from 'react-bootstrap/ToggleButton';
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       data: null,
-      currNoteIndex: null
+      currNoteIndex: null,
+      diffModeEnabled: false
     };
     this.onIndexChanged = this.onIndexChanged.bind(this);
     this.handleNotesChange = this.handleNotesChange.bind(this);
     this.handleClickUpdate = this.handleClickUpdate.bind(this);
+    this.onNotesModeChangeClicked = this.onNotesModeChangeClicked.bind(this);
+  }
+
+  onNotesModeChangeClicked(event) {
+    this.setState({
+      diffModeEnabled: event === 2
+    });
   }
 
   componentDidMount() {
@@ -90,17 +102,18 @@ class App extends React.Component {
     if (this.state.data === null) {
       return null;
     }
-    let prettyDiff = null;
-    if (this.state.currNoteIndex >= 1 && this.state.data.length > 1) {
+    let prettyDiffHtml = '';
+    if (this.state.diffModeEnabled) {
       const dmp = new DiffMatchPatch();
-      const diff = dmp.diff_main(
-          this.state.data[this.state.currNoteIndex - 1].content, this.state.data[this.state.currNoteIndex].content
-      );
-      prettyDiff = (
-        <span>
-          <b>对照：</b>
-          <span dangerouslySetInnerHTML={{__html: dmp.diff_prettyHtml(diff)}} />
-        </span>);
+      let diff;
+      if (this.state.currNoteIndex >= 1 && this.state.data.length > 1) {
+        diff = dmp.diff_main(
+            this.state.data[this.state.currNoteIndex - 1].content, this.state.data[this.state.currNoteIndex].content
+        );
+      } else {
+        diff = dmp.diff_main('', this.state.data[this.state.currNoteIndex].content);
+      }
+      prettyDiffHtml = dmp.diff_prettyHtml(diff).replaceAll('&para;', '');
     }
 
     return (
@@ -111,17 +124,35 @@ class App extends React.Component {
           marginLeft: 'auto', marginRight: 'auto', marginBottom: '3em'
         }}>
           <div>
-            <TextareaAutosize value={this.state.data[this.state.currNoteIndex].content}
-              onChange={this.handleNotesChange} style={{width: '100%', outline: '0', borderWidth: '0 0 1px'}}/>
+            {
+              this.state.diffModeEnabled ?
+              <span className="text-black"
+                dangerouslySetInnerHTML={{__html: prettyDiffHtml}} /> :
+              <TextareaAutosize value={this.state.data[this.state.currNoteIndex].content}
+                onChange={this.handleNotesChange} style={{width: '100%', outline: '0', borderWidth: '0 0 1px'}}/>
+            }
             <div>
-              (更新日期：{this.state.data[this.state.currNoteIndex].metadata.date})
-              {
-                this.state.currNoteIndex === this.state.data.length - 1 ?
-                <Button className="float-end" variant="primary" onClick={this.handleClickUpdate}>提交</Button> :
-                <></>
-              }
+              <Row>
+                <Col xs={5} className="my-auto">
+                  (更新于：{this.state.data[this.state.currNoteIndex].metadata.date})
+                </Col>
+                <Col xs={7} className="my-auto">
+                  <Button className="float-end" variant="primary" onClick={this.handleClickUpdate}
+                    disabled={this.state.currNoteIndex !== this.state.data.length - 1}>
+                      提交
+                  </Button>
+                  <ToggleButtonGroup type="radio" name="options" className="float-end" defaultValue={1}
+                    style={{marginRight: '1em'}} onChange={this.onNotesModeChangeClicked}>
+                    <ToggleButton id="tbg-radio-1" value={1}>
+                      原文
+                    </ToggleButton>
+                    <ToggleButton id="tbg-radio-2" value={2}>
+                      对照
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                </Col>
+              </Row>
             </div>
-            {prettyDiff}
           </div>
         </div>
         <Navbar bg="primary" expand="lg" variant="dark" fixed="bottom">
@@ -129,7 +160,9 @@ class App extends React.Component {
             <Nav className="me-auto">
               <Nav.Link onClick={() => this.onIndexChanged(-1)}>&nbsp;&nbsp;❰&nbsp;&nbsp;</Nav.Link>
             </Nav>
-            <Nav className="mx-auto text-light"><b>第{this.state.currNoteIndex + 1}/{this.state.data.length}版笔记</b></Nav>
+            <Nav className="mx-auto text-light">
+              <b>第{this.state.currNoteIndex + 1}/{this.state.data.length}版笔记</b>
+            </Nav>
             <Nav className="ms-auto">
               <Nav.Link onClick={() => this.onIndexChanged(1)}>&nbsp;&nbsp;❱&nbsp;&nbsp;</Nav.Link>
             </Nav>

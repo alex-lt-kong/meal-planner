@@ -1,8 +1,7 @@
 import React from 'react';
 import {createRoot} from 'react-dom/client';
 import {Reminder} from './reminder';
-const MealPlan = require('./mealplans.js').MealPlan;
-const Blacklist = require('./blacklist.js').Blacklist;
+import {MealPlan} from './mealplans.js';
 import {TopNavBar, BottomNavBar} from './navbar';
 import Card from 'react-bootstrap/Card';
 

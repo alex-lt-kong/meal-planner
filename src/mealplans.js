@@ -9,7 +9,8 @@ import Col from 'react-bootstrap/Col';
 import TextareaAutosize from 'react-textarea-autosize';
 import moment from 'moment';
 const $ = require('jquery');
-const MealPlanDailyAttachments = require('./attachment.js').MealPlanDailyAttachments;
+import {MealPlanDailyAttachments} from './attachment.js';
+
 
 class MealPlanDailySelfie extends React.Component {
   constructor(props) {
@@ -96,7 +97,7 @@ class MealPlanDailyRemark extends React.Component {
     this.state = {
       data: props.data,
       diffModeEnabled: false,
-      prettyHtml: dmp.diff_prettyHtml(diff).replaceAll('&para', '')
+      prettyHtml: dmp.diff_prettyHtml(diff).replaceAll('&para;', '')
     };
     this.handleRemarkChange = this.handleRemarkChange.bind(this);
     this.onModeChangeSwitchClicked = this.onModeChangeSwitchClicked.bind(this);
@@ -108,11 +109,10 @@ class MealPlanDailyRemark extends React.Component {
       const diff = dmp.diff_main(this.props.data.remark.prev_content, this.props.data.remark.content);
       this.setState({
         data: this.props.data,
-        prettyHtml: dmp.diff_prettyHtml(diff).replaceAll('&para', '')
+        prettyHtml: dmp.diff_prettyHtml(diff).replaceAll('&para;', '')
       });
     }
   }
-
 
   onModeChangeSwitchClicked(event) {
     this.setState({
@@ -142,7 +142,7 @@ class MealPlanDailyRemark extends React.Component {
             <h6 className="text-primary my-auto"><b>备注{remarkChangeInfo}</b></h6>
           </Col>
           <Col xs={6} className="my-auto">
-            <Form.Check type="switch" className="float-end" id="custom-switch" label="对比模式"
+            <Form.Check type="switch" className="float-end" label="对照模式"
               onChange={this.onModeChangeSwitchClicked} />
           </Col>
         </Row>

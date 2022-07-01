@@ -36,3 +36,4 @@ npm install
 ## Deployment
 
 * Compile/Transpile : `node babelify.js [--dev|--prod]`
+* Create tables as defined in `tables` directory

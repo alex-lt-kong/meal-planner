@@ -8,6 +8,7 @@ const srcList = [
 
 if (process.argv.length !== 3 || (process.argv[2] !== '--prod' && process.argv[2] !== '--dev')) {
   console.warn('Shoud specify --prod or --dev');
+  exit(1);
 }
 
 // sample is from tinyify: https://github.com/browserify/tinyify

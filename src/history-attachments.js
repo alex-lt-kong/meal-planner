@@ -9,6 +9,7 @@ $('#table_id').DataTable( {
     url: './get-all-attachments/',
     dataSrc: 'data'
   },
+  pagingType: 'full',
   responsive: true,
   oLanguage: {
     sSearch: '搜索:',
@@ -16,7 +17,9 @@ $('#table_id').DataTable( {
     sInfoFiltered: '',
     oPaginate: {
       sNext: '下页',
-      sPrevious: '上页'
+      sPrevious: '上页',
+      sLast: '末页',
+      sFirst: '首页'
     }
   },
   lengthChange: false,
