@@ -16,7 +16,7 @@ apt install mariadb-server phpmyadmin
 
 * Tested versions:
     * Python: `3.9`
-    * Node.js: `14.19`,
+    * Node.js: `14.19`, `18.04`
     * npm: `6.14`,
 
 ### Python environment
