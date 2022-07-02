@@ -3,7 +3,7 @@ const browserify = require('browserify');
 
 const srcList = [
   'login.js', 'history-attachments.js', 'notes.js', 'history-selfies.js',
-  'blacklist.js', 'notes.js', 'index.js', 'reminder.js', 'mealplans.js', 'attachment.js'
+  'blacklist.js', 'index.js', 'reminder.js', 'mealplans.js', 'attachment.js'
 ];
 
 if (process.argv.length !== 3 || (process.argv[2] !== '--prod' && process.argv[2] !== '--dev')) {
