@@ -2,6 +2,9 @@
 
 from flask import Flask, render_template, Response, request, redirect, session
 from typing import Dict, Any
+from PIL import Image
+# canNOT change this to import PIL and use PIL.Image...:
+# https://stackoverflow.com/questions/11911480/python-pil-has-no-attribute-image
 
 import click
 import datetime as dt
@@ -12,7 +15,6 @@ import json
 import logging
 import numpy as np
 import os
-import PIL
 import pymysql
 import random
 import re
@@ -259,7 +261,7 @@ def upload_selfie():
     filename = f'{date_string}{oldext}'
     selected_file.seek(0)
     try:
-        image = PIL.Image.open(selected_file).convert('RGB')
+        image = Image.open(selected_file).convert('RGB')
         image.thumbnail((1024, 1024))
         # (800, 800): the maximum width and maximum height of the thumbnail
         image.save(os.path.join(selfies_path, filename))
