@@ -2,8 +2,7 @@ const fs = require('fs');
 const browserify = require('browserify');
 
 const srcList = [
-  'login.js', 'history-attachments.js', 'notes.js', 'history-selfies.js',
-  'blacklist.js', 'index.js', 'reminder.js', 'mealplans.js', 'attachment.js'
+  'login.js', 'history-attachments.js', 'notes.js', 'history-selfies.js', 'index.js', 'attachment.js'
 ];
 
 if (process.argv.length !== 3 || (process.argv[2] !== '--prod' && process.argv[2] !== '--dev')) {

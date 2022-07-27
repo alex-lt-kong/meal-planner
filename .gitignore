@@ -1,3 +1,27 @@
+# ===== Custom =====
+
+settings.json
+!./.vscode/settings.json
+users.json
+resources/selfies/*
+resources/attachments/*
+blacklist.json
+test.py
+
+# ===== VS Code =====
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
 # ===== Flask + JS =====
 static/js/*.js
 
@@ -132,16 +156,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-
-
-# 
-settings.json
-!./.vscode/settings.json
-users.json
-resources/selfies/*
-resources/attachments/*
-blacklist.json
-test.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/# Logs

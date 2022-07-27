@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
+from emailer import emailer
 from flask import Flask, render_template, Response, request, redirect, session
-from typing import Dict, Any
 from PIL import Image
 # canNOT change this to import PIL and use PIL.Image...:
 # https://stackoverflow.com/questions/11911480/python-pil-has-no-attribute-image
@@ -10,7 +10,6 @@ import click
 import datetime as dt
 import flask
 import hashlib
-import importlib.machinery as im
 import json
 import logging
 import numpy as np
@@ -21,6 +20,7 @@ import re
 import signal
 import sys
 import threading
+import typing
 import waitress
 
 app = Flask(__name__)
@@ -32,7 +32,7 @@ app.config.update(
     SEND_FILE_MAX_AGE_DEFAULT=36000
 )
 
-allowed_ext = []
+allowed_ext: typing.List[str] = []
 app_name = 'meal-planner'
 # app_address: the app's address on the Internet
 app_address = ''
@@ -43,8 +43,6 @@ blacklist_path = os.path.join(app_dir, 'blacklist.json')
 debug_mode = False
 db_url, db_username, db_password, db_name = '', '', '', ''
 external_script_dir = ''
-loader = im.SourceFileLoader('emailer', f'{app_dir}/../emailer/emailer.py')
-emailer = loader.load_module()
 log_path = ''
 selfies_path = os.path.join(app_dir, 'resources/selfies')
 settings_path = os.path.join(app_dir, 'settings.json')
@@ -443,7 +441,7 @@ def login():
     return render_template('login.html', message='')
 
 
-def write_meal_plan_to_db(data: Dict[str, Any], mp_date: dt.date):
+def write_meal_plan_to_db(data: typing.Dict[str, typing.Any], mp_date: dt.date):
 
     conn = None
     try:
@@ -852,6 +850,7 @@ def get_daily_a_count():
         'value': []
     }
     conn = None
+    mv_days = 14
     try:
         conn = pymysql.connect(host=db_url, user=db_username, password=db_password, database=db_name)
 
@@ -867,9 +866,9 @@ def get_daily_a_count():
         @evening_extra_meal_is_a := (CASE WHEN (evening_extra_meal_feedback = 'A' OR evening_extra_meal_feedback LIKE 'A %') THEN 1 ELSE 0 END) AS evening_extra_meal_feedback,
         @breakfast_is_a + @morning_extra_meal_is_a + @lunch_is_a + @afternoon_extra_meal_is_a + @dinner_is_a + @evening_extra_meal_is_a AS a_count
     FROM `meal_plan`
-    ORDER BY `meal_plan`.`date`  DESC LIMIT 1, 
-            ''' + str(days)
-            # It is guaranteed that days is an integer, so no risk of SQL injection
+    ORDER BY `meal_plan`.`date`  DESC LIMIT 1, ''' + str(days + mv_days)
+    # + 14 is to pre-read 14 days for the calculation of moving average
+    # It is guaranteed that days is an integer, so no risk of SQL injection
             cursor.execute(sql)
             result = cursor.fetchall()
             for item in result:
@@ -884,11 +883,14 @@ def get_daily_a_count():
 
     data['metadata'] = {}
     data['metadata']['username'] = username
-    data['value_ma'] = moving_average(data['value'], 14)
-    data['value_ma'].extend([None, None, None, None, None, None, None, None, None, None, None, None, None])
+    data['value_ma'] = moving_average(data['value'], mv_days)
+    data['value_ma'][0] = None  # Today's MV is hidden--it will always be lower since today's A is incomplete
     data['date'].reverse()
+    data['date'] = data['date'][mv_days:]
     data['value'].reverse()
+    data['value'] = data['value'][mv_days:]
     data['value_ma'].reverse()
+    data['value_ma'] = data['value_ma'][1:]  # Why remove the 1st element? Don't know! Just it works this way...
     return flask.jsonify(data)
 
 
