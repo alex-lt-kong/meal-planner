@@ -516,7 +516,7 @@ def analyze_plan_change_inplace(meal_plan):
 
     items = ['breakfast', 'morning_extra_meal',
              'lunch', 'afternoon_extra_meal',
-             'dinner', 'evening_extra_meal', 'remark']
+             'dinner', 'evening_extra_meal']
 
     re_str = r'(-?\d*\.?\d+)'
     res_old, res_new = {}, {}
@@ -553,6 +553,8 @@ def analyze_plan_change_inplace(meal_plan):
                             f'{res_old[item][j]}, {res_new[item][j]}')
                         meal_plan[item]['modification_type'] = 2
                         break
+    if meal_plan['remark']['content'] != meal_plan['remark']['prev_content']:
+        meal_plan['remark']['modification_type'] = 1
 
 
 def read_meal_plan_from_db(mp_date: dt.date):

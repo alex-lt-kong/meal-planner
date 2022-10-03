@@ -90,7 +90,8 @@ class Reminder extends React.Component {
         },
         yAxis: {
           grid: {display: true},
-          ticks: {beginAtZero: false}
+          ticks: {beginAtZero: false},
+          position: 'right'
         }
       },
       plugins: {
