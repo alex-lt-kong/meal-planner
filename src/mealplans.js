@@ -201,8 +201,8 @@ class MealPlanItem extends React.Component {
   getFeedbackSelect() {
     const optionsValueList = [
       'A - 大便成形，饮食正常量，无饱胀/腹痛/不适',
-      'B - 大便不成形', 'B - 饮食减量', 'B - 轻微腹痛或轻微不适',
-      'C - 拉稀', 'C - 饮食较大减量', 'C - 腹痛或较严重不适', '待填'
+      'B - 大便不成形', 'B - 饮食减量', 'B - 不适', 'B - 轻微腹痛',
+      'C - 腹痛', 'C - 饮食较大减量', 'C - 拉稀', '待填'
     ];
     if (optionsValueList.includes(this.props.data[this.props.itemName].feedback) == false) {
       optionsValueList.push(this.props.data[this.props.itemName].feedback);
